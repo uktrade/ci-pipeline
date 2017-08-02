@@ -18,7 +18,7 @@ pipeline {
     stage('prep') {
       steps {
         script {
-          def deployer = docker.image('ukti/deployer:latest')
+          deployer = docker.image('ukti/deployer:latest')
           deployer.pull()
         }
       }
@@ -113,7 +113,7 @@ pipeline {
         }
       }
     }
-    
+
   }
 
 }
