@@ -7,10 +7,10 @@ pipeline {
   }
 
   parameters {
-    string(defaultValue: null, description:'Please choose your team: ', name: Team)
-    string(defaultValue: null, description:'Please choose your project: ', name: Project)
-    string(defaultValue: null, description:'Please choose your environment: ', name: Environment)
-    string(defaultValue: null, description:'Please choose your git branch/tag/commit: ', name: Git_Commit)
+    string(defaultValue: null, description:'Please choose your team: ', name: 'Team')
+    string(defaultValue: null, description:'Please choose your project: ', name: 'Project')
+    string(defaultValue: null, description:'Please choose your environment: ', name: 'Environment')
+    string(defaultValue: null, description:'Please choose your git branch/tag/commit: ', name: 'Git_Commit')
   }
 
   stages {
