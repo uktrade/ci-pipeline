@@ -1,0 +1,36 @@
+---
+name: plan-c
+namespace: demo
+scm: git@github.com/uktrade/plan-c
+environments:
+  - environment: dev
+    type: heroku
+    app: project-fe-dev
+    vars:
+      - REDIS: redis://redis:6379
+      - ES: es://es:9200
+    secrets:
+      path: test/plan-a/dev
+    run:
+      - "/bin/bash"
+      - "docker run"
+  - environment: staging
+    type: s3
+    app: bucket.eu-west-2
+    vars:
+      - REDIS: redis://redis:6379
+    secrets:
+      path: test/plan-a/staging
+    run:
+      - "/bin/bash"
+      - "docker run"
+  - environment: production
+    type: gds
+    app: project-prod/fe
+    vars:
+      - REDIS: redis://redis:6379
+    secrets:
+      path: test/plan-a/production
+    run:
+      - "/bin/bash"
+      - "docker run"
