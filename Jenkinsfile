@@ -1,7 +1,7 @@
 node('docker.ci.uktrade.io') {
   def options_json
   def envars
-  def builder = docker.image('ruby:latest')
+  def builder = docker.image('ukti/deployer:latest')
   builder.pull()
   builder.inside {
     stage('checkout') {
@@ -54,7 +54,7 @@ node('docker.ci.uktrade.io') {
     }
   }
   stage('deploy') {
-    def deployer = docker.image('python:latest')
+    def deployer = docker.image('ukti/deployer:latest')
     deployer.pull()
     deployer.inside {
       git url: env.SCM, branch: git_commit
