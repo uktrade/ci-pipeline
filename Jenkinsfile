@@ -48,18 +48,16 @@ node('docker.ci.uktrade.io') {
   stage('load') {
     script {
       envars.each {
-        var = it.split("=")
-        var.each { k,v ->
-          env."${k}" = v
-        }
+        var = it.toString().split("=", 2)
+        env."${var[0]}" = var[1]
       }
     }
   }
   stage('deploy') {
-    def deployer = docker.image('ukti/deployer:latest')
+    def deployer = docker.image('python:latest')
     deployer.pull()
     deployer.inside {
-
+      sh 'env | sort'
     }
   }
 }
