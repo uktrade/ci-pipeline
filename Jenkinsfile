@@ -105,10 +105,7 @@ pipeline {
         script {
           deployer.inside {
             git url: env.SCM, branch: env.Git_Commit
-            sh """
-              env | sort
-              bash -c "${env.PAAS_RUN}"
-            """
+            sh "bash -c \"${env.PAAS_RUN}\""
           }
         }
       }
