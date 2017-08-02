@@ -15,17 +15,16 @@ pipeline {
 
   stages {
 
-    def options_json
-    def envars
-    def deployer = docker.image('ukti/deployer:latest')
+    stage('prep') {
+      def deployer = docker.image('ukti/deployer:latest')
+      deployer.pull()
+    }
 
-    deployer.pull()
-    deployer.inside {
-      stage('checkout') {
+
+    stage('init') {
+      deployer.inside {
         git 'https://github.com/uktrade/ci-pipeline.git'
         sh 'bundle install'
-      }
-      stage('init') {
         sh "${env.WORKSPACE}/bootstrap.rb"
         options_json = readJSON file: "${env.WORKSPACE}/option.json"
       }
@@ -65,8 +64,8 @@ pipeline {
       }
     }
 
-    deployer.inside {
-      stage('setup') {
+    stage('setup') {
+      deployer.inside {
         git 'https://github.com/uktrade/ci-pipeline.git'
         sh 'bundle install'
         withCredentials([string(credentialsId: env.VAULT_TOKEN_ID, variable: 'TOKEN')]) {
@@ -86,8 +85,8 @@ pipeline {
       }
     }
 
-    deployer.inside {
-      stage('deploy') {
+    stage('deploy') {
+      deployer.inside {
         git url: env.SCM, branch: env.Git_Commit
         sh """
           env | sort
