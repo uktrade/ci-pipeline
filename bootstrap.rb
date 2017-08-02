@@ -16,14 +16,11 @@ OPTION_FILE = 'option.json'
 ENV_FILE = 'env'
 
 def init(path)
-  schema = JSON.parse(File.read(JSON_SCHEMA))
   option_data = Hash.new
-
   Dir.foreach(path) do |file|
     if MIME::Types.type_for(file).to_s =~ /(text|application)\/(x-)?yaml/
       file_data = YAML.load_file("#{CONFIG_DIR}/#{file}")
-
-      if JSON::Validator.validate(schema, JSON.dump(file_data))
+      if JSON::Validator.validate!(JSON_SCHEMA, JSON.dump(file_data), {:validate_schema => true, :strict => true})
         consul_add("#{file_data['namespace']}/#{file_data['name']}/_", file_data['scm'])
         env_data = []
         file_data['environments'].each { |env|
@@ -32,14 +29,13 @@ def init(path)
         }
       end
       option_data.deep_merge!({ file_data['namespace'] => [ file_data['name'] => env_data ]})
-
     end
   end
   save_option(option_data)
-
 end
 
 def consul_add(path, data)
+  puts "#{CONSUL}/#{path}"
   RestClient.put("#{CONSUL}/#{path}", data)
 end
 
@@ -72,9 +68,11 @@ def save_env(team, project, env)
       }
     }
     secrets.each { |k,v|
-      File.open(ENV_FILE, 'a') { |file|
-        file.puts "#{k}=#{v}"
-      }
+      unless k.eql?("") || v.eql?("")
+        File.open(ENV_FILE, 'a') { |file|
+          file.puts "#{k}=#{v}"
+        }
+      end
     }
   end
 end
