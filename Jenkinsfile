@@ -17,11 +17,12 @@ pipeline {
 
     stage('prep') {
       steps {
-        def deployer = docker.image('ukti/deployer:latest')
-        deployer.pull()
+        script {
+          def deployer = docker.image('ukti/deployer:latest')
+          deployer.pull()
+        }
       }
     }
-
 
     stage('init') {
       deployer.inside {
