@@ -1,14 +1,16 @@
 pipeline {
-  agent {
-    node('docker.ci.uktrade.io') {
 
-      parameters {
-        string(defaultValue: null, description:'Please choose your team: ', name: Team)
-        string(defaultValue: null, description:'Please choose your project: ', name: Project)
-        string(defaultValue: null, description:'Please choose your environment: ', name: Environment)
-        string(defaultValue: null, description:'Please choose your git branch/tag/commit: ', name: Git_Commit)
-      }
-      
+  parameters {
+    string(defaultValue: null, description:'Please choose your team: ', name: Team)
+    string(defaultValue: null, description:'Please choose your project: ', name: Project)
+    string(defaultValue: null, description:'Please choose your environment: ', name: Environment)
+    string(defaultValue: null, description:'Please choose your git branch/tag/commit: ', name: Git_Commit)
+  }
+
+  agent {
+    node {
+      label 'docker.ci.uktrade.io'
+
       stages {
 
         def options_json
