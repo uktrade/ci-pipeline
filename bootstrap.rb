@@ -10,9 +10,7 @@ require "base64"
 CONFIG_DIR = 'config'
 JSON_SCHEMA = 'schema.json'
 CONSUL = ENV['CONSUL']
-CONSUL_BASE = '/v1/kv/ci/'
 VAULT = ENV['VAULT']
-VAULT_BASE = '/v1/dit/'
 VAULT_TOKEN = ENV['VAULT_TOKEN']
 OPTION_FILE = 'option.json'
 ENV_FILE = 'env'
@@ -42,16 +40,16 @@ def init(path)
 end
 
 def consul_add(path, data)
-  RestClient.put("#{CONSUL}#{CONSUL_BASE}#{path}", data)
+  RestClient.put("#{CONSUL}/#{path}", data)
 end
 
 def consul_get(path)
-  return RestClient.get("#{CONSUL}#{CONSUL_BASE}#{path}")
+  return RestClient.get("#{CONSUL}/#{path}")
 end
 
 def vault_get(path)
   return RestClient.get(
-    "#{VAULT}#{VAULT_BASE}#{path}",
+    "#{VAULT}/#{path}",
     headers = {'X-Vault-Token': VAULT_TOKEN}
   )
 end
