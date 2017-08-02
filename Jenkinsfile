@@ -15,23 +15,29 @@ node('docker.ci.uktrade.io') {
   }
   stage('input') {
     script {
-      if (env.Team == null) && (env.Project == null) && (env.Environment == null) && (env.Git_Commit == null) {
-        options = load "${env.WORKSPACE}/input.groovy"
+      options = load "${env.WORKSPACE}/input.groovy"
+      if (env.Team == null) {
         team = input(
           id: 'team', message: 'Please choose your team: ', parameters: [
           [$class: 'ChoiceParameterDefinition', name: 'Team', description: 'Team', choices: options.get_team(options_json)]
         ])
         env.Team = team
+      }
+      if (env.Project == null) {
         project = input(
           id: 'project', message: 'Please choose your project: ', parameters: [
           [$class: 'ChoiceParameterDefinition', name: 'Project', description: 'Project', choices: options.get_project(options_json,team)]
         ])
         env.Project = project
+      }
+      if (env.Environment == null) {
         environment = input(
           id: 'environment', message: 'Please choose your environment: ', parameters: [
           [$class: 'ChoiceParameterDefinition', name: 'Environment', description: 'Environment', choices: options.get_env(options_json, team, project)]
         ])
         env.Environment = environment
+      }
+      if (env.Git_Commit == null) {
         git_commit = input(
           id: 'git_commit', message: 'Please enter your git branch/tag/commit: ', parameters: [
           [$class: 'StringParameterDefinition', name: 'Git Commit', description: 'GitCommit', defaultValue: 'master']
