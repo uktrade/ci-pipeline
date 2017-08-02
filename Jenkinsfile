@@ -26,11 +26,13 @@ pipeline {
 
     stage('init') {
       steps {
-        deployer.inside {
-          git 'https://github.com/uktrade/ci-pipeline.git'
-          sh 'bundle install'
-          sh "${env.WORKSPACE}/bootstrap.rb"
-          options_json = readJSON file: "${env.WORKSPACE}/option.json"
+        script {
+          deployer.inside {
+            git 'https://github.com/uktrade/ci-pipeline.git'
+            sh 'bundle install'
+            sh "${env.WORKSPACE}/bootstrap.rb"
+            options_json = readJSON file: "${env.WORKSPACE}/option.json"
+          }
         }
       }
     }
@@ -73,14 +75,16 @@ pipeline {
 
     stage('setup') {
       steps {
-        deployer.inside {
-          git 'https://github.com/uktrade/ci-pipeline.git'
-          sh 'bundle install'
-          withCredentials([string(credentialsId: env.VAULT_TOKEN_ID, variable: 'TOKEN')]) {
-            env.VAULT_TOKEN = TOKEN
-            sh "${env.WORKSPACE}/bootstrap.rb ${env.Team} ${env.Project} ${env.Environment}"
+        script {
+          deployer.inside {
+            git 'https://github.com/uktrade/ci-pipeline.git'
+            sh 'bundle install'
+            withCredentials([string(credentialsId: env.VAULT_TOKEN_ID, variable: 'TOKEN')]) {
+              env.VAULT_TOKEN = TOKEN
+              sh "${env.WORKSPACE}/bootstrap.rb ${env.Team} ${env.Project} ${env.Environment}"
+            }
+            envars = readProperties file: "${env.WORKSPACE}/env"
           }
-          envars = readProperties file: "${env.WORKSPACE}/env"
         }
       }
     }
@@ -98,12 +102,14 @@ pipeline {
 
     stage('deploy') {
       steps {
-        deployer.inside {
-          git url: env.SCM, branch: env.Git_Commit
-          sh """
-            env | sort
-            bash -c "${env.PAAS_RUN}"
-          """
+        script {
+          deployer.inside {
+            git url: env.SCM, branch: env.Git_Commit
+            sh """
+              env | sort
+              bash -c "${env.PAAS_RUN}"
+            """
+          }
         }
       }
     }
