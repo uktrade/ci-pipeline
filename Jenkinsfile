@@ -1,9 +1,9 @@
 node('docker.ci.uktrade.io') {
   def options_json
   def envars
-  def builder = docker.image('ukti/deployer:latest')
-  builder.pull()
-  builder.inside {
+  def deployer = docker.image('ukti/deployer:latest')
+  deployer.pull()
+  deployer.inside {
     stage('checkout') {
       git 'https://github.com/uktrade/ci-pipeline.git'
       sh 'bundle install'
@@ -34,7 +34,7 @@ node('docker.ci.uktrade.io') {
       ])
     }
   }
-  builder.inside {
+  deployer.inside {
     stage('setup') {
       git 'https://github.com/uktrade/ci-pipeline.git'
       sh 'bundle install'
@@ -53,10 +53,8 @@ node('docker.ci.uktrade.io') {
       }
     }
   }
-  stage('deploy') {
-    def deployer = docker.image('ukti/deployer:latest')
-    deployer.pull()
-    deployer.inside {
+  deployer.inside {
+    stage('deploy') {
       git url: env.SCM, branch: git_commit
       sh """
         env | sort
