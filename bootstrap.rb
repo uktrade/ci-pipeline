@@ -79,7 +79,7 @@ end
 
 def main(args)
   team, project, env = args
-  if team.nil? || project.nil? || env.nil? || ENV['VAULT_TOKEN'].ni?
+  if team.nil? || project.nil? || env.nil? || ENV['VAULT_TOKEN'].nil?
     init(CONFIG_DIR)
   else
     save_env(team, project, env)
