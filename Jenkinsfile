@@ -25,11 +25,13 @@ pipeline {
     }
 
     stage('init') {
-      deployer.inside {
-        git 'https://github.com/uktrade/ci-pipeline.git'
-        sh 'bundle install'
-        sh "${env.WORKSPACE}/bootstrap.rb"
-        options_json = readJSON file: "${env.WORKSPACE}/option.json"
+      steps {
+        deployer.inside {
+          git 'https://github.com/uktrade/ci-pipeline.git'
+          sh 'bundle install'
+          sh "${env.WORKSPACE}/bootstrap.rb"
+          options_json = readJSON file: "${env.WORKSPACE}/option.json"
+        }
       }
     }
 
