@@ -1,7 +1,6 @@
 pipeline {
   agent {
-    node {
-      label 'docker.ci.uktrade.io'
+    node('docker.ci.uktrade.io') {
 
       parameters {
         string(defaultValue: null, description:'Please choose your team: ', name: Team)
