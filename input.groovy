@@ -15,7 +15,11 @@ def get_project(json, team) {
 }
 
 def get_env(json, team, project) {
-  return json[team][project].join('\n')
+  envs = []
+  json[team][project].each { node ->
+    envs += node
+  }
+  return envs.join('\n')
 }
 
 return this;

@@ -28,7 +28,7 @@ def init(path)
           env_data += [ env['environment'] ]
         }
       end
-      option_data.deep_merge!({ file_data['namespace'] => [ file_data['name'] => env_data ]})
+      option_data.deep_merge!({ file_data['namespace'] => { file_data['name'] => env_data }})
     end
   end
   save_option(option_data)
