@@ -36,10 +36,12 @@ node('docker.ci.uktrade.io') {
   }
   builder.inside {
     stage('setup') {
-      git 'https://github.com/uktrade/ci-pipeline.git'
-      sh 'bundle install'
-      sh "${env.WORKSPACE}/bootstrap.rb ${team} ${project} ${environment}"
-      envars = readProperties file: "${env.WORKSPACE}/env"
+      withCredentials([string(credentialsId: env.VAULT_TOKEN_ID, variable: VAULT_TOKEN)]) {
+        git 'https://github.com/uktrade/ci-pipeline.git'
+        sh 'bundle install'
+        sh "${env.VAULT_TOKEN}=${VAULT_TOKEN} ${env.WORKSPACE}/bootstrap.rb ${team} ${project} ${environment}"
+        envars = readProperties file: "${env.WORKSPACE}/env"
+      }
     }
   }
   stage('load') {
