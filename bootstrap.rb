@@ -55,11 +55,20 @@ def save_option(data)
 end
 
 def save_env(team, project, env)
+  scm = Base64.decode64(JSON.parse(consul_get("#{team}/#{project}/_")).pop['Value'])
   resp = JSON.parse(consul_get("#{team}/#{project}/#{env}")).pop
+
   if resp.include?('Value')
-    File.open(ENV_FILE, 'w') {|file| file.truncate(0) }
+    File.open(ENV_FILE, 'w') { |file| file.truncate(0) }
     data = JSON.parse(Base64.decode64(resp['Value']))
-    secrets = JSON.parse(vault_get("#{team}/#{project}/#{env}"))['data']
+
+    File.open(ENV_FILE, 'a') { |file|
+      file.puts "SCM=#{scm}"
+      file.puts "PAAS_TYPE=#{data['type']}"
+      file.puts "PAAS_APP=#{data['app']}"
+      file.puts "PAAS_ENVIRONMENT=#{data['environment']}"
+    }
+
     data['vars'].each { |var|
       var.each { |k,v|
         File.open(ENV_FILE, 'a') { |file|
@@ -67,14 +76,21 @@ def save_env(team, project, env)
         }
       }
     }
-    secrets.each { |k,v|
-      unless k.eql?("") || v.eql?("")
-        File.open(ENV_FILE, 'a') { |file|
-          file.puts "#{k}=#{v}"
-        }
-      end
-    }
+
+    if data['secrets']
+      secrets = JSON.parse(vault_get("#{team}/#{project}/#{env}"))['data']
+      secrets.each { |k,v|
+        unless k.eql?("") || v.eql?("")
+          File.open(ENV_FILE, 'a') { |file|
+            file.puts "#{k}=#{v}"
+          }
+        end
+      }
+    end
+  else
+    println "Error: unable to parse Consul data."
   end
+
 end
 
 def main(args)

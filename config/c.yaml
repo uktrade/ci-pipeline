@@ -9,8 +9,7 @@ environments:
     vars:
       - REDIS: redis://redis:6379
       - ES: es://es:9200
-    secrets:
-      path: test/plan-a/dev
+    secrets: true
     run:
       - "/bin/bash"
       - "docker run"
@@ -19,8 +18,7 @@ environments:
     app: bucket.eu-west-2
     vars:
       - REDIS: redis://redis:6379
-    secrets:
-      path: test/plan-a/staging
+    secrets: false
     run:
       - "/bin/bash"
       - "docker run"
@@ -29,8 +27,7 @@ environments:
     app: project-prod/fe
     vars:
       - REDIS: redis://redis:6379
-    secrets:
-      path: test/plan-a/production
+    secrets: false
     run:
       - "/bin/bash"
       - "docker run"

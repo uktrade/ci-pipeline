@@ -46,14 +46,7 @@
             }
           },
           "secrets": {
-            "type": "object",
-            "required": ["path"],
-            "properties": {
-              "path": {
-                "type": "string",
-                "description": "Vault path to secrects"
-              }
-            }
+            "type": "boolean"
           },
           "run": {
             "type": "array",
