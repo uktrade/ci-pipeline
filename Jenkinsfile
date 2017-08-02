@@ -15,23 +15,29 @@ node('docker.ci.uktrade.io') {
   }
   stage('input') {
     script {
-      options = load "${env.WORKSPACE}/input.groovy"
-      team = input(
-        id: 'team', message: 'Please choose your team: ', parameters: [
-        [$class: 'ChoiceParameterDefinition', name: 'Team', description: 'Team', choices: options.get_team(options_json)]
+      if (env.Team == null) && (env.Project == null) && (env.Environment == null) && (env.Git_Commit == null) {
+        options = load "${env.WORKSPACE}/input.groovy"
+        team = input(
+          id: 'team', message: 'Please choose your team: ', parameters: [
+          [$class: 'ChoiceParameterDefinition', name: 'Team', description: 'Team', choices: options.get_team(options_json)]
         ])
-      project = input(
-        id: 'project', message: 'Please choose your project: ', parameters: [
-        [$class: 'ChoiceParameterDefinition', name: 'Project', description: 'Project', choices: options.get_project(options_json,team)]
-      ])
-      environment = input(
-        id: 'environment', message: 'Please choose your environment: ', parameters: [
-        [$class: 'ChoiceParameterDefinition', name: 'Environment', description: 'Environment', choices: options.get_env(options_json, team, project)]
-      ])
-      git_commit = input(
-        id: 'git_commit', message: 'Please enter your git branch/tag/commit: ', parameters: [
-        [$class: 'StringParameterDefinition', name: 'Git Commit', description: 'GitCommit', defaultValue: 'master']
-      ])
+        env.Team = team
+        project = input(
+          id: 'project', message: 'Please choose your project: ', parameters: [
+          [$class: 'ChoiceParameterDefinition', name: 'Project', description: 'Project', choices: options.get_project(options_json,team)]
+        ])
+        env.Project = project
+        environment = input(
+          id: 'environment', message: 'Please choose your environment: ', parameters: [
+          [$class: 'ChoiceParameterDefinition', name: 'Environment', description: 'Environment', choices: options.get_env(options_json, team, project)]
+        ])
+        env.Environment = environment
+        git_commit = input(
+          id: 'git_commit', message: 'Please enter your git branch/tag/commit: ', parameters: [
+          [$class: 'StringParameterDefinition', name: 'Git Commit', description: 'GitCommit', defaultValue: 'master']
+        ])
+        env.Git_Commit = git_commit
+      }
     }
   }
   deployer.inside {
@@ -40,7 +46,7 @@ node('docker.ci.uktrade.io') {
       sh 'bundle install'
       withCredentials([string(credentialsId: env.VAULT_TOKEN_ID, variable: 'TOKEN')]) {
         env.VAULT_TOKEN = TOKEN
-        sh "${env.WORKSPACE}/bootstrap.rb ${team} ${project} ${environment}"
+        sh "${env.WORKSPACE}/bootstrap.rb ${env.Team} ${env.Project} ${env.Environment}"
       }
       envars = readProperties file: "${env.WORKSPACE}/env"
     }
@@ -55,7 +61,7 @@ node('docker.ci.uktrade.io') {
   }
   deployer.inside {
     stage('deploy') {
-      git url: env.SCM, branch: git_commit
+      git url: env.SCM, branch: env.Git_Commit
       sh """
         env | sort
         bash -c "${env.PAAS_RUN}"
