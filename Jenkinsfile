@@ -29,7 +29,7 @@ pipeline {
         script {
           deployer.inside {
             git 'https://github.com/uktrade/ci-pipeline.git'
-            sh 'bundle install'
+            sh 'bundle check || bundle install'
             sh "${env.WORKSPACE}/bootstrap.rb"
             options_json = readJSON file: "${env.WORKSPACE}/option.json"
           }
@@ -78,7 +78,7 @@ pipeline {
         script {
           deployer.inside {
             git 'https://github.com/uktrade/ci-pipeline.git'
-            sh 'bundle install'
+            sh 'bundle check || bundle install'
             withCredentials([string(credentialsId: env.VAULT_TOKEN_ID, variable: 'TOKEN')]) {
               env.VAULT_TOKEN = TOKEN
               sh "${env.WORKSPACE}/bootstrap.rb ${env.Team} ${env.Project} ${env.Environment}"
