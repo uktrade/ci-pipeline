@@ -57,7 +57,7 @@ node('docker.ci.uktrade.io') {
     def deployer = docker.image('python:latest')
     deployer.pull()
     deployer.inside {
-      git url: env.SCM branch: git_commit
+      git url: env.SCM, branch: git_commit
       sh """
         env | sort
         bash -c "${env.PAAS_RUN}"
