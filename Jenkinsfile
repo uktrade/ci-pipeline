@@ -34,8 +34,10 @@ node('docker.ci.uktrade.io') {
       ])
     }
   }
-  stage('setup') {
-    builder.inside {
+  builder.inside {
+    stage('setup') {
+      git 'https://github.com/uktrade/ci-pipeline.git'
+      sh 'bundle install'
       sh "${env.WORKSPACE}/bootstrap.rb ${env.team} ${env.project} ${env.environment}"
       envars = readProperties file: "${env.WORKSPACE}/env"
     }
