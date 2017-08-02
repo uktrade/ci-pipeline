@@ -35,7 +35,6 @@ def init(path)
 end
 
 def consul_add(path, data)
-  puts "#{CONSUL}/#{path}"
   RestClient.put("#{CONSUL}/#{path}", data)
 end
 
