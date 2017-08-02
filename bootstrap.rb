@@ -69,6 +69,18 @@ def save_env(team, project, env)
       file.puts "PAAS_ENVIRONMENT=#{data['environment']}"
     }
 
+    run = String.new
+    data['run'].each_with_index { |cmd, index|
+      if (index + 1) < data['run'].length
+        run += "#{cmd} && "
+      else
+        run += cmd
+      end
+    }
+    File.open(ENV_FILE, 'a') { |file|
+      file.puts "PAAS_RUN=#{run}"
+    }
+
     data['vars'].each { |var|
       var.each { |k,v|
         File.open(ENV_FILE, 'a') { |file|
