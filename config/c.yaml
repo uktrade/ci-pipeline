@@ -11,8 +11,8 @@ environments:
       - ES: es://es:9200
     secrets: true
     run:
-      - "/bin/bash"
-      - "docker run"
+      - "python -V"
+      - "echo hello\ world"
   - environment: staging
     type: s3
     app: bucket.eu-west-2

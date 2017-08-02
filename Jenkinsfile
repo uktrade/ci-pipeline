@@ -57,7 +57,10 @@ node('docker.ci.uktrade.io') {
     def deployer = docker.image('python:latest')
     deployer.pull()
     deployer.inside {
-      sh 'env | sort'
+      sh """
+        env | sort
+        bash -c "${env.PAAS_RUN}"
+      """
     }
   }
 }
