@@ -1,4 +1,4 @@
-node {
+node('docker.ci.uktrade.io') {
   def options_json
   def envars
   def builder = docker.image('ruby:latest')
