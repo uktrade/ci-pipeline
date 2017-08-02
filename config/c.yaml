@@ -1,7 +1,7 @@
 ---
 name: plan-c
 namespace: demo
-scm: git@github.com/uktrade/plan-c
+scm: https://github.com/uktrade/ci-pipeline.git
 environments:
   - environment: dev
     type: heroku
