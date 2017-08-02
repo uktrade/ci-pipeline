@@ -7,7 +7,7 @@ node {
       sh 'bundle install'
     }
     stage('init') {
-      sh 'bootstrap.rb'
+      sh '${env.WORKSPACE}/bootstrap.rb'
       def options_json = readJSON file: "${env.WORKSPACE}/option.json"
     }
   }
@@ -41,7 +41,7 @@ node {
   }
   stage('setup') {
     builder.inside {
-      sh "bootstrap.rb ${env.team} ${env.project} ${env.environment}"
+      sh "${env.WORKSPACE}/bootstrap.rb ${env.team} ${env.project} ${env.environment}"
       def envars = readFile "${env.WORKSPACE}/env"
     }
   }
