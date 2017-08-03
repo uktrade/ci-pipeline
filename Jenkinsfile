@@ -17,6 +17,7 @@ pipeline {
     stage('prep') {
       steps {
         script {
+          deleteDir
           deployer = docker.image('ukti/deployer:latest')
           deployer.pull()
         }
