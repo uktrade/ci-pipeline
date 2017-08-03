@@ -4,8 +4,8 @@ namespace: demo
 scm: git@github.com:cloudfoundry-samples/cf-sample-app-nodejs.git
 environments:
   - environment: dev
-    type: heroku
-    app: project-fe-dev
+    type: gds
+    app: sandbox/cf-nodejs
     vars:
       - REDIS: redis://redis:6379
       - ES: es://es:9200
