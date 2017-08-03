@@ -126,7 +126,6 @@ pipeline {
   post {
     always {
       script {
-        deployer.stop()
         deleteDir()
       }
     }
