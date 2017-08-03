@@ -19,6 +19,6 @@ RUN curl -Lfs -o - https://github.com/openshift/origin/releases/download/v1.5.1/
     apt-get install -y cf-cli && \
     rm -rf /var/lib/apt/lists/*
 
-ADD Gemfile* /tmp/
+COPY Gemfile* /tmp/
 
 RUN cd /tmp && bundle install
