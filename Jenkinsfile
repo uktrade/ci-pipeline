@@ -103,6 +103,7 @@ pipeline {
     stage('deploy') {
       steps {
         script {
+          env.HOME = '/tmp'
           deployer.inside {
             git url: env.SCM, branch: env.Git_Commit, credentialsId: '16e11bb3-6c5a-4979-a512-4a9fb75feede'
             sh "bash -c ${env.PAAS_RUN}"
