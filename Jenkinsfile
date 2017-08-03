@@ -103,6 +103,7 @@ pipeline {
       steps {
         script {
           deployer.inside {
+            writeFile file: "${env.WORKSPACE}/env", text: envars
             git url: env.SCM, branch: env.Git_Commit
             sh "bash -c \"${env.PAAS_RUN}\""
             switch(env.PAAS_TYPE) {
