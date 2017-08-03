@@ -120,6 +120,10 @@ pipeline {
                       cf set-env ${gds_app[1]} $var
                     done < ${env.WORKSPACE}/.env
                   """
+                  envars.each {
+                    var = it.toString().split("=", 2)
+                    sh "cf set-env ${gds_app[1]} ${var[0]} ${var[1]}"
+                  }
                 }
                 break
               case "s3":
