@@ -112,7 +112,7 @@ pipeline {
                 withCredentials([usernamePassword(credentialsId: '0b7b64bd-7929-4c94-b538-d1801d28d055', passwordVariable: 'gds_pass', usernameVariable: 'gds_user')]) {
                   gds_app = env.PAAS_APP.split("/")
                   sh """
-                    cf login -a ${env.GDS_PAAS} -u ${gds_user} -p ${gds_pass}
+                    cf login -a ${env.GDS_PAAS} -u ${gds_user} -p ${gds_pass} -s ${gds_app[0]}
                     cf target -s ${gds_app[0]}
                     while read var; do
                       cf set-env ${gds_app[1]} var
