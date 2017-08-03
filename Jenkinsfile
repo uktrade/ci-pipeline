@@ -114,11 +114,11 @@ pipeline {
                   sh """
                     cf login -a ${env.GDS_PAAS} -u ${gds_user} -p ${gds_pass} -s ${gds_app[0]}
                     cf target -s ${gds_app[0]}
+                    ln -snf ${env.WORKSPACE}/.gitignore ${env.WORKSPACE}/.cfignore
+                    cf push ${gds_app[1]}
                     while read var; do
                       cf set-env ${gds_app[1]} $var
                     done < ${env.WORKSPACE}/.env
-                    ln -snf ${env.WORKSPACE}/.gitignore ${env.WORKSPACE}/.cfignore
-                    cf push ${gds_app[1]}
                   """
                 }
                 break
