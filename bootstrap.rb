@@ -77,7 +77,7 @@ def save_env(team, project, env)
       end
     }
     File.open(ENV_FILE, 'a') { |file|
-      file.puts "PAAS_RUN=#{run}"
+      file.puts "PAAS_RUN=\"#{run}\""
     }
 
     data['vars'].each { |var|
