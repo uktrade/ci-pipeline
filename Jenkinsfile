@@ -82,7 +82,7 @@ pipeline {
               env.VAULT_TOKEN = TOKEN
               sh "${env.WORKSPACE}/bootstrap.rb ${env.Team} ${env.Project} ${env.Environment}"
             }
-            envars = readProperties file: "${env.WORKSPACE}/env"
+            envars = readFile file: "${env.WORKSPACE}/env"
           }
         }
       }
