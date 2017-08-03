@@ -111,17 +111,22 @@ pipeline {
               case "gds":
                 withCredentials([usernamePassword(credentialsId: '0b7b64bd-7929-4c94-b538-d1801d28d055', passwordVariable: 'gds_pass', usernameVariable: 'gds_user')]) {
                   gds_app = env.PAAS_APP.split("/")
-                  sh """
-                    cf login -a ${env.GDS_PAAS} -u ${gds_user} -p ${gds_pass} -s ${gds_app[0]}
-                    cf target -s ${gds_app[0]}
-                    ln -snf ${env.WORKSPACE}/.gitignore ${env.WORKSPACE}/.cfignore
-                    cf push ${gds_app[1]}
-                  """
+                  ansiColor('xterm') {
+                    sh """
+                      cf login -a ${env.GDS_PAAS} -u ${gds_user} -p ${gds_pass} -s ${gds_app[0]}
+                      cf target -s ${gds_app[0]}
+                      ln -snf ${env.WORKSPACE}/.gitignore ${env.WORKSPACE}/.cfignore
+                    """
+                  }
                   envars.each {
                     var = it.toString().split("=", 2)
-                    sh "cf set-env ${gds_app[1]} ${var[0]} \'${var[1]}\'"
+                    ansiColor('xterm') {
+                      sh "cf set-env ${gds_app[1]} ${var[0]} \'${var[1]}\'"
+                    }
                   }
-                  sh "cf restage ${gds_app[1]}"
+                  ansiColor('xterm') {
+                    sh "cf push ${gds_app[1]}"
+                  }
                 }
                 break
               case "s3":
