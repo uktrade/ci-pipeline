@@ -1,7 +1,7 @@
 ---
 name: plan-c
 namespace: demo
-scm: git@github.com:uktrade/ci-pipeline.git
+scm: git@github.com:cloudfoundry-samples/cf-sample-app-nodejs.git
 environments:
   - environment: dev
     type: heroku
@@ -11,7 +11,7 @@ environments:
       - ES: es://es:9200
     secrets: true
     run:
-      - "cat ${WORKSPACE}/env"
+      - "cat ${WORKSPACE}/.env"
       - "env | sort"
       - "echo hello\ world"
   - environment: staging
