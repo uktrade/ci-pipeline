@@ -17,6 +17,7 @@ pipeline {
     stage('prep') {
       steps {
         script {
+          validateDeclarativePipeline file: "${env.WORKSPACE}/Jenkinsfile"
           deployer = docker.image('ukti/deployer:latest')
           deployer.pull()
         }
@@ -124,8 +125,10 @@ pipeline {
 
   post {
     always {
-      deployer.stop()
-      deleteDir()
+      script {
+        deployer.stop()
+        deleteDir()
+      }
     }
   }
 
