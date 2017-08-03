@@ -11,7 +11,7 @@ environments:
       - ES: es://es:9200
     secrets: true
     run:
-      - "cat ${WORKSPACE} env"
+      - "cat ${WORKSPACE}/env"
       - "env | sort"
       - "echo hello\ world"
   - environment: staging
