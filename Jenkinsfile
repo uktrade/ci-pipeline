@@ -101,6 +101,7 @@ pipeline {
 
     stage('deploy') {
       steps {
+        sh 'env | sort'
         script {
           deployer.inside {
             git url: env.SCM, branch: env.Git_Commit, credentialsId: '16e11bb3-6c5a-4979-a512-4a9fb75feede'
