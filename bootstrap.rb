@@ -13,7 +13,7 @@ CONSUL = ENV['CONSUL']
 VAULT = ENV['VAULT']
 VAULT_TOKEN = ENV['VAULT_TOKEN']
 OPTION_FILE = "#{ENV['WORKSPACE']}/option.json"
-ENV_FILE = "#{ENV['WORKSPACE']}/env"
+ENV_FILE = "#{ENV['WORKSPACE']}/.env"
 
 def validate(schema, data)
   return JSON::Validator.validate!(schema, data, {:validate_schema => true, :strict => true})
@@ -111,7 +111,7 @@ def main(args)
       'PAAS_RUN' => "\"#{run}\""
     }
 
-    data['vars'].each { |var| file_content.deep_merge!(var) }
+    data['vars'].each { |var| file_content.deep_merge!(var) } unless data['vars'].empty?
     secrets = vault_get("#{team}/#{project}/#{env}") if data['secrets']
     file_content.deep_merge!(secrets)
 

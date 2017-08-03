@@ -83,7 +83,7 @@ pipeline {
               env.VAULT_TOKEN = TOKEN
               sh "${env.WORKSPACE}/bootstrap.rb ${env.Team} ${env.Project} ${env.Environment}"
             }
-            envars = readProperties file: "${env.WORKSPACE}/env"
+            envars = readProperties file: "${env.WORKSPACE}/.env"
           }
         }
       }
@@ -108,6 +108,18 @@ pipeline {
             sh "bash -c ${env.PAAS_RUN}"
             switch(env.PAAS_TYPE) {
               case "gds":
+                withCredentials([usernamePassword(credentialsId: '0b7b64bd-7929-4c94-b538-d1801d28d055', passwordVariable: 'gds_pass', usernameVariable: 'gds_user')]) {
+                  gds_app = env.PAAS_APP.split("/")
+                  sh """
+                    echo cf login -a ${env.GDS_PAAS} -u ${gds_user} -p ${gds_pass}
+                    echo cf target -s ${gds_app[0]}
+                    while read var; do
+                      echo cf set-env ${gds_app[1]} var
+                    done < ${env.WORKSPACE}/.env
+                    ln -s .gitignore .cfignore
+                    echo cf push ${gds_app[1]}
+                  """
+                }
                 break
               case "s3":
                 break
