@@ -119,7 +119,7 @@ pipeline {
                   """
                   envars.each {
                     var = it.toString().split("=", 2)
-                    sh "cf set-env ${gds_app[1]} ${var[0]} ${var[1]}"
+                    sh "cf set-env ${gds_app[1]} ${var[0]} \'${var[1]}\'"
                   }
                   sh "cf restage ${gds_app[1]}"
                 }
