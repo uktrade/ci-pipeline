@@ -120,12 +120,10 @@ pipeline {
       }
     }
 
-    stage('cleanup') {
-      steps {
-        script {
-          deployer.stop
-          deleteDir()
-        }
+    post {
+      always {
+        deployer.stop()
+        deleteDir()
       }
     }
 
