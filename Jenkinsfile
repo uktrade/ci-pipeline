@@ -16,8 +16,8 @@ pipeline {
   stages {
     stage('prep') {
       steps {
+        echo validateDeclarativePipeline("${env.WORKSPACE}/Jenkinsfile")
         script {
-          validateDeclarativePipeline file: "${env.WORKSPACE}/Jenkinsfile"
           deployer = docker.image('ukti/deployer:latest')
           deployer.pull()
         }
