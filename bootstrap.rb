@@ -15,23 +15,8 @@ VAULT_TOKEN = ENV['VAULT_TOKEN']
 OPTION_FILE = "#{ENV['WORKSPACE']}/option.json"
 ENV_FILE = "#{ENV['WORKSPACE']}/env"
 
-def init(path)
-  option_data = Hash.new
-  Dir.foreach(path) do |file|
-    if MIME::Types.type_for(file).to_s =~ /(text|application)\/(x-)?yaml/
-      file_data = YAML.load_file("#{CONFIG_DIR}/#{file}")
-      if JSON::Validator.validate!(JSON_SCHEMA, JSON.dump(file_data), {:validate_schema => true, :strict => true})
-        consul_add("#{file_data['namespace']}/#{file_data['name']}/_", file_data['scm'])
-        env_data = []
-        file_data['environments'].each { |env|
-          consul_add("#{file_data['namespace']}/#{file_data['name']}/#{env['environment']}",  JSON.dump(env))
-          env_data += [ env['environment'] ]
-        }
-      end
-      option_data.deep_merge!({ file_data['namespace'] => { file_data['name'] => env_data }})
-    end
-  end
-  save_option(option_data)
+def validate(schema, data)
+  return JSON::Validator.validate!(schema, data, {:validate_schema => true, :strict => true})
 end
 
 def consul_add(path, data)
@@ -106,11 +91,37 @@ end
 
 def main(args)
   team, project, env = args
+
   if team.nil? || project.nil? || env.nil? || ENV['VAULT_TOKEN'].nil?
-    init(CONFIG_DIR)
+    puts "Validating files: "
+    config_files = Array.new
+    Dir.foreach(CONFIG_DIR) do |file|
+      if MIME::Types.type_for(file).to_s =~ /(text|application)\/(x-)?yaml/
+        puts "\t+ #{CONFIG_DIR}/#{file}"
+        file_data = YAML.load_file("#{CONFIG_DIR}/#{file}")
+        config_files += ["#{CONFIG_DIR}/#{file}"] if validate(JSON_SCHEMA, JSON.dump(file_data))
+      end
+    end
+
+    puts "Updating Consul data."
+    option_data = Hash.new
+    config_files.each { |file|
+      file_data = YAML.load_file(file)
+      consul_add("#{file_data['namespace']}/#{file_data['name']}/_", file_data['scm'])
+      env_data = []
+      file_data['environments'].each { |env|
+        consul_add("#{file_data['namespace']}/#{file_data['name']}/#{env['environment']}", JSON.dump(env))
+        env_data += [ env['environment'] ]
+      }
+      option_data.deep_merge!({ file_data['namespace'] => { file_data['name'] => env_data }})
+    }
+
+    save_option(option_data)
   else
+    puts "Saving environment variables."
     save_env(team, project, env)
   end
+
 end
 
 main(ARGV)
