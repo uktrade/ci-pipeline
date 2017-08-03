@@ -7,13 +7,13 @@ require 'rest-client'
 require 'deep_merge'
 require "base64"
 
-CONFIG_DIR = 'config'
-JSON_SCHEMA = 'schema.json'
+CONFIG_DIR = "#{ENV['WORKSPACE']}/config"
+JSON_SCHEMA = "#{ENV['WORKSPACE']}/schema.json"
 CONSUL = ENV['CONSUL']
 VAULT = ENV['VAULT']
 VAULT_TOKEN = ENV['VAULT_TOKEN']
-OPTION_FILE = 'option.json'
-ENV_FILE = 'env'
+OPTION_FILE = "#{ENV['WORKSPACE']}/option.json"
+ENV_FILE = "#{ENV['WORKSPACE']}/env"
 
 def init(path)
   option_data = Hash.new
