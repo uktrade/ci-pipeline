@@ -123,7 +123,7 @@ pipeline {
     stage('cleanup') {
       steps {
         script {
-          deployer.stop()
+          deployer.stop
           deleteDir()
         }
       }
