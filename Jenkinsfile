@@ -106,6 +106,16 @@ pipeline {
           deployer.inside {
             git url: env.SCM, branch: env.Git_Commit
             sh "bash -c \"${env.PAAS_RUN}\""
+            switch(env.PAAS_TYPE) {
+              case "gds":
+                break
+              case "s3":
+                break
+              case "openshift":
+                break
+              case "heroku":
+                break
+            }
           }
         }
       }
