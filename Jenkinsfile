@@ -116,14 +116,12 @@ pipeline {
                     cf target -s ${gds_app[0]}
                     ln -snf ${env.WORKSPACE}/.gitignore ${env.WORKSPACE}/.cfignore
                     cf push ${gds_app[1]}
-                    while read var; do
-                      cf set-env ${gds_app[1]} $var
-                    done < ${env.WORKSPACE}/.env
                   """
                   envars.each {
                     var = it.toString().split("=", 2)
                     sh "cf set-env ${gds_app[1]} ${var[0]} ${var[1]}"
                   }
+                  sh "cf restage ${gds_app[1]}"
                 }
                 break
               case "s3":
