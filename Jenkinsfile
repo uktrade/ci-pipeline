@@ -93,7 +93,7 @@ pipeline {
         script {
           envars.each {
             var = it.toString().split("=", 2)
-            env."${var[0]}" = "${var[1]}"
+            env."${var[0]}" = "\"${var[1]}\""
           }
         }
       }
