@@ -82,7 +82,7 @@ pipeline {
               env.VAULT_TOKEN = TOKEN
               sh "${env.WORKSPACE}/bootstrap.rb ${env.Team} ${env.Project} ${env.Environment}"
             }
-            envars = readFile file: "${env.WORKSPACE}/env"
+            envars = readProperties file: "${env.WORKSPACE}/env"
           }
         }
       }
@@ -103,7 +103,6 @@ pipeline {
       steps {
         script {
           deployer.inside {
-            writeFile file: "${env.WORKSPACE}/env", text: envars
             git url: env.SCM, branch: env.Git_Commit
             sh "bash -c \"${env.PAAS_RUN}\""
             switch(env.PAAS_TYPE) {
