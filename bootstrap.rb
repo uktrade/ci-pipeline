@@ -84,7 +84,7 @@ def save_env(team, project, env)
       }
     end
   else
-    println "Error: unable to parse Consul data."
+    puts "Error: unable to parse Consul data."
   end
 
 end
