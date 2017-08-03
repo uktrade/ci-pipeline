@@ -106,7 +106,10 @@ pipeline {
           env.HOME = '/tmp'
           deployer.inside {
             git url: env.SCM, branch: env.Git_Commit, credentialsId: '16e11bb3-6c5a-4979-a512-4a9fb75feede'
-            sh "bash -c ${env.PAAS_RUN}"
+            ansiColor('xterm') {
+              sh "bash -c ${env.PAAS_RUN}"
+            }
+
             switch(env.PAAS_TYPE) {
               case "gds":
                 withCredentials([usernamePassword(credentialsId: '0b7b64bd-7929-4c94-b538-d1801d28d055', passwordVariable: 'gds_pass', usernameVariable: 'gds_user')]) {
@@ -129,10 +132,13 @@ pipeline {
                   }
                 }
                 break
+
               case "s3":
                 break
+
               case "openshift":
                 break
+
               case "heroku":
                 break
             }
