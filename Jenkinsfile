@@ -120,13 +120,13 @@ pipeline {
       }
     }
 
-    post {
-      always {
-        deployer.stop()
-        deleteDir()
-      }
-    }
+  }
 
+  post {
+    always {
+      deployer.stop()
+      deleteDir()
+    }
   }
 
 }
