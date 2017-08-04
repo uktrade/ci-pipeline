@@ -19,7 +19,7 @@ def validate(schema, data)
   return JSON::Validator.validate!(schema, data, {:validate_schema => true, :strict => true})
 end
 
-def consul_add(path, data)
+def consul_add(path, data = nil)
   return RestClient.put("#{CONSUL}/#{path}", data)
 end
 
@@ -28,8 +28,13 @@ def consul_delete(path)
 end
 
 def consul_get(path)
-  resp = RestClient.get("#{CONSUL}/#{path}")
-  return JSON.parse(Base64.decode64(JSON.parse(resp).pop['Value']))
+  begin
+    resp = RestClient.get("#{CONSUL}/#{path}")
+  rescue RestClient::ExceptionWithResponse => e
+    return e.http_code
+  else
+    return JSON.parse(Base64.decode64(JSON.parse(resp).pop['Value']))
+  end
 end
 
 def vault_get(path)
@@ -79,9 +84,10 @@ def main(args)
         env_data += [ env['environment'] ]
       }
 
-      consul_get("#{file_data['namespace']}/#{file_data['name']}/_")['environments'].each { |del|
+      existing_envs = consul_get("#{file_data['namespace']}/#{file_data['name']}/_")
+      existing_envs['environments'].each { |del|
         consul_delete("#{file_data['namespace']}/#{file_data['name']}/#{del}") if not env_data.include?(del)
-      }
+      } if not existing_envs == 404
 
       path_data = {
         'name' => file_data['name'],

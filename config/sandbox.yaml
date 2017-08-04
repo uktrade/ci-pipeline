@@ -1,0 +1,23 @@
+---
+name: sandbox
+namespace: shared
+scm: git@github.com:cloudfoundry-samples/cf-sample-app-nodejs.git
+environments:
+  - environment: dev
+    type: gds
+    app: sandbox/cf-nodejs
+    vars:
+      - FOO: bar
+    secrets: true
+    run:
+      - "ls -al ${WORKSPACE}"
+      - "env | sort"
+      - "echo hello\ world"
+  - environment: staging
+    type: gds
+    app: sandbox/cf-nodejs
+    vars:
+      - FOO: bar
+    secrets: false
+    run:
+      - "exit -1"

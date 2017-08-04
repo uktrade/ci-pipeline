@@ -4,6 +4,7 @@
   "description": "A DIT project pipeline definition",
   "type": "object",
   "required": ["name", "namespace", "scm", "environments"],
+  "additionalProperties": false,
   "properties": {
     "name": {
       "description": "The unique identifier for a project",
@@ -24,6 +25,7 @@
       "items": {
         "type": "object",
         "minProperties": 1,
+        "additionalProperties": false,
         "required": ["environment", "type", "app", "vars", "secrets", "run"],
         "properties": {
           "environment": {
@@ -32,7 +34,8 @@
           },
           "type": {
             "description": "Platform type",
-            "type": "string"
+            "type": "string",
+            "enum": ["gds", "s3", "openshift", "heroku"]
           },
           "app": {
             "description": "Destination app name",
