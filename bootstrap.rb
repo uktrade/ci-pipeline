@@ -6,7 +6,7 @@ require 'json-schema'
 require 'rest-client'
 require 'deep_merge'
 require 'base64'
-require 'Shellwords'
+require 'shellwords'
 
 CONFIG_DIR = "#{ENV['WORKSPACE']}/config"
 JSON_SCHEMA = "#{ENV['WORKSPACE']}/schema.json"
