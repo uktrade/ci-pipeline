@@ -5,7 +5,8 @@ require 'json'
 require 'json-schema'
 require 'rest-client'
 require 'deep_merge'
-require "base64"
+require 'base64'
+require 'Shellwords'
 
 CONFIG_DIR = "#{ENV['WORKSPACE']}/config"
 JSON_SCHEMA = "#{ENV['WORKSPACE']}/schema.json"
@@ -51,10 +52,9 @@ end
 
 def save_env(file, data)
   File.open(file, 'w') { |file| file.truncate(0) }
-  escape = /(\'|\"|\.|\*|\/|\-|\\)/
   return data.each { |key, value|
     File.open(file, 'a') { |file|
-      file.puts "#{key}=#{value.gsub(escape){ |match| "\\" + match }}" unless key.empty? || value.empty?
+      file.puts "#{key}=#{Shellwords.shellescape(value)}" unless key.empty? || value.empty?
     }
   }
 end
