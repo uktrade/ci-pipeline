@@ -124,7 +124,7 @@ pipeline {
                   envars.each {
                     var = it.toString().split("=", 2)
                     ansiColor('xterm') {
-                      sh "cf set-env ${gds_app[1]} ${var[0]} \'${var[1]}\'"
+                      sh "echo cf set-env ${gds_app[1]} ${var[0]} \'${var[1]}\'"
                     }
                   }
                   ansiColor('xterm') {
