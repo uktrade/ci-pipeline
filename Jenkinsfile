@@ -107,7 +107,7 @@ pipeline {
           deployer.inside {
             git url: env.SCM, branch: env.Git_Commit, credentialsId: '16e11bb3-6c5a-4979-a512-4a9fb75feede'
             ansiColor('xterm') {
-              sh "bash -c ${env.PAAS_RUN}"
+              sh "bash -c \"${env.PAAS_RUN}\""
             }
 
             switch(env.PAAS_TYPE) {
