@@ -54,7 +54,7 @@ def save_env(file, data)
   File.open(file, 'w') { |file| file.truncate(0) }
   return data.each { |key, value|
     File.open(file, 'a') { |file|
-      file.puts "#{key}=#{Shellwords.shellescape(value)}" unless key.empty? || value.empty?
+      file.puts "#{key}=#{value}" unless key.empty? || value.empty?
     }
   }
 end
@@ -120,6 +120,7 @@ def main(args)
 
     data['vars'].each { |var| file_content.deep_merge!(var) } unless data['vars'].empty?
     secrets = vault_get("#{team}/#{project}/#{env}") if data['secrets']
+    secrets.each { |k, v| secrets[k] = Shellwords.shellescape(v) }
     file_content.deep_merge!(secrets)
 
     save_env(ENV_FILE, file_content)
