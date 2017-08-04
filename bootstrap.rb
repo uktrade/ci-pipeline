@@ -53,7 +53,7 @@ def save_env(file, data)
   File.open(file, 'w') { |file| file.truncate(0) }
   return data.each { |key, value|
     File.open(file, 'a') { |file|
-      file.puts "#{key}=#{value}" unless key.empty? || value.empty?
+      file.puts "#{key.to_s}=#{value.to_s}" unless key.to_s.empty? || value.to_s.empty?
     }
   }
 end
