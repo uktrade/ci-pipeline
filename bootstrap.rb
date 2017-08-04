@@ -120,7 +120,7 @@ def main(args)
 
     data['vars'].each { |var| file_content.deep_merge!(var) } unless data['vars'].empty?
     secrets = vault_get("#{team}/#{project}/#{env}") if data['secrets']
-    secrets.each { |k, v| secrets[k] = Shellwords.shellescape(v) }
+    # secrets.each { |k, v| secrets[k] = Shellwords.shellescape(v) }
     file_content.deep_merge!(secrets)
 
     save_env(ENV_FILE, file_content)
