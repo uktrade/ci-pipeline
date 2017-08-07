@@ -68,8 +68,7 @@ def main(args)
     Dir.foreach(CONFIG_DIR) do |file|
       if MIME::Types.type_for(file).to_s =~ /(text|application)\/(x-)?yaml/
         puts "\t+ #{CONFIG_DIR}/#{file}"
-        file_data = YAML.load_file("#{CONFIG_DIR}/#{file}")
-        config_files += ["#{CONFIG_DIR}/#{file}"] if validate(JSON_SCHEMA, JSON.dump(file_data))
+        config_files += ["#{CONFIG_DIR}/#{file}"] if validate(JSON_SCHEMA, JSON.dump(YAML.load_file("#{CONFIG_DIR}/#{file}")))
       end
     end
 
