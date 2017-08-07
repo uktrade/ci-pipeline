@@ -7,7 +7,7 @@ RUN echo "force-unsafe-io" > /etc/dpkg/dpkg.cfg.d/02apt-speedup && \
 
 RUN curl -sL https://deb.nodesource.com/setup_8.x | bash - && \
     apt-get update && \
-    apt-get install -y python3.5 python-pip ruby rubygems bundler ruby-full nodejs && \
+    apt-get install -y python3.5 python-pip ruby rubygems bundler ruby-full nodejs make && \
     rm -rf /var/lib/apt/lists/*
 
 RUN curl -Lfs -o - https://github.com/openshift/origin/releases/download/v1.5.1/openshift-origin-client-tools-v1.5.1-7b451fc-linux-64bit.tar.gz | tar -xzf - -C /usr/local/bin --strip 1 --wildcards */oc && \
