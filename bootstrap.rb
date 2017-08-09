@@ -107,7 +107,7 @@ def main(args)
     run = String.new
     data['run'].each_with_index { |cmd, index|
       (index + 1) < data['run'].length ? run += "#{cmd} && " : run += cmd
-    }
+    } unless data['run'].empty?
     file_content = {
       'SCM' => consul_get("#{team}/#{project}/_")['scm'],
       'PAAS_TYPE' => data['type'],
