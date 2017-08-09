@@ -11,11 +11,7 @@ RUN apt-get update && \
     export NVM_DIR="/usr/local/nvm" && . "$NVM_DIR/nvm.sh" && \
     nvm install stable && nvm install lts/* && \
     curl -Lfs https://raw.githubusercontent.com/pyenv/pyenv-installer/master/bin/pyenv-installer | PYENV_ROOT=/usr/local/pyenv bash && \
-    cat > /etc/profile.d/pyenv.sh <<EOF
-    export PATH="/usr/local/pyenv/bin:\$PATH"
-    eval "\$(pyenv init -)"
-    eval "\$(pyenv virtualenv-init -)"
-    EOF && \
+    echo -e 'export PATH="/usr/local/pyenv/bin:$PATH"\neval "$(pyenv init -)"\neval "$(pyenv virtualenv-init -)"' > /etc/profile.d/pyenv.sh && \
     rm -rf /var/lib/apt/lists/*
 
 RUN curl -Lfs https://github.com/openshift/origin/releases/download/v1.5.1/openshift-origin-client-tools-v1.5.1-7b451fc-linux-64bit.tar.gz | tar -xzf - -C /usr/local/bin --strip 1 --wildcards */oc && \
