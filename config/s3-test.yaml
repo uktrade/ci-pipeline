@@ -1,0 +1,15 @@
+---
+name: s3-test
+namespace: shared
+scm: git@github.com:cloudfoundry-samples/cf-sample-app-nodejs.git
+environments:
+  - environment: dev
+    type: s3
+    app: ci-pipeline-s3-test
+    vars:
+      - S3_WEBSITE_REDIRECT: null
+    secrets: true
+    run:
+      - "ls -al ${WORKSPACE}"
+      - "env | sort"
+      - "echo hello\ world"
