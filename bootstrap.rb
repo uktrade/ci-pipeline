@@ -12,7 +12,7 @@ JSON_SCHEMA = "#{ENV['WORKSPACE']}/schema.json"
 CONSUL = ENV['CONSUL']
 VAULT = ENV['VAULT']
 VAULT_TOKEN = ENV['VAULT_TOKEN']
-OPTION_FILE = "#{ENV['WORKSPACE']}/option.json"
+OPTION_FILE = "#{ENV['WORKSPACE']}/.option.json"
 ENV_FILE = "#{ENV['WORKSPACE']}/.env"
 
 def validate(schema, data)
