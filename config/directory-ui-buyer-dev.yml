@@ -1,0 +1,37 @@
+---
+name: directory-ui-buyer
+namespace: directory
+scm: git@github.com:uktrade/directory-ui-buyer.git
+environments:
+  - environment: dev
+    type: gds
+    app: dev-directory/directory-ui-buyer
+    vars:
+      - LOG_LEVEL: debug
+      - FEATURE_EXPORT_OPPORTUNITY_LEAD_GENERATION_ENABLED: true
+      - FAB_TRUSTED_SOURCE_ENROLMENT_LINK=http://buyer.trade.great.dev:8001/register-code/{code}/
+      - SECTOR_LINKS_JSON={"CREATIVE_AND_MEDIA":{"company_one":"https://www.example.com/creative-company-1","company_two":"http://www.example.com/creative-company-2","case_study":"http://www.example.com/creative-case-study"},"HEALTHCARE_AND_MEDICAL":{"company_one":"http://www.example.com/health-company-1","company_two":"http://www.example.com/health-company-1","case_study":"http://www.example.com/health-case-study"},"FOOD_AND_DRINK":{"company_one":"http://www.example.com/food-company-1","company_two":"http://www.example.com/food-company-2","case_study":"http://www.example.com/food-case-study"},"SOFTWARE_AND_COMPUTER_SERVICES":{"company_one":"http://www.example.com/tech-company-1","company_two":"http://www.example.com/tech-company-2","case_study":"http://www.example.com/tech-case-study"},"GLOBAL_SPORTS_INFRASTRUCTURE":{"company_one":"https://www.example.com/sports-company-1","company_two":"http://www.example.com/sports-company-2","case_study":"http://www.example.com/sports-case-study"}}
+      - FEATURE_SPORTS_INFRASTRUCTURE_ENABLED=true
+      - PYTHON_VERSION=3.5.3
+      - DISABLED_LANGUAGES_INDUSTRIES_PAGE=ja,fr,zh-hans
+      - LANG=C.UTF-8
+      - API_CLIENT_BASE_URL=http://directory-api-dev.herokuapp.com/
+      - ZENDESK_EMAIL=tools+stage-directory-zendesk@digital.trade.gov.uk
+      - PS1=\[\033[01;34m\]\w\[\033[00m\] \[\033[01;32m\]$ \[\033[00m\]
+      - PYTHON_PIP_VERSION=9.0.1
+      - FEATURE_CONTACT_COMPANY_FORM_ENABLED=true
+      - FEEDBACK_FORM_URL=https://contact-us.export.great.gov.uk/feedback/directory/
+      - FEATURE_NEW_INTERNATIONAL_LANDING_PAGE_ENABLED=true
+      - FEATURE_COMPANY_SEARCH_VIEW_ENABLED=true
+      - SESSION_COOKIE_SECURE=false
+      - UTM_COOKIE_DOMAIN=.uktrade.io
+      - FEATURE_PUBLIC_PROFILES_ENABLED=true
+      - ZENDESK_SUBDOMAIN=staging-uktrade
+      - FEATURE_ADVANCED_MANUFACTURING_ENABLED=true
+      - DISABLED_LANGUAGES=fr
+      - PORT=42512
+      - GOOGLE_TAG_MANAGER_ID=GTM-TC46J8K
+      - FEATURE_LANGUAGE_SWITCHER_ENABLED=true
+    secrets: true
+    run:
+      - "true"
