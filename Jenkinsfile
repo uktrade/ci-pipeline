@@ -47,7 +47,8 @@ pipeline {
               [$class: 'ChoiceParameterDefinition', name: 'Team', description: 'Team', choices: options.get_team(options_json)]
             ])
             env.Team = team
-          } else if (!options.validate_team(options_json, env.Team)) {
+          }
+          if (!options.validate_team(options_json, env.Team)) {
             error 'Invalid Team!'
           }
 
@@ -57,7 +58,8 @@ pipeline {
               [$class: 'ChoiceParameterDefinition', name: 'Project', description: 'Project', choices: options.get_project(options_json,team)]
             ])
             env.Project = project
-          } else if (!options.validate_project(options_json, env.Team, env.Project)) {
+          }
+          if (!options.validate_project(options_json, env.Team, env.Project)) {
             error 'Invalid Project!'
           }
 
@@ -67,7 +69,8 @@ pipeline {
               [$class: 'ChoiceParameterDefinition', name: 'Environment', description: 'Environment', choices: options.get_env(options_json, team, project)]
             ])
             env.Environment = environment
-          } else if (!options.validate_env(options_json, env.Team, env.Project, env.Environment)) {
+          }
+          if (!options.validate_env(options_json, env.Team, env.Project, env.Environment)) {
             error 'Invalid Environment!'
           }
 
