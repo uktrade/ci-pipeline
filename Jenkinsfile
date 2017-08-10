@@ -138,7 +138,7 @@ pipeline {
                   export AWS_DEFAULT_REGION=${env.AWS_DEFAULT_REGION}
                   export AWS_ACCESS_KEY_ID=${env.AWS_ACCESS_KEY_ID}
                   export AWS_SECRET_ACCESS_KEY=${env.AWS_SECRET_ACCESS_KEY}
-                  aws s3 sync --sse --acl public-read --delete --exclude '\.*' ${env.WORKSPACE} s3://${env.PAAS_APP}
+                  aws s3 sync --sse --acl public-read --delete --exclude '.*' ${env.WORKSPACE} s3://${env.PAAS_APP}
                   if [ -f ${env.WORKSPACE}/${env.S3_WEBSITE_REDIRECT} ]; then
                     aws s3api put-bucket-website --bucket ${env.PAAS_APP} --website-configuration file://${env.WORKSPACE}/${env.S3_WEBSITE_REDIRECT}
                   fi
