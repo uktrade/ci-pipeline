@@ -41,28 +41,28 @@ pipeline {
       steps {
         script {
           options = load "${env.WORKSPACE}/input.groovy"
-          if (env.Team == null) {
+          if (env.Team?.trim()) {
             team = input(
               id: 'team', message: 'Please choose your team: ', parameters: [
               [$class: 'ChoiceParameterDefinition', name: 'Team', description: 'Team', choices: options.get_team(options_json)]
             ])
             env.Team = team
           }
-          if (env.Project == null) {
+          if (env.Project?.trim()) {
             project = input(
               id: 'project', message: 'Please choose your project: ', parameters: [
               [$class: 'ChoiceParameterDefinition', name: 'Project', description: 'Project', choices: options.get_project(options_json,team)]
             ])
             env.Project = project
           }
-          if (env.Environment == null) {
+          if (env.Environment?.trim()) {
             environment = input(
               id: 'environment', message: 'Please choose your environment: ', parameters: [
               [$class: 'ChoiceParameterDefinition', name: 'Environment', description: 'Environment', choices: options.get_env(options_json, team, project)]
             ])
             env.Environment = environment
           }
-          if (env.Git_Commit == null) {
+          if (env.Git_Commit?.trim()) {
             git_commit = input(
               id: 'git_commit', message: 'Please enter your git branch/tag/commit: ', parameters: [
               [$class: 'StringParameterDefinition', name: 'Git Commit', description: 'GitCommit', defaultValue: 'master']
