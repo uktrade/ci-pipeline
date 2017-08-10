@@ -25,4 +25,4 @@ RUN curl -Lfs https://github.com/openshift/origin/releases/download/v1.5.1/opens
 
 COPY Gemfile* /tmp/
 
-RUN cd /tmp && bundle install
+RUN bundle install --gemfile=/tmp/Gemfile
