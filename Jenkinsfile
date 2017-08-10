@@ -47,21 +47,30 @@ pipeline {
               [$class: 'ChoiceParameterDefinition', name: 'Team', description: 'Team', choices: options.get_team(options_json)]
             ])
             env.Team = team
+          } else if (!options.validate_team(options_json, env.Team)) {
+            error 'Invalid Team!'
           }
+
           if (!env.Project) {
             project = input(
               id: 'project', message: 'Please choose your project: ', parameters: [
               [$class: 'ChoiceParameterDefinition', name: 'Project', description: 'Project', choices: options.get_project(options_json,team)]
             ])
             env.Project = project
+          } else if (!options.validate_project(options_json, env.Team, env.Project)) {
+            error 'Invalid Project!'
           }
+
           if (!env.Environment) {
             environment = input(
               id: 'environment', message: 'Please choose your environment: ', parameters: [
               [$class: 'ChoiceParameterDefinition', name: 'Environment', description: 'Environment', choices: options.get_env(options_json, team, project)]
             ])
             env.Environment = environment
+          } else if (!options.validate_env(options_json, env.Team, env.Project, env.Environment)) {
+            error 'Invalid Environment!'
           }
+
           if (!env.Git_Commit) {
             git_commit = input(
               id: 'git_commit', message: 'Please enter your git branch/tag/commit: ', parameters: [

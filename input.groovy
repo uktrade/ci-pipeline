@@ -22,4 +22,28 @@ def get_env(json, team, project) {
   return envs.join('\n')
 }
 
+def validate_team(json, team) {
+  def namespace = []
+  json.each { k,v ->
+    namespace += k
+  }
+  return namespace.contains(team)
+}
+
+def validate_project(json, team, project) {
+  def projects = []
+  json[team].each { k,v ->
+    projects += k
+  }
+  return projects.contains(project)
+}
+
+def validate_env(json, team, project, env) {
+  envs = []
+  json[team][project].each { node ->
+    envs += node
+  }
+  return envs.contains(env)
+}
+
 return this;
