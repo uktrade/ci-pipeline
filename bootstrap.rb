@@ -117,7 +117,7 @@ def main(args)
     }
     data['vars'].each { |var| file_content.deep_merge!(var) } unless data['vars'].empty?
     secrets = vault_get("#{team}/#{project}/#{env}") if data['secrets']
-    file_content.deep_merge!(secrets)
+    file_content.deep_merge!(secrets) unless secrets.empty?
 
     save_env(ENV_FILE, file_content)
   end
