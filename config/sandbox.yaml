@@ -13,11 +13,13 @@ environments:
       - "ls -al ${WORKSPACE}"
       - "env | sort"
       - "echo hello\ world"
-  - environment: staging
-    type: gds
-    app: sandbox/cf-nodejs
+  - environment: s3
+    type: s3
+    app: ci-pipeline-s3-test
     vars:
-      - FOO: bar
-    secrets: false
+      - S3_WEBSITE_SRC: public
+    secrets: true
     run:
-      - "exit -1"
+      - "ls -al ${WORKSPACE}"
+      - "env | sort"
+      - "echo hello\ world"
