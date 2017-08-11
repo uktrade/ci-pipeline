@@ -1,0 +1,32 @@
+---
+name: directory-ui-supplier
+namespace: directory
+scm: git@github.com:uktrade/directory-ui-supplier.git
+environments:
+  - environment: dev
+    type: gds
+    app: dev-directory/directory-ui-supplier
+    vars:
+      - API_CLIENT_BASE_URL: 'http://directory-api-dev.herokuapp.com/'
+      - DISABLED_LANGUAGES: fr
+      - DISABLED_LANGUAGES_INDUSTRIES_PAGE: 'ja,fr,zh-hans'
+      - FAB_TRUSTED_SOURCE_ENROLMENT_LINK: 'http://buyer.trade.great.dev:8001/register-code/{code}/'
+      - FEATURE_ADVANCED_MANUFACTURING_ENABLED: true
+      - FEATURE_COMPANY_SEARCH_VIEW_ENABLED: true
+      - FEATURE_CONTACT_COMPANY_FORM_ENABLED: true
+      - FEATURE_EXPORT_OPPORTUNITY_LEAD_GENERATION_ENABLED: true
+      - FEATURE_LANGUAGE_SWITCHER_ENABLED: true
+      - FEATURE_MORE_INDUSTRIES_BUTTON_ENABLED: true
+      - FEATURE_NEW_INTERNATIONAL_LANDING_PAGE_ENABLED: true
+      - FEATURE_PUBLIC_PROFILES_ENABLED: true
+      - FEATURE_SPORTS_INFRASTRUCTURE_ENABLED: true
+      - FEATURE_UNSUBSCRIBE_VIEW_ENABLED: true
+      - FEEDBACK_FORM_URL: 'https://contact-us.export.great.gov.uk/feedback/directory/'
+      - SECTOR_LINKS_JSON: '{"CREATIVE_AND_MEDIA":{"company_one":"https://www.example.com/creative-company-1","company_two":"http://www.example.com/creative-company-2","case_study":"http://www.example.com/creative-case-study"},"HEALTHCARE_AND_MEDICAL":{"company_one":"http://www.example.com/health-company-1","company_two":"http://www.example.com/health-company-1","case_study":"http://www.example.com/health-case-study"},"FOOD_AND_DRINK":{"company_one":"http://www.example.com/food-company-1","company_two":"http://www.example.com/food-company-2","case_study":"http://www.example.com/food-case-study"},"SOFTWARE_AND_COMPUTER_SERVICES":{"company_one":"http://www.example.com/tech-company-1","company_two":"http://www.example.com/tech-company-2","case_study":"http://www.example.com/tech-case-study"},"GLOBAL_SPORTS_INFRASTRUCTURE":{"company_one":"https://www.example.com/sports-company-1","company_two":"http://www.example.com/sports-company-2","case_study":"http://www.example.com/sports-case-study"}}'
+      - SESSION_COOKIE_SECURE: false
+      - UTM_COOKIE_DOMAIN: '.uktrade.io'
+      - ZENDESK_EMAIL: 'tools+stage-directory-zendesk@digital.trade.gov.uk'
+      - ZENDESK_SUBDOMAIN: staging-uktrade
+    secrets: true
+    run:
+      - "true"
