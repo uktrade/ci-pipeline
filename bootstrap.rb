@@ -38,11 +38,13 @@ def consul_get(path)
 end
 
 def vault_get(path)
-  resp = RestClient.get(
-    "#{VAULT}/#{path}",
-    headers = {'X-Vault-Token': VAULT_TOKEN}
-  )
-  return JSON.parse(resp)['data']
+  begin
+    resp = RestClient.get("#{VAULT}/#{path}", headers = {'X-Vault-Token': VAULT_TOKEN})
+  rescue RestClient::ExceptionWithResponse => e
+    return e.http_code
+  else
+    return JSON.parse(resp)['data']
+  end
 end
 
 def save_option(data)
