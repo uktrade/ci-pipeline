@@ -58,7 +58,7 @@ pipeline {
             ])
             env.Image = image
           } else if (!options.validate_team(options_json, env.Image)) {
-            env.Image = env.Image = image
+            env.Image = 'ukti/deployer:latest'
           }
 
           if (!env.Project) {
