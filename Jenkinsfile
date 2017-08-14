@@ -28,7 +28,7 @@ pipeline {
       steps {
         script {
           deployer.inside {
-            git url: 'git@github.com:uktrade/ci-pipeline.git', credentialsId: env.SCM_CREDENTIAL
+            git url: 'git@github.com:uktrade/ci-pipeline.git', branch: env.BRANCH_NAME, credentialsId: env.SCM_CREDENTIAL
             sh 'bundle check || bundle install'
             sh "${env.WORKSPACE}/bootstrap.rb"
             options_json = readJSON file: "${env.WORKSPACE}/.option.json"
@@ -86,7 +86,7 @@ pipeline {
       steps {
         script {
           deployer.inside {
-            git url: 'git@github.com:uktrade/ci-pipeline.git', credentialsId: env.SCM_CREDENTIAL
+            git url: 'git@github.com:uktrade/ci-pipeline.git', branch: env.BRANCH_NAME, credentialsId: env.SCM_CREDENTIAL
             sh 'bundle check || bundle install'
             withCredentials([string(credentialsId: env.VAULT_TOKEN_ID, variable: 'TOKEN')]) {
               env.VAULT_TOKEN = TOKEN
