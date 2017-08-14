@@ -10,4 +10,4 @@ environments:
       - API_CLIENT_BASE_URL: 'http://directory-api-dev.herokuapp.com/'
     secrets: true
     run:
-      - "./install_build_application.bash"
+      - "dev-directory/directory-ui-supplier/install_build_application.bash"
