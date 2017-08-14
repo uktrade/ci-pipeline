@@ -18,7 +18,7 @@ pipeline {
       steps {
         script {
           validateDeclarativePipeline("${env.WORKSPACE}/Jenkinsfile")
-          deployer = docker.image('ukti/deployer:latest')
+          deployer = docker.image(env.Image)
           deployer.pull()
         }
       }
@@ -49,6 +49,16 @@ pipeline {
             env.Team = team
           } else if (!options.validate_team(options_json, env.Team)) {
             error 'Invalid Team!'
+          }
+
+          if (!env.Image) {
+            team = input(
+              id: 'image', message: 'Please choose your image: ', parameters: [
+              [$class: 'ChoiceParameterDefinition', name: 'Image', description: 'Image', choices: options.get_image(options_json)]
+            ])
+            env.Image = image
+          } else if (!options.validate_team(options_json, env.Image)) {
+            env.Image = env.Image = image
           }
 
           if (!env.Project) {
