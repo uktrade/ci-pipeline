@@ -18,9 +18,8 @@ pipeline {
       steps {
         script {
           validateDeclarativePipeline("${env.WORKSPACE}/Jenkinsfile")
-          sh "git branch --remotes --contains `git rev-parse HEAD` | grep -v HEAD > ${env.WORKSPACE}/.git_branch"
-          branch = readFile "${env.WORKSPACE}/.git_branch"
-          env.BRANCH_NAME = branch.replaceAll(/\s+origin\//, "")
+          sh "git rev-parse HEAD > ${env.WORKSPACE}/.git_branch"
+          env.BRANCH_NAME = readFile "${env.WORKSPACE}/.git_branch"
           deployer = docker.image('ukti/deployer:latest')
           deployer.pull()
         }
