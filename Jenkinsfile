@@ -18,21 +18,22 @@ pipeline {
       steps {
         script {
           validateDeclarativePipeline("${env.WORKSPACE}/Jenkinsfile")
-          try{
-            if (!env.Image) {
-            team = input(
-              id: 'image', message: 'Please choose your image: ', parameters: [
-              [$class: 'ChoiceParameterDefinition', name: 'Image', description: 'Image', choices: options.get_image(options_json)]
-            ])
-            env.Image = image
-          } else if (!options.validate_team(options_json, env.Image)) {
-            env.Image = 'ukti/deployer:latest'
-          }
-          }catch(Exception ex){
-          env.Image = 'ukti/deployer:latest'
-          }
+        //  try{
+      //      if (!env.Image) {
+    //        team = input(
+            //  id: 'image', message: 'Please choose your image: ', parameters: [
+           //   [$class: 'ChoiceParameterDefinition', name: 'Image', description: 'Image', choices: options.get_image(options_json)]
+          //  ])
+         //   env.Image = image
+         // } else if (!options.validate_team(options_json, env.Image)) {
+        //    env.Image = 'ukti/deployer:latest'
+       //   }
+     //     }catch(Exception ex){
+    //      env.Image = 'ukti/deployer:latest'
+  //        }
           
-          deployer = docker.image(env.Image)
+          deployer = docker.image('ukti/deployer:latest')
+//          deployer = docker.image(env.Image)
           deployer.pull()
         }
       }
