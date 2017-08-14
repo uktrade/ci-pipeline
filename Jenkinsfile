@@ -28,7 +28,7 @@ pipeline {
           } else if (!options.validate_team(options_json, env.Image)) {
             env.Image = 'ukti/deployer:latest'
           }
-          }catch{
+          }catch(Exception ex){
           env.Image = 'ukti/deployer:latest'
           }
           
