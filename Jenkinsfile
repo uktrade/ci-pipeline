@@ -18,7 +18,7 @@ pipeline {
       steps {
         script {
           validateDeclarativePipeline("${env.WORKSPACE}/Jenkinsfile")
-          deployer = docker.image('ukti/docker-ukpaas-deploy-ubuntu:directory-ui-supplier')
+          deployer = docker.image('ukti/deployer:latest')
           deployer.pull()
         }
       }
