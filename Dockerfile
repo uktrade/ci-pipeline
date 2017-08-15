@@ -9,6 +9,7 @@ RUN echo "force-unsafe-io" > /etc/dpkg/dpkg.cfg.d/02apt-speedup && \
 
 RUN apt-get update && \
     apt-get install -y build-essential python3 python3-pip ruby-full rubygems bundler gettext && \
+    pip3 install --upgrade virtualenv pyenv-virtualenv && \
     curl -Lfs https://raw.githubusercontent.com/creationix/nvm/$NVM_VER/install.sh | NVM_DIR=/usr/local/nvm bash && \
     curl -Lfs https://raw.githubusercontent.com/pyenv/pyenv-installer/master/bin/pyenv-installer | PYENV_ROOT=/usr/local/pyenv bash && \
     rm -rf /var/lib/apt/lists/*
