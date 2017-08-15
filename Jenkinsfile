@@ -136,6 +136,7 @@ pipeline {
               echo "Detected Python version ${node_ver}"
               ansiColor('xterm') {
                 sh """
+                  bash -l -c 'nvm ls-remote --lts'
                   bash -l -c 'nvm install ${node_ver}'
                 """
               }
@@ -145,6 +146,7 @@ pipeline {
               echo "Detected Nodejs version ${node_ver}"
               ansiColor('xterm') {
                 sh """
+                  bash -l -c 'pyenv help'
                   bash -l -c 'pyenv install ${py_ver}'
                 """
               }
