@@ -1,7 +1,7 @@
 ---
 name: sandbox
 namespace: shared
-scm: git@github.com:cloudfoundry-samples/cf-sample-app-nodejs.git
+scm: git@github.com:uktrade/cf-sample-app-nodejs.git
 environments:
   - environment: dev
     type: gds

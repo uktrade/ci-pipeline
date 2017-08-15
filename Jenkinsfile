@@ -125,8 +125,26 @@ pipeline {
             } else {
               git url: env.SCM, branch: env.Git_Commit, credentialsId: env.SCM_CREDENTIAL
             }
+
+            node_ver_exist = fileExists "${env.WORKSPACE}/.nvmrc"
+            py_ver_exist = fileExists "${env.WORKSPACE}/.python-version"
+            if (node_ver_exist) {
+              node_ver = readFile "${env.WORKSPACE}/.nvmrc"
+              echo "Detected Python version ${node_ver}"
+              ansiColor('xterm') {
+                sh "bash -l -c 'nvm install ${node_ver}"
+              }
+            }
+            if (py_ver_exist) {
+              py_ver = readFile "${env.WORKSPACE}/.python-version"
+              echo "Detected Nodejs version ${node_ver}"
+              ansiColor('xterm') {
+                sh "bash -l -c 'pyenv install ${py_ver}'"
+              }
+            }
+
             ansiColor('xterm') {
-              sh "bash -c \"${env.PAAS_RUN}\""
+              sh "bash -l -c \"${env.PAAS_RUN}\""
             }
 
             switch(env.PAAS_TYPE) {
