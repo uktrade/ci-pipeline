@@ -27,11 +27,10 @@ COPY Gemfile* /tmp/
 RUN bundle install --gemfile=/tmp/Gemfile
 
 USER ubuntu:ubuntu
+ENV HOME /home/ubuntu
 
 RUN curl -Lfs https://raw.githubusercontent.com/pyenv/pyenv-installer/master/bin/pyenv-installer | bash && \
     curl -Lfs https://raw.githubusercontent.com/creationix/nvm/$NVM_VER/install.sh | bash && \
-    chmod +x "$HOME/.nvm/nvm.sh" && \
-    echo 'export PATH="$HOME/.pyenv/bin:$PATH"' >> ~/.bashrc && \
-    echo 'eval "$(pyenv init -)"\neval "$(pyenv virtualenv-init -)"' >> ~/.bashrc
-
-ENV PATH "$HOME/.pyenv/bin:$PATH"
+    echo 'export PATH="$HOME/.pyenv/bin:$PATH"' >> ~/.profile && \
+    echo 'eval "$(pyenv init -)"\neval "$(pyenv virtualenv-init -)"' >> ~/.profile && \
+    echo 'export NVM_DIR="$HOME/.nvm"\n[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"' >> ~/.profile
