@@ -34,7 +34,7 @@ pipeline {
       steps {
         script {
           deployer.inside {
-            checkout([$class: 'GitSCM', url: env.GIT_URL, branches: env.GIT_BRANCH, recursiveSubmodules: true, credentialsId: env.SCM_CREDENTIAL])
+            checkout([$class: 'GitSCM', url: env.GIT_URL, branches: [name: env.GIT_BRANCH], recursiveSubmodules: true, credentialsId: env.SCM_CREDENTIAL])
             sh 'bundle check || bundle install'
             sh "${env.WORKSPACE}/bootstrap.rb"
             options_json = readJSON file: "${env.WORKSPACE}/.option.json"
@@ -92,7 +92,7 @@ pipeline {
       steps {
         script {
           deployer.inside {
-            checkout([$class: 'GitSCM', url: env.GIT_URL, branches: env.GIT_BRANCH, recursiveSubmodules: true, credentialsId: env.SCM_CREDENTIAL])
+            checkout([$class: 'GitSCM', url: env.GIT_URL, branches: [name: env.GIT_BRANCH], recursiveSubmodules: true, credentialsId: env.SCM_CREDENTIAL])
             sh 'bundle check || bundle install'
             withCredentials([string(credentialsId: env.VAULT_TOKEN_ID, variable: 'TOKEN')]) {
               env.VAULT_TOKEN = TOKEN
@@ -120,7 +120,7 @@ pipeline {
         script {
           env.HOME = '/tmp'
           deployer.inside {
-            checkout([$class: 'GitSCM', url: env.SCM, branches: env.Git_Commit, recursiveSubmodules: true, credentialsId: env.SCM_CREDENTIAL])
+            checkout([$class: 'GitSCM', url: env.SCM, branches: [name: env.Git_Commit], recursiveSubmodules: true, credentialsId: env.SCM_CREDENTIAL])
             ansiColor('xterm') {
               sh "bash -c \"${env.PAAS_RUN}\""
             }
