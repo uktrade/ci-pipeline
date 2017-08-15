@@ -26,7 +26,7 @@ pipeline {
           env.GIT_URL = readFile "${env.WORKSPACE}/.git_url"
           env.GIT_BRANCH = readFile "${env.WORKSPACE}/.git_branch"
           branch = readFile "${env.WORKSPACE}/.git_branch_name"
-          env.BRANCH_NAME = branch.replaceAll(/\s+origin\//, "")
+          env.BRANCH_NAME = branch.replaceAll(/\s+origin\//, "").trim()
           deployer = docker.image("ukti/deployer:${env.BRANCH_NAME}")
           deployer.pull()
         }
