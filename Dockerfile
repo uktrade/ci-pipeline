@@ -26,3 +26,8 @@ RUN curl -Lfs https://github.com/openshift/origin/releases/download/v1.5.1/opens
 COPY Gemfile* /tmp/
 
 RUN bundle install --gemfile=/tmp/Gemfile
+
+RUN groupadd -g 1000 ubuntu && \
+    useradd -u 1000 -g 1000 -m ubuntu
+
+USER ubuntu:ubuntu
