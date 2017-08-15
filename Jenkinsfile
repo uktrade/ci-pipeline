@@ -20,7 +20,7 @@ pipeline {
           validateDeclarativePipeline("${env.WORKSPACE}/Jenkinsfile")
           sh """
             git rev-parse HEAD > ${env.WORKSPACE}/.git_branch
-            git remote get-url origin > ${env.WORKSPACE}/.
+            git remote get-url origin > ${env.WORKSPACE}/.git_url
             git branch --remotes --contains `git rev-parse HEAD` | grep -v HEAD > ${env.WORKSPACE}/.git_branch_name
           """
           env.GIT_URL = readFile "${env.WORKSPACE}/.git_url"
