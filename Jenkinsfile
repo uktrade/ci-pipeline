@@ -19,12 +19,11 @@ pipeline {
         script {
           validateDeclarativePipeline("${env.WORKSPACE}/Jenkinsfile")
           sh """
-            git branch --remotes --contains `git rev-parse HEAD` | grep -v HEAD > ${env.WORKSPACE}/.git_branch
+            git rev-parse HEAD > ${env.WORKSPACE}/.git_branch
             git remote get-url origin > ${env.WORKSPACE}/.git_url
           """
           env.GIT_URL = readFile "${env.WORKSPACE}/.git_url"
-          branch = readFile "${env.WORKSPACE}/.git_branch"
-          env.BRANCH_NAME = branch.replaceAll(/\s+origin\//, "")
+          env.GIT_BRANCH = readFile "${env.WORKSPACE}/.git_branch"
           deployer = docker.image('ukti/deployer:latest')
           deployer.pull()
         }
@@ -35,7 +34,7 @@ pipeline {
       steps {
         script {
           deployer.inside {
-            git url: env.GIT_URL, branch: env.BRANCH_NAME, credentialsId: env.SCM_CREDENTIAL
+            checkout([$class: 'GitSCM', url: env.GIT_URL, branches: [[name: env.GIT_BRANCH]], recursiveSubmodules: true, credentialsId: env.SCM_CREDENTIAL])
             sh 'bundle check || bundle install'
             sh "${env.WORKSPACE}/bootstrap.rb"
             options_json = readJSON file: "${env.WORKSPACE}/.option.json"
@@ -93,7 +92,7 @@ pipeline {
       steps {
         script {
           deployer.inside {
-            git url: env.GIT_URL, branch: env.BRANCH_NAME, credentialsId: env.SCM_CREDENTIAL
+            checkout([$class: 'GitSCM', url: env.GIT_URL, branches: [[name: env.GIT_BRANCH]], recursiveSubmodules: true, credentialsId: env.SCM_CREDENTIAL])
             sh 'bundle check || bundle install'
             withCredentials([string(credentialsId: env.VAULT_TOKEN_ID, variable: 'TOKEN')]) {
               env.VAULT_TOKEN = TOKEN
@@ -121,7 +120,11 @@ pipeline {
         script {
           env.HOME = '/tmp'
           deployer.inside {
-            git url: env.SCM, branch: env.Git_Commit, credentialsId: env.SCM_CREDENTIAL
+            if (env.Git_Commit =~ /[a-fA-F0-9]{40}/) {
+              checkout([$class: 'GitSCM', url: env.SCM, branches: [[name: env.Git_Commit]], recursiveSubmodules: true, credentialsId: env.SCM_CREDENTIAL])
+            } else {
+              git url: env.SCM, branch: env.Git_Commit, credentialsId: env.SCM_CREDENTIAL
+            }
             ansiColor('xterm') {
               sh "bash -c \"${env.PAAS_RUN}\""
             }
