@@ -11,7 +11,6 @@ RUN apt-get update && \
     export NVM_DIR="/usr/local/nvm" && . "$NVM_DIR/nvm.sh" && \
     nvm install stable && nvm install lts/* && \
     curl -Lfs https://raw.githubusercontent.com/pyenv/pyenv-installer/master/bin/pyenv-installer | PYENV_ROOT=/usr/local/pyenv bash && \
-    echo -e 'export PATH="/usr/local/pyenv/bin:$PATH"\neval "$(pyenv init -)"\neval "$(pyenv virtualenv-init -)"' > /etc/profile.d/pyenv.sh && \
     rm -rf /var/lib/apt/lists/*
 
 RUN curl -Lfs https://github.com/openshift/origin/releases/download/v1.5.1/openshift-origin-client-tools-v1.5.1-7b451fc-linux-64bit.tar.gz | tar -xzf - -C /usr/local/bin --strip 1 --wildcards */oc && \
@@ -28,6 +27,8 @@ COPY Gemfile* /tmp/
 RUN bundle install --gemfile=/tmp/Gemfile
 
 RUN groupadd -g 1000 ubuntu && \
-    useradd -u 1000 -g 1000 -m ubuntu
+    useradd -u 1000 -g 1000 -m ubuntu && \
+    echo 'export PATH="/usr/local/pyenv/bin:$PATH"\neval "$(pyenv init -)"\neval "$(pyenv virtualenv-init -)"' >> /home/ubuntu/.bashrc && \
+    echo 'export NVM_DIR="/usr/local/nvm"\n[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"' >> /home/ubuntu/.bashrc
 
 USER ubuntu:ubuntu
