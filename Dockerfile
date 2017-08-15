@@ -1,13 +1,15 @@
 FROM ubuntu:16.04
 
+ENV NVM_VER v0.33.2
+
 RUN echo "force-unsafe-io" > /etc/dpkg/dpkg.cfg.d/02apt-speedup && \
     apt-get update && \
     apt-get install -y curl wget git apt-transport-https ca-certificates software-properties-common && \
     rm -rf /var/lib/apt/lists/*
 
 RUN apt-get update && \
-    apt-get install -y build-essential python3.5 python3-pip ruby-full rubygems bundler gettext && \
-    curl -Lfs https://raw.githubusercontent.com/creationix/nvm/v0.33.2/install.sh | NVM_DIR=/usr/local/nvm bash && \
+    apt-get install -y build-essential python3 python3-pip ruby-full rubygems bundler gettext && \
+    curl -Lfs https://raw.githubusercontent.com/creationix/nvm/$NVM_VER/install.sh | NVM_DIR=/usr/local/nvm bash && \
     curl -Lfs https://raw.githubusercontent.com/pyenv/pyenv-installer/master/bin/pyenv-installer | PYENV_ROOT=/usr/local/pyenv bash && \
     rm -rf /var/lib/apt/lists/*
 
