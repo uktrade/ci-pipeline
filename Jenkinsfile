@@ -132,14 +132,14 @@ pipeline {
             py_ver_exist = fileExists "${env.WORKSPACE}/.python-version"
             if (node_ver_exist) {
               node_ver = readFile "${env.WORKSPACE}/.nvmrc"
-              echo "Detected Python version ${node_ver}"
+              echo "Detected Nodejs version ${node_ver}"
               ansiColor('xterm') {
                 sh "bash -l -c 'nvm install ${node_ver}'"
               }
             }
             if (py_ver_exist) {
               py_ver = readFile "${env.WORKSPACE}/.python-version"
-              echo "Detected Nodejs version ${node_ver}"
+              echo "Detected Python version ${py_ver}"
               ansiColor('xterm') {
                 sh "bash -l -c 'pyenv install ${py_ver}'"
               }
