@@ -30,6 +30,7 @@ USER ubuntu:ubuntu
 
 RUN curl -Lfs https://raw.githubusercontent.com/pyenv/pyenv-installer/master/bin/pyenv-installer | bash && \
     curl -Lfs https://raw.githubusercontent.com/creationix/nvm/$NVM_VER/install.sh | bash && \
+    chmod +x "$HOME/.nvm/nvm.sh" && \
     echo 'export PATH="$HOME/.pyenv/bin:$PATH"' >> ~/.bashrc && \
     echo 'eval "$(pyenv init -)"\neval "$(pyenv virtualenv-init -)"' >> ~/.bashrc
 
