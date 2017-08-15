@@ -6,7 +6,7 @@ RUN echo "force-unsafe-io" > /etc/dpkg/dpkg.cfg.d/02apt-speedup && \
     rm -rf /var/lib/apt/lists/*
 
 RUN apt-get update && \
-    apt-get install -y build-essential python3.5 python-pip ruby rubygems bundler ruby-full gettext && \
+    apt-get install -y build-essential python3.5 python-pip python3-pip ruby rubygems bundler ruby-full gettext && \
     curl -Lfs https://raw.githubusercontent.com/creationix/nvm/v0.33.2/install.sh | NVM_DIR=/usr/local/nvm bash && \
     export NVM_DIR="/usr/local/nvm" && . "$NVM_DIR/nvm.sh" && \
     nvm install stable && nvm install lts/* && \
