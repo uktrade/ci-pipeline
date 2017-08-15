@@ -2,6 +2,9 @@ FROM ubuntu:16.04
 
 ENV NVM_VER v0.33.2
 
+RUN groupadd -g 1000 ubuntu && \
+    useradd -u 1000 -g 1000 -m -s /bin/bash ubuntu
+
 RUN echo "force-unsafe-io" > /etc/dpkg/dpkg.cfg.d/02apt-speedup && \
     apt-get update && \
     apt-get install -y curl wget git apt-transport-https ca-certificates software-properties-common && \
@@ -23,13 +26,11 @@ RUN curl -Lfs https://github.com/openshift/origin/releases/download/v1.5.1/opens
 COPY Gemfile* /tmp/
 RUN bundle install --gemfile=/tmp/Gemfile
 
-RUN groupadd -g 1000 ubuntu && \
-    useradd -u 1000 -g 1000 -m -s /bin/bash ubuntu
-
 USER ubuntu:ubuntu
 
 RUN curl -Lfs https://raw.githubusercontent.com/pyenv/pyenv-installer/master/bin/pyenv-installer | bash && \
-    curl -Lfs https://raw.githubusercontent.com/creationix/nvm/$NVM_VER/install.sh | bash
+    curl -Lfs https://raw.githubusercontent.com/creationix/nvm/$NVM_VER/install.sh | bash && \
+    echo 'export PATH="$HOME/.pyenv/bin:$PATH"' >> ~/.bashrc && \
+    echo 'eval "$(pyenv init -)"\neval "$(pyenv virtualenv-init -)"' >> ~/.bashrc
 
-RUN echo 'export PATH="$HOME/.pyenv/bin:$PATH"\neval "$(pyenv init -)"\neval "$(pyenv virtualenv-init -)"' >> ~/.bashrc && \
-    echo 'export NVM_DIR="$HOME/.nvm"\n[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"' >> ~/.bashrc
+ENV PATH "$HOME/.pyenv/bin:$PATH"
