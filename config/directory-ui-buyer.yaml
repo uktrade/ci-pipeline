@@ -1,0 +1,13 @@
+---
+name: directory-ui-buyer
+namespace: directory
+scm: git@github.com:uktrade/directory-ui-buyer.git
+environments:
+  - environment: dev
+    type: gds
+    app: dev-directory/directory-ui-buyer
+    vars:
+      - API_CLIENT_BASE_URL: 'http://directory-ui-buyer-dev.herokuapp.com/'
+    secrets: true
+    run:
+      - "true"
