@@ -120,7 +120,11 @@ pipeline {
         script {
           env.HOME = '/tmp'
           deployer.inside {
-            checkout([$class: 'GitSCM', url: env.SCM, branches: [[name: env.Git_Commit]], recursiveSubmodules: true, credentialsId: env.SCM_CREDENTIAL])
+            if (env.Git_Commit =~ /[a-fA-F0-9]{40}/) {
+              checkout([$class: 'GitSCM', url: env.SCM, branches: [[name: env.Git_Commit]], recursiveSubmodules: true, credentialsId: env.SCM_CREDENTIAL])
+            } else {
+              git url: env.SCM, branch: env.Git_Commit, credentialsId: env.SCM_CREDENTIAL
+            }
             ansiColor('xterm') {
               sh "bash -c \"${env.PAAS_RUN}\""
             }
