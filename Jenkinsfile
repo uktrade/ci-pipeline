@@ -18,7 +18,11 @@ pipeline {
       steps {
         script {
           validateDeclarativePipeline("${env.WORKSPACE}/Jenkinsfile")
-          sh "git branch --remotes --contains `git rev-parse HEAD` | grep -v HEAD > ${env.WORKSPACE}/.git_branch"
+          sh """
+            git branch --remotes --contains `git rev-parse HEAD` | grep -v HEAD > ${env.WORKSPACE}/.git_branch
+            git remote get-url origin > ${env.WORKSPACE}/.git_url
+          """
+          env.GIT_URL = readFile "${env.WORKSPACE}/.git_url"
           branch = readFile "${env.WORKSPACE}/.git_branch"
           env.BRANCH_NAME = branch.replaceAll(/\s+origin\//, "")
           deployer = docker.image('ukti/deployer:latest')
@@ -31,7 +35,7 @@ pipeline {
       steps {
         script {
           deployer.inside {
-            git url: 'git@github.com:uktrade/ci-pipeline.git', branch: env.BRANCH_NAME, credentialsId: env.SCM_CREDENTIAL
+            git url: env.GIT_URL, branch: env.BRANCH_NAME, credentialsId: env.SCM_CREDENTIAL
             sh 'bundle check || bundle install'
             sh "${env.WORKSPACE}/bootstrap.rb"
             options_json = readJSON file: "${env.WORKSPACE}/.option.json"
@@ -89,7 +93,7 @@ pipeline {
       steps {
         script {
           deployer.inside {
-            git url: 'git@github.com:uktrade/ci-pipeline.git', branch: env.BRANCH_NAME, credentialsId: env.SCM_CREDENTIAL
+            git url: env.GIT_URL, branch: env.BRANCH_NAME, credentialsId: env.SCM_CREDENTIAL
             sh 'bundle check || bundle install'
             withCredentials([string(credentialsId: env.VAULT_TOKEN_ID, variable: 'TOKEN')]) {
               env.VAULT_TOKEN = TOKEN
