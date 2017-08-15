@@ -121,7 +121,6 @@ pipeline {
     stage('deploy') {
       steps {
         script {
-          env.HOME = '/tmp'
           deployer.inside {
             if (env.Git_Commit =~ /[a-fA-F0-9]{40}/) {
               checkout([$class: 'GitSCM', url: env.SCM, branches: [[name: env.Git_Commit]], recursiveSubmodules: true, credentialsId: env.SCM_CREDENTIAL])
@@ -135,20 +134,14 @@ pipeline {
               node_ver = readFile "${env.WORKSPACE}/.nvmrc"
               echo "Detected Python version ${node_ver}"
               ansiColor('xterm') {
-                sh """
-                  bash -l -c 'nvm ls-remote --lts'
-                  bash -l -c 'nvm install ${node_ver}'
-                """
+                sh "bash -l -c 'nvm install ${node_ver}'"
               }
             }
             if (py_ver_exist) {
               py_ver = readFile "${env.WORKSPACE}/.python-version"
               echo "Detected Nodejs version ${node_ver}"
               ansiColor('xterm') {
-                sh """
-                  bash -l -c 'pyenv help'
-                  bash -l -c 'pyenv install ${py_ver}'
-                """
+                sh "bash -l -c 'pyenv install ${py_ver}'"
               }
             }
 
