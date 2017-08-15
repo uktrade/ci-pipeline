@@ -28,8 +28,8 @@ RUN bundle install --gemfile=/tmp/Gemfile
 
 RUN groupadd -g 1000 ubuntu && \
     useradd -u 1000 -g 1000 -m ubuntu && \
-    echo 'export PATH="/usr/local/pyenv/bin:$PATH"\neval "$(pyenv init -)"\neval "$(pyenv virtualenv-init -)"' >> /home/ubuntu/.bashrc && \
+    echo 'eval "$(pyenv init -)"\neval "$(pyenv virtualenv-init -)"' >> /home/ubuntu/.bashrc && \
     echo 'export NVM_DIR="/usr/local/nvm"\n[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"' >> /home/ubuntu/.bashrc && \
-    chown -R ubuntu:ubuntu /usr/local/pyenv /usr/local/nvm
+    chown -R ubuntu:ubuntu /usr/local/nvm
 
 USER ubuntu:ubuntu
