@@ -1,0 +1,13 @@
+---
+name: directory-sso
+namespace: directory
+scm: git@github.com:uktrade/directory-sso.git
+environments:
+  - environment: dev
+    type: gds
+    app: dev-directory/directory-sso
+    vars:
+      - API_CLIENT_BASE_URL: 'http://directory-sso-dev.herokuapp.com/'
+    secrets: true
+    run:
+      - "true"
