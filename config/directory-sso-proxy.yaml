@@ -1,0 +1,13 @@
+---
+name: directory-sso-proxy
+namespace: directory
+scm: git@github.com:uktrade/directory-sso-proxy.git
+environments:
+  - environment: dev
+    type: gds
+    app: dev-directory/directory-sso-proxy
+    vars:
+      - API_CLIENT_BASE_URL: 'http://directory-ui-buyer-dev.herokuapp.com/'
+    secrets: true
+    run:
+      - "true"
