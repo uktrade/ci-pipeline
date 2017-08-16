@@ -24,7 +24,7 @@ environments:
       - "true"
   - environment: staging
     type: gds
-    app: dev-exopps/contact-ukti
+    app: staging-exopps/contact-ukti
     vars:
       - NODE_MODULES_CACHE: false
       - NPM_CONFIG_PRODUCTION: false
@@ -36,6 +36,25 @@ environments:
       - USE_AUTH: false
       - REDIS_HOST: contactukti-redis.gds-dev.uktrade.io
       - REDIS_URL: contactukti-redis.gds-dev.uktrade.io
+      - REDIS_PORT: 26379
+      - ZENDESK_URL: https://staging-uktrade.zendesk.com/api/v2
+      - ZENDESK_TAG: contact-dit-staging
+    secrets: false
+    run:
+      - "true"
+  - environment: production
+    type: gds
+    app: exopps/contact-ukti
+    vars:
+      - NODE_MODULES_CACHE: false
+      - NPM_CONFIG_PRODUCTION: false
+      - EMAIL_HOST: email-smtp.eu-west-1.amazonaws.com
+      - EMAIL_PORT: 587
+      - STUNNEL_ENABLED: true
+      - REDIS_USE_SENTINEL: true
+      - USE_AUTH: false
+      - REDIS_HOST: contactukti-redis.gds.uktrade.io
+      - REDIS_URL: contactukti-redis.gds.uktrade.io
       - REDIS_PORT: 26379
       - ZENDESK_URL: https://staging-uktrade.zendesk.com/api/v2
       - ZENDESK_TAG: contact-dit-staging
