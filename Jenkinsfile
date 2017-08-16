@@ -21,7 +21,7 @@ pipeline {
           sh """
             git rev-parse HEAD > ${env.WORKSPACE}/.git_branch
             git remote get-url origin > ${env.WORKSPACE}/.git_url
-            git branch --remotes --contains `git rev-parse HEAD` | grep -v HEAD > ${env.WORKSPACE}/.git_branch_name
+            git branch --remotes --contains `git rev-parse HEAD` | grep -v HEAD | tail -n 1 > ${env.WORKSPACE}/.git_branch_name
           """
           env.GIT_URL = readFile "${env.WORKSPACE}/.git_url"
           env.GIT_BRANCH = readFile "${env.WORKSPACE}/.git_branch"
