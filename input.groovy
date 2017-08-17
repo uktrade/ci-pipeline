@@ -46,4 +46,8 @@ def validate_env(json, team, project, env) {
   return envs.contains(env)
 }
 
+def bash_escape(string) {
+  return string.replaceAll(/([\!\"\#\$\&\'\(\)\*\;\<\>\?\[\]\^\\\`\{\}\~\ ])/, '\\\\$1')
+}
+
 return this;

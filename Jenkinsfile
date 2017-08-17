@@ -49,34 +49,34 @@ pipeline {
     stage('input') {
       steps {
         script {
-          options = load "${env.WORKSPACE}/input.groovy"
+          input = load "${env.WORKSPACE}/input.groovy"
           if (!env.Team) {
             team = input(
               id: 'team', message: 'Please choose your team: ', parameters: [
-              [$class: 'ChoiceParameterDefinition', name: 'Team', description: 'Team', choices: options.get_team(options_json)]
+              [$class: 'ChoiceParameterDefinition', name: 'Team', description: 'Team', choices: input.get_team(options_json)]
             ])
             env.Team = team
-          } else if (!options.validate_team(options_json, env.Team)) {
+          } else if (!input.validate_team(options_json, env.Team)) {
             error 'Invalid Team!'
           }
 
           if (!env.Project) {
             project = input(
               id: 'project', message: 'Please choose your project: ', parameters: [
-              [$class: 'ChoiceParameterDefinition', name: 'Project', description: 'Project', choices: options.get_project(options_json,team)]
+              [$class: 'ChoiceParameterDefinition', name: 'Project', description: 'Project', choices: input.get_project(options_json,team)]
             ])
             env.Project = project
-          } else if (!options.validate_project(options_json, env.Team, env.Project)) {
+          } else if (!input.validate_project(options_json, env.Team, env.Project)) {
             error 'Invalid Project!'
           }
 
           if (!env.Environment) {
             environment = input(
               id: 'environment', message: 'Please choose your environment: ', parameters: [
-              [$class: 'ChoiceParameterDefinition', name: 'Environment', description: 'Environment', choices: options.get_env(options_json, team, project)]
+              [$class: 'ChoiceParameterDefinition', name: 'Environment', description: 'Environment', choices: input.get_env(options_json, team, project)]
             ])
             env.Environment = environment
-          } else if (!options.validate_env(options_json, env.Team, env.Project, env.Environment)) {
+          } else if (!input.validate_env(options_json, env.Team, env.Project, env.Environment)) {
             error 'Invalid Environment!'
           }
 
@@ -110,9 +110,8 @@ pipeline {
     stage('load') {
       steps {
         script {
-          envars.each {
-            var = it.toString().split("=", 2)
-            env."${var[0]}" = var[1]
+          envars.each { key, value ->
+            env."${key}" = value
           }
         }
       }
@@ -160,10 +159,9 @@ pipeline {
                       ln -snf ${env.WORKSPACE}/.gitignore ${env.WORKSPACE}/.cfignore
                     """
                   }
-                  envars.each {
-                    var = it.toString().split("=", 2)
+                  envars.each { key, value ->
                     ansiColor('xterm') {
-                      sh "cf set-env ${gds_app[1]} ${var[0]} ${var[1]}"
+                      sh "cf set-env ${gds_app[1]} ${input.bash_escape(key)} ${input.bash_escape(value)}"
                     }
                   }
                   ansiColor('xterm') {
