@@ -145,7 +145,7 @@ pipeline {
             }
 
             ansiColor('xterm') {
-              sh "bash -l -c \"${input.bash_escape(env.PAAS_RUN)}\""
+              sh "bash -l -c \"${env.PAAS_RUN}\""
             }
 
             switch(env.PAAS_TYPE) {
@@ -154,8 +154,8 @@ pipeline {
                   gds_app = env.PAAS_APP.split("/")
                   ansiColor('xterm') {
                     sh """
-                      cf login -a ${env.GDS_PAAS} -u ${gds_user} -p ${gds_pass} -s ${gds_app[0]}
-                      cf target -s ${gds_app[0]}
+                      cf login -a ${env.GDS_PAAS} -u ${gds_user} -p ${gds_pass} -o ${gds_app[0]} -s ${gds_app[1]}
+                      cf target -o ${gds_app[0]} -s ${gds_app[1]}
                       ln -snf ${env.WORKSPACE}/.gitignore ${env.WORKSPACE}/.cfignore
                     """
                   }
@@ -165,7 +165,7 @@ pipeline {
                     }
                   }
                   ansiColor('xterm') {
-                    sh "cf push ${gds_app[1]}"
+                    sh "cf push ${gds_app[2]}"
                   }
                 }
                 break

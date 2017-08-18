@@ -5,7 +5,7 @@ scm: git@github.com:uktrade/directory-ui-supplier.git
 environments:
   - environment: dev
     type: gds
-    app: dev-directory/directory-ui-supplier
+    app: dit-services/dev-directory/directory-ui-supplier
     vars:
       - API_CLIENT_BASE_URL: 'http://directory-api-dev.herokuapp.com/'
     secrets: true
