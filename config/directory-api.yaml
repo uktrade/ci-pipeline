@@ -5,7 +5,7 @@ scm: git@github.com:uktrade/directory-api.git
 environments:
   - environment: dev
     type: gds
-    app: dev-directory/directory-api
+    app: dit-services/dev-directory/directory-api
     vars:
       - API_CLIENT_BASE_URL: 'http://directory-api-dev.herokuapp.com/'
       - DISABLE_COLLECTSTATIC: 1

@@ -5,7 +5,7 @@ scm: git@github.com:uktrade/cf-sample-app-nodejs.git
 environments:
   - environment: dev
     type: gds
-    app: sandbox/cf-nodejs
+    app: dit-services/sandbox/cf-nodejs
     vars:
       - FOO: bar
     secrets: true

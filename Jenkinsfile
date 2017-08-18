@@ -154,18 +154,18 @@ pipeline {
                   gds_app = env.PAAS_APP.split("/")
                   ansiColor('xterm') {
                     sh """
-                      cf login -a ${env.GDS_PAAS} -u ${gds_user} -p ${gds_pass} -s ${gds_app[0]}
-                      cf target -s ${gds_app[0]}
+                      cf login -a ${env.GDS_PAAS} -u ${gds_user} -p ${gds_pass} -o ${gds_app[0]} -s ${gds_app[1]}
+                      cf target -o ${gds_app[0]} -s ${gds_app[1]}
                       ln -snf ${env.WORKSPACE}/.gitignore ${env.WORKSPACE}/.cfignore
                     """
                   }
                   envars.each { key, value ->
                     ansiColor('xterm') {
-                      sh "cf set-env ${gds_app[1]} ${input.bash_escape(key)} ${input.bash_escape(value)}"
+                      sh "cf set-env ${gds_app[2]} ${input.bash_escape(key)} ${input.bash_escape(value)}"
                     }
                   }
                   ansiColor('xterm') {
-                    sh "cf push ${gds_app[1]}"
+                    sh "cf push ${gds_app[2]}"
                   }
                 }
                 break
