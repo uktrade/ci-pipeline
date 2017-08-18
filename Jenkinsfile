@@ -145,7 +145,7 @@ pipeline {
             }
 
             ansiColor('xterm') {
-              sh "bash -l -c \"${env.PAAS_RUN}\""
+              sh "bash -l -c \"${input.bash_escape(env.PAAS_RUN)}\""
             }
 
             switch(env.PAAS_TYPE) {
