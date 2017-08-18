@@ -161,7 +161,7 @@ pipeline {
                   }
                   envars.each { key, value ->
                     ansiColor('xterm') {
-                      sh "cf set-env ${gds_app[1]} ${input.bash_escape(key)} ${input.bash_escape(value)}"
+                      sh "cf set-env ${gds_app[2]} ${input.bash_escape(key)} ${input.bash_escape(value)}"
                     }
                   }
                   ansiColor('xterm') {
