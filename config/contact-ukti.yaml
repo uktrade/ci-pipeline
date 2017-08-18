@@ -39,7 +39,7 @@ environments:
       - REDIS_PORT: 26379
       - ZENDESK_URL: https://staging-uktrade.zendesk.com/api/v2
       - ZENDESK_TAG: contact-dit-staging
-    secrets: false
+    secrets: true
     run:
       - "true"
   - environment: production
@@ -52,12 +52,11 @@ environments:
       - EMAIL_PORT: 587
       - STUNNEL_ENABLED: true
       - REDIS_USE_SENTINEL: true
-      - USE_AUTH: false
       - REDIS_HOST: contactukti-redis.gds.uktrade.io
       - REDIS_URL: contactukti-redis.gds.uktrade.io
       - REDIS_PORT: 26379
-      - ZENDESK_URL: https://staging-uktrade.zendesk.com/api/v2
-      - ZENDESK_TAG: contact-dit-staging
-    secrets: false
+      - ZENDESK_URL: https://uktrade.zendesk.com/api/v2
+      - ZENDESK_TAG: contact-dit
+    secrets: true
     run:
       - "true"
