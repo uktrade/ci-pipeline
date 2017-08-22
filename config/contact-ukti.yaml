@@ -5,7 +5,7 @@ scm: git@github.com:uktrade/contact-ukti.git
 environments:
   - environment: dev
     type: gds
-    app: dit-services/dev-exopps/contact-ukti-dev
+    app: dit-staging/dev-exopps/contact-ukti-dev
     vars:
       - LOG_LEVEL: debug
       - EMAIL_HOST: email-smtp.eu-west-1.amazonaws.com
@@ -24,7 +24,7 @@ environments:
       - "true"
   - environment: staging
     type: gds
-    app: dit-services/staging-exopps/contact-ukti
+    app: dit-staging/staging-exopps/contact-ukti-staging
     vars:
       - NODE_MODULES_CACHE: false
       - NPM_CONFIG_PRODUCTION: false
