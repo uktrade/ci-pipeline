@@ -98,7 +98,7 @@ pipeline {
             checkout([$class: 'GitSCM', url: env.GIT_URL, branches: [[name: env.GIT_BRANCH]], recursiveSubmodules: true, credentialsId: env.SCM_CREDENTIAL])
             sh 'bundle check || bundle install'
             withCredentials([string(credentialsId: env.VAULT_TOKEN_ID, variable: 'TOKEN')]) {
-              env.VAULT_TOKEN = TOKEN
+              env.VAULT_SERECT_ID = TOKEN
               sh "${env.WORKSPACE}/bootstrap.rb ${env.Team} ${env.Project} ${env.Environment}"
             }
             envars = readProperties file: "${env.WORKSPACE}/.env"

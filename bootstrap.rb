@@ -11,8 +11,10 @@ require 'shellwords'
 CONFIG_DIR = "#{ENV['WORKSPACE']}/config"
 JSON_SCHEMA = "#{ENV['WORKSPACE']}/schema.json"
 CONSUL = ENV['CONSUL']
-VAULT = ENV['VAULT']
-VAULT_TOKEN = ENV['VAULT_TOKEN']
+VAULT_API = ENV['VAULT_API']
+VAULT_PREFIX = ENV['VAULT_PREFIX']
+VAULT_ROLE_ID = ENV['VAULT_ROLE_ID']
+VAULT_SERECT_ID = ENV['VAULT_SERECT_ID']
 OPTION_FILE = "#{ENV['WORKSPACE']}/.option.json"
 ENV_FILE = "#{ENV['WORKSPACE']}/.env"
 
@@ -40,7 +42,9 @@ end
 
 def vault_get(path)
   begin
-    resp = RestClient.get("#{VAULT}/#{path}", headers = {'X-Vault-Token': VAULT_TOKEN})
+    login = {'role_id' => VAULT_ROLE_ID, 'secret_id' => VAULT_SERECT_ID}
+    token = JSON.parse(RestClient.post("#{VAULT_API}/auth/approle/login", login.to_json))['auth']['client_token']
+    resp = RestClient.get("#{VAULT_API}/#{VAULT_PREFIX}/#{path}", headers = {'X-Vault-Token': token})
   rescue RestClient::ExceptionWithResponse => e
     return e.http_code
   else
@@ -64,7 +68,7 @@ end
 def main(args)
   team, project, env = args
 
-  if team.nil? || project.nil? || env.nil? || ENV['VAULT_TOKEN'].nil?
+  if team.nil? || project.nil? || env.nil? || ENV['VAULT_SERECT_ID'].nil?
     puts "Validating files:"
 
     config_files = Array.new
