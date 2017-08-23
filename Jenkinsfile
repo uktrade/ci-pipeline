@@ -156,9 +156,12 @@ pipeline {
                     sh """
                       cf login -a ${env.GDS_PAAS} -u ${gds_user} -p ${gds_pass} -o ${gds_app[0]} -s ${gds_app[1]}
                       cf target -o ${gds_app[0]} -s ${gds_app[1]}
-                      ln -snf ${env.WORKSPACE}/.gitignore ${env.WORKSPACE}/.cfignore
                       cf push ${gds_app[2]} --no-start
                     """
+                    cfignore_exist = fileExists "${env.WORKSPACE}/.cfignore"
+                    if (!cfignore_exist) {
+                      sh "ln -snf ${env.WORKSPACE}/.gitignore ${env.WORKSPACE}/.cfignore"
+                    }
                   }
                   envars.each { key, value ->
                     ansiColor('xterm') {
