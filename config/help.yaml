@@ -18,6 +18,7 @@ environments:
       - USE_CAPTCHA: True
       - ZENDESK_URL: https://staging-uktrade.zendesk.com/api/v2/tickets.json
       - ZENDESK_TEST_URL: https://staging-uktrade.zendesk.com/api/v2/users.json
+      - DISABLE_COLLECTSTATIC: 1
     secrets: true
     run:
       - "pip install -r requirements.txt"
@@ -33,6 +34,7 @@ environments:
       - USE_CAPTCHA: False
       - ZENDESK_TEST_URL: https://uktrade.zendesk.com/api/v2/users.json
       - ZENDESK_URL: https://uktrade.zendesk.com/api/v2/tickets.json
+      - DISABLE_COLLECTSTATIC: 1
     secrets: true
     run:
       - "pip install -r requirements.txt"
