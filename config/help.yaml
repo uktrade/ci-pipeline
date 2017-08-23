@@ -1,0 +1,40 @@
+---
+name: help
+namespace: enav
+scm: git@github.com:uktrade/help.git
+environments:
+  - environment: staging
+    type: gds
+    app: dit-staging/staging-enav/enav-help-staging
+    vars:
+      - ALLOW_ADMIN: True
+      - ALLOW_AUTHENTICATED: True
+      - DJANGO_SETTINGS_MODULE: help.settings.staging
+      - HELP_HOST: http://contact-us.export.staging.uktrade.io/
+      - PROFILE_HOST: https://stage.profile.uktrade.io/
+      - RESTRICT_IPS: True
+      - SOO_HOST: http://selling-online-overseas.export.staging.uktrade.io/
+      - SSO_HOST: https://stage.sso.uktrade.io/
+      - USE_CAPTCHA: True
+      - ZENDESK_URL: https://staging-uktrade.zendesk.com/api/v2/tickets.json
+      - ZENDESK_TEST_URL: https://staging-uktrade.zendesk.com/api/v2/users.json
+    secrets: true
+    run:
+      - "pip install -r requirements.txt"
+      - "npm install && npm run build"
+      - "python manage.py collectstatic --noinput"
+  - environment: production
+    type: gds
+    app: dit-services/enav/enav-help
+    vars:
+      - DJANGO_SETTINGS_MODULE: help.settings.prod
+      - ERROR_PAGE_URL: https://sorry.great.gov.uk/error.html
+      - MAINTENANCE_PAGE_URL: https://sorry.great.gov.uk/
+      - USE_CAPTCHA: False
+      - ZENDESK_TEST_URL: https://uktrade.zendesk.com/api/v2/users.json
+      - ZENDESK_URL: https://uktrade.zendesk.com/api/v2/tickets.json
+    secrets: true
+    run:
+      - "pip install -r requirements.txt"
+      - "npm install && npm run build"
+      - "python manage.py collectstatic --noinput"
