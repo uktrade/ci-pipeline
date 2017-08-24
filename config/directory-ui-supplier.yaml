@@ -7,7 +7,15 @@ environments:
     type: gds
     app: dit-services/dev-directory/directory-ui-supplier
     vars:
-      - API_CLIENT_BASE_URL: 'http://directory-api-dev.herokuapp.com/'
+      - API: 'api'
+    secrets: true
+    run:
+      - "true"
+  - environment: staging
+    type: gds
+    app: dit-staging/dev-directory/directory-ui-supplier
+    vars:
+      - DISABLE_COLLECTSTATIC: 1
     secrets: true
     run:
       - "true"
