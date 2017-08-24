@@ -13,7 +13,7 @@ environments:
       - "true"
   - environment: staging
     type: gds
-    app: dit-services/dev-directory/directory-api
+    app: dit-staging/dev-directory/directory-api
     vars:
       - DISABLE_COLLECTSTATIC: 1
     secrets: true
