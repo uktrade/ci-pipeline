@@ -11,3 +11,11 @@ environments:
     secrets: true
     run:
       - "true"
+  - environment: staging
+    type: gds
+    app: dit-staging/dev-directory/directory-sso
+    vars:
+      - DISABLE_COLLECTSTATIC: 1
+    secrets: true
+    run:
+      - "true"
