@@ -5,15 +5,15 @@ scm: git@github.com:uktrade/directory-ui-buyer.git
 environments:
   - environment: dev
     type: gds
-    app: dit-services/dev-directory/directory-ui-buyer
+    app: dit-services/dev-directory/directory-ui-buyer-dev
     vars:
-      - API_CLIENT_BASE_URL: 'http://directory-ui-buyer-dev.herokuapp.com/'
+      - API_CLIENT_BASE_URL: 'http://directory-ui-buyer-dev.cloudapps.digital/'
     secrets: true
     run:
       - "true"
   - environment: staging
     type: gds
-    app: dit-staging/dev-directory/directory-ui-buyer
+    app: dit-staging/dev-directory/directory-ui-buyer-staging
     vars:
       - DISABLE_COLLECTSTATIC: 1
     secrets: true
