@@ -5,7 +5,7 @@ scm: git@github.com:uktrade/directory-sso-proxy.git
 environments:
   - environment: dev
     type: gds
-    app: dit-services/dev-directory/directory-sso-proxy-dev
+    app: dit-staging/dev-directory/directory-sso-proxy-dev
     vars:
       - API: 'api'
     secrets: true
@@ -13,7 +13,7 @@ environments:
       - "true"
   - environment: staging
     type: gds
-    app: dit-staging/dev-directory/directory-sso-proxy-staging
+    app: dit-staging/staging-directory/directory-sso-proxy-staging
     vars:
       - DISABLE_COLLECTSTATIC: 1
     secrets: true
