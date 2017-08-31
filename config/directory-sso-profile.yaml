@@ -13,7 +13,7 @@ environments:
       - "true"
   - environment: staging
     type: gds
-    app: dit-staging/dev-directory/directory-sso-profile-staging
+    app: dit-staging/staging-directory/directory-sso-profile-staging
     vars:
       - DISABLE_COLLECTSTATIC: 1
     secrets: true
