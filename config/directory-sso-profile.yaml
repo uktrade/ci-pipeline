@@ -7,7 +7,7 @@ environments:
     type: gds
     app: dit-services/dev-directory/directory-sso-profile-dev
     vars:
-      - API_CLIENT_BASE_URL: 'http://directory-sso-profile-dev.herokuapp.com/'
+      - API_CLIENT_BASE_URL: 'http://directory-sso-profile-dev.cloudapps.digital/'
     secrets: true
     run:
       - "true"
