@@ -5,7 +5,7 @@ scm: git@github.com:uktrade/directory-sso-profile.git
 environments:
   - environment: dev
     type: gds
-    app: dit-services/dev-directory/directory-sso-profile
+    app: dit-services/dev-directory/directory-sso-profile-dev
     vars:
       - API_CLIENT_BASE_URL: 'http://directory-sso-profile-dev.herokuapp.com/'
     secrets: true
@@ -13,7 +13,7 @@ environments:
       - "true"
   - environment: staging
     type: gds
-    app: dit-staging/dev-directory/directory-ssoprofile
+    app: dit-staging/dev-directory/directory-sso-profile-staging
     vars:
       - DISABLE_COLLECTSTATIC: 1
     secrets: true
