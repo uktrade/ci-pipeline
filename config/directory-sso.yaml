@@ -5,7 +5,7 @@ scm: git@github.com:uktrade/directory-sso.git
 environments:
   - environment: dev
     type: gds
-    app: dit-services/dev-directory/directory-sso-dev
+    app: dit-staging/dev-directory/directory-sso-dev
     vars:
       - url_Service: 'https'
     secrets: true
@@ -13,7 +13,7 @@ environments:
       - "true"
   - environment: staging
     type: gds
-    app: dit-staging/dev-directory/directory-sso-staging
+    app: dit-staging/staging-directory/directory-sso-staging
     vars:
       - DISABLE_COLLECTSTATIC: 1
     secrets: true
