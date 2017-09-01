@@ -11,9 +11,9 @@ environments:
     secrets: true
     run:
       - "true"
-  - environment: staging
+  - environment: prod
     type: gds
-    app: dit-staging/staging-directory/directory-ui-buyer-staging
+    app: dit-services/directory/directory-ui-buyer
     vars:
       - DISABLE_COLLECTSTATIC: 1
     secrets: true
