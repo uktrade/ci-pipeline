@@ -13,7 +13,7 @@ environments:
       - "true"
   - environment: staging
     type: gds
-    app: dit-services/directory/directory-ui-buyer
+    app: dit-staging/staging-directory/directory-ui-buyer-staging
     vars:
       - DISABLE_COLLECTSTATIC: 1
     secrets: true
