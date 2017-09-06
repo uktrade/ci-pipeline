@@ -14,7 +14,7 @@ environments:
       - "true"
   - environment: staging
     type: gds
-    app: dit-staging/dev-datahub/datahub-staging
+    app: dit-staging/staging-datahub/datahub-staging
     vars:
       - LOG_LEVEL: info
       - API_ROOT: https://datahub-api-staging.cloudapps.digital
@@ -23,7 +23,7 @@ environments:
       - "true"
   - environment: production
     type: gds
-    app: dit-staging/dev-datahub/datahub
+    app: dit-services/datahub/datahub
     vars:
       - LOG_LEVEL: info
       - API_ROOT: https://datahub-api.cloudapps.digital

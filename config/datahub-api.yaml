@@ -15,7 +15,7 @@ environments:
       - "true"
   - environment: staging
     type: gds
-    app: dit-staging/dev-datahub/datahub-api-staging
+    app: dit-staging/staging-datahub/datahub-api-staging
     vars:
       - DEBUG: 1
       - DATAHUB_FRONTEND_BASE_URL: https://datahub-staging.cloudapps.digital
@@ -25,7 +25,7 @@ environments:
       - "true"
   - environment: production
     type: gds
-    app: dit-staging/dev-datahub/datahub-api
+    app: dit-services/datahub/datahub-api
     vars:
       - DEBUG: 1
       - DATAHUB_FRONTEND_BASE_URL: https://datahub.cloudapps.digital
