@@ -1,0 +1,32 @@
+---
+name: datahub-fe
+namespace: datahub
+scm: git@github.com:uktrade/data-hub-frontend.git
+environments:
+  - environment: dev
+    type: gds
+    app: dit-staging/dev-datahub/datahub-dev
+    vars:
+      - LOG_LEVEL: info
+      - API_ROOT: https://datahub-api-dev.cloudapps.digital
+    secrets: true
+    run:
+      - "true"
+  - environment: staging
+    type: gds
+    app: dit-staging/dev-datahub/datahub-staging
+    vars:
+      - LOG_LEVEL: info
+      - API_ROOT: https://datahub-api-staging.cloudapps.digital
+    secrets: true
+    run:
+      - "true"
+  - environment: production
+    type: gds
+    app: dit-staging/dev-datahub/datahub
+    vars:
+      - LOG_LEVEL: info
+      - API_ROOT: https://datahub-api.cloudapps.digital
+    secrets: true
+    run:
+      - "true"
