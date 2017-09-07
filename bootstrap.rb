@@ -127,8 +127,10 @@ def main(args)
       'PAAS_RUN' => run
     }
     data['vars'].each { |var| file_content.deep_merge!(var) } unless data['vars'].empty?
-    secrets = vault_get("#{team}/#{project}/#{env}") if data['secrets']
-    file_content.deep_merge!(secrets) unless secrets.empty?
+    if data['secrets']
+      secrets = vault_get("#{team}/#{project}/#{env}")
+      file_content.deep_merge!(secrets) unless secrets.empty?
+    end
 
     save_env(ENV_FILE, file_content)
   end
