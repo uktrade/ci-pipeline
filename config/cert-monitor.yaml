@@ -1,6 +1,6 @@
 ---
 name: cert-monitor
-namespace: cert-monitor
+namespace: webops
 scm: git@github.com:uktrade/cert_monitor.git
 environments:
   - environment: production
