@@ -7,7 +7,7 @@ environments:
     type: gds
     app: dit-services/webops/cert-monitor-production
     vars: 
-      - KEY: VALUE
+      - CF_INSTANCE_PORTS: [external:8080]: CF_INSTANCE_PORTS=[internal:8080]
     secrets: false
     run:
       - "true"
