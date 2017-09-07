@@ -1,0 +1,13 @@
+---
+name: cert-monitor
+namespace: cert-monitor
+scm: git@github.com:uktrade/cert_monitor.git
+environments:
+ - environment: production
+   type: gds
+   apps: dit-services/webops/cert-monitor
+   vars: 
+     - KEY: VALUE
+   secrets: true
+   run:
+     - "true"
