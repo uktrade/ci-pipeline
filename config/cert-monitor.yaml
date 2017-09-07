@@ -5,7 +5,7 @@ scm: git@github.com:uktrade/cert_monitor.git
 environments:
   - environment: production
     type: gds
-    apps: dit-services/webops/cert-monitor
+    app: dit-services/webops/cert-monitor
     vars: 
       - KEY: VALUE
     secrets: true
