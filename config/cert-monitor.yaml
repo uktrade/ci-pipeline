@@ -8,6 +8,6 @@ environments:
     app: dit-services/webops/cert-monitor
     vars: 
       - KEY: VALUE
-    secrets: true
+    secrets: false
     run:
       - "true"
