@@ -205,6 +205,10 @@ pipeline {
   }
 
   post {
+    failure {
+      emailext subject: '${currentBuild.result}: ${env.Project} ${env.Environmen}', body: '${env.JOB_NAME} [${env.BUILD_NUMBER}]', recipientProviders: [[$class: 'CulpritsRecipientProvider']], attachLog: true
+    }
+
     always {
       script {
         deleteDir()
