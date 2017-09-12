@@ -19,3 +19,11 @@ environments:
     secrets: true
     run:
       - "true"
+  - environment: prod
+    type: gds
+    app: dit-services/directory/directory-sso
+    vars:
+      - DISABLE_COLLECTSTATIC: 1
+    secrets: true
+    run:
+      - "true"
