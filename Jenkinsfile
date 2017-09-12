@@ -206,7 +206,7 @@ pipeline {
 
   post {
     failure {
-      emailext subject: "${currentBuild.result}: ${env.Project} ${env.Environmen}", body: "${PROJECT_DEFAULT_CONTENT}", recipientProviders: [[$class: 'RequesterRecipientProvider']], attachLog: true
+      emailext subject: "${currentBuild.result}: ${env.Project} ${env.Environmen}", body: "${PROJECT_DEFAULT_CONTENT}", recipientProviders: [[$class: 'DevelopersRecipientProvider']], attachLog: true
     }
 
     always {
