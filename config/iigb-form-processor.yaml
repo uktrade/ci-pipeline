@@ -12,7 +12,7 @@ environments:
       - LOGGING_LEVEL: debug
       - NODE_MODULES_CACHE: true
       - ZENDESK_API_VERSION: /api/v2
-      - ZENDESK_BASE_URL: https://uktrade.zendesk.com
+      - ZENDESK_BASE_URL: https://staging-uktrade.zendesk.com
     secrets: true
     run:
       - "true"
