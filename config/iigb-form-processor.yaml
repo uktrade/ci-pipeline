@@ -5,7 +5,7 @@ scm: git@github.com:uktrade/iigb-form-processor.git
 environments:
   - environment: staging
     type: gds
-    app: dit-staging/iigb/iigb-form-processor-staging
+    app: dit-staging/staging-iigb/iigb-form-processor-staging
     vars:
       - IIGB_FORM_FILTER: false
       - IIGB_IP_FILTER: false
