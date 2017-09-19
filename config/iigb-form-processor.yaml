@@ -22,10 +22,12 @@ environments:
     vars:
       - IIGB_FORM_FILTER: false
       - IIGB_IP_FILTER: false
+      - IIGB_BASE_URL: https://invest.great.gov.uk
+      - ERROR_PAGE_URL: https://sorry.great.gov.uk/error.html
       - LOGGING_LEVEL: debug
-      - NODE_MODULES_CACHE: true
       - ZENDESK_API_VERSION: /api/v2
       - ZENDESK_BASE_URL: https://uktrade.zendesk.com
+      - MAINTENANCE_PAGE_URL: https://sorry.great.gov.uk/
     secrets: true
     run:
       - "true"
