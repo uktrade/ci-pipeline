@@ -11,7 +11,7 @@ environments:
       - "true"
   - environment: staging
     type: gds
-    app: dit-staging/staging-dev/dev-staging
+    app: dit-staging/staging-exred/exred-staging
     secrets: false
     run:
       - "true"
