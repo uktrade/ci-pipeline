@@ -6,12 +6,16 @@ environments:
   - environment: dev
     type: gds
     app: dit-staging/dev-exred/exred-dev
+    vars:
+      - DISABLE_COLLECTSTATIC: 1
     secrets: false
     run:
       - "true"
   - environment: staging
     type: gds
     app: dit-staging/staging-exred/exred-staging
+    vars:
+      - DISABLE_COLLECTSTATIC: 1
     secrets: false
     run:
       - "true"
