@@ -6,12 +6,14 @@ environments:
   - environment: dev
     type: gds
     app: dit-staging/dev-exred/exred-dev
+    vars: {}
     secrets: false
     run:
       - "true"
   - environment: staging
     type: gds
     app: dit-staging/staging-exred/exred-staging
+    vars: {}
     secrets: false
     run:
       - "true"
