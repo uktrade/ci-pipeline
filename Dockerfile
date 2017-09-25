@@ -34,3 +34,6 @@ RUN curl -Lfs https://raw.githubusercontent.com/pyenv/pyenv-installer/master/bin
     echo 'export PATH="$HOME/.pyenv/bin:$PATH"' >> ~/.profile && \
     echo 'eval "$(pyenv init -)"\neval "$(pyenv virtualenv-init -)"' >> ~/.profile && \
     echo 'export NVM_DIR="$HOME/.nvm"\n[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"' >> ~/.profile
+
+RUN cf add-plugin-repo CF-Community https://plugins.cloudfoundry.org && \
+    cf install-plugin -r CF-Community "blue-green-deploy" -f
