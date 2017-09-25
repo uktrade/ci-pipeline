@@ -1,0 +1,29 @@
+---
+name: directory-api-worker
+namespace: directory
+scm: git@github.com:uktrade/directory-api.git
+environments:
+  - environment: dev
+    type: gds
+    app: dit-staging/dev-directory/directory-api-worker-dev
+    vars:
+      - DISABLE_COLLECTSTATIC: 1
+    secrets: true
+    run:
+      - "true"
+  - environment: staging
+    type: gds
+    app: dit-staging/staging-directory/directory-api-worker-staging
+    vars:
+      - DISABLE_COLLECTSTATIC: 1
+    secrets: true
+    run:
+      - "true"
+  - environment: prod
+    type: gds
+    app: dit-services/directory/directory-api-worker
+    vars:
+      - DISABLE_COLLECTSTATIC: 1
+    secrets: true
+    run:
+      - "true"
