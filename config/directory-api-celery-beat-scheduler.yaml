@@ -1,11 +1,11 @@
 ---
-name: directory-api-worker
+name: directory-api-celery-beat-scheduler
 namespace: directory
 scm: git@github.com:uktrade/directory-api.git
 environments:
   - environment: dev
     type: gds
-    app: dit-staging/dev-directory/directory-api-worker-dev
+    app: dit-staging/dev-directory/directory-api-celery-beat-scheduler-dev
     vars:
       - DISABLE_COLLECTSTATIC: 1
     secrets: true
@@ -13,7 +13,7 @@ environments:
       - "true"
   - environment: staging
     type: gds
-    app: dit-staging/staging-directory/directory-api-worker-staging
+    app: dit-staging/staging-directory/directory-api-celery-beat-scheduler-staging
     vars:
       - DISABLE_COLLECTSTATIC: 1
     secrets: true
@@ -21,7 +21,7 @@ environments:
       - "true"
   - environment: prod
     type: gds
-    app: dit-services/directory/directory-api-worker
+    app: dit-services/directory/directory-api-celery-beat-scheduler
     vars:
       - DISABLE_COLLECTSTATIC: 1
     secrets: true
