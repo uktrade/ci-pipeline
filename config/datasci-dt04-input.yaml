@@ -1,0 +1,21 @@
+---
+name: dt05-input
+namespace: datasci
+scm: git@github.com:uktrade/dt04-input.git
+environments:
+  - environment: staging
+    type: gds
+    app: dit-staging/staging-datasci/staging-dt04
+    vars:
+      - DISABLE_COLLECTSTATIC: 1
+    secrets: true
+    run:
+      - "true"
+  - environment: production
+    type: gds
+    app: dit-staging/staging-datasci/dt04
+    vars:
+      - DISABLE_COLLECTSTATIC: 1
+    secrets: true
+    run:
+      - "true"
