@@ -120,6 +120,7 @@ pipeline {
     stage('deploy') {
       steps {
         script {
+          echo env
           deployer.inside {
             if (env.Git_Commit =~ /[a-fA-F0-9]{40}/) {
               checkout([$class: 'GitSCM', url: env.SCM, branches: [[name: env.Git_Commit]], recursiveSubmodules: true, credentialsId: env.SCM_CREDENTIAL])
