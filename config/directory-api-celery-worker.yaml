@@ -5,7 +5,7 @@ scm: git@github.com:uktrade/directory-api.git
 environments:
   - environment: dev
     type: gds
-    app: dit-staging/dev-directory/directory-api-celery-worker
+    app: dit-staging/dev-directory/directory-api-celery-worker-dev
     vars:
       - DISABLE_COLLECTSTATIC: 1
     secrets: true
