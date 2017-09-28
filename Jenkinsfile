@@ -169,7 +169,7 @@ pipeline {
                     }
                   }
                   ansiColor('xterm') {
-                    sh "bash -c 'cf push ${gds_app[2]}'"
+                    sh "CF_TRACE=true cf push ${gds_app[2]}"
                   }
                 }
                 break
