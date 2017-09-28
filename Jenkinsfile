@@ -83,7 +83,7 @@ pipeline {
           if (!env.Git_Commit) {
             git_commit = input(
               id: 'git_commit', message: 'Please enter your git branch/tag/commit: ', parameters: [
-              [$class: 'StringParameterDefinition', name: 'Git Commit', description: 'GitCommit', defaultValue: 'master']
+              [$class: 'StringParameterDefinition', name: 'Git Commit', description: 'GitCommit']
             ])
             env.Git_Commit = git_commit
           }
