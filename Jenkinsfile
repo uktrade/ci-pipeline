@@ -169,7 +169,7 @@ pipeline {
                     }
                   }
                   ansiColor('xterm') {
-                    sh "cf blue-green-deploy ${gds_app[2]}"
+                    sh "cf v3-push ${gds_app[2]}"
                   }
                 }
                 break
