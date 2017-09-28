@@ -169,9 +169,7 @@ pipeline {
                     }
                   }
                   ansiColor('xterm') {
-                    sh "ls -al"
-                    sh "env | sort"
-                    sh "CF_TRACE=true cf push ${gds_app[2]}"
+                    sh "cf push ${gds_app[2]}"
                   }
                 }
                 break
