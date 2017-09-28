@@ -169,6 +169,7 @@ pipeline {
                     }
                   }
                   ansiColor('xterm') {
+                    sh "ls -al"
                     sh "CF_TRACE=true cf push ${gds_app[2]}"
                   }
                 }
