@@ -14,6 +14,17 @@ environments:
     secrets: true
     run:
       - "true"
+  - environment: uat
+    type: gds
+    app: dit-staging/uat-datahub/datahub-api-uat
+    vars:
+      - DEBUG: 1
+      - DATAHUB_FRONTEND_BASE_URL: https://datahub-uat.cloudapps.digital
+      - DJANGO_SETTINGS_MODULE: config.settings.dev
+      - DISABLE_COLLECTSTATIC: 1
+    secrets: true
+    run:
+      - "true"
   - environment: staging
     type: gds
     app: dit-staging/staging-datahub/datahub-api-staging

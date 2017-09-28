@@ -10,7 +10,7 @@ pipeline {
     string(defaultValue: '', description:'Please choose your team: ', name: 'Team')
     string(defaultValue: '', description:'Please choose your project: ', name: 'Project')
     string(defaultValue: '', description:'Please choose your environment: ', name: 'Environment')
-    string(defaultValue: '', description:'Please choose your git branch/tag/commit: ', name: 'Git_Commit')
+    string(defaultValue: '', description:'Please choose your git branch/tag/commit: ', name: 'Version')
   }
 
   stages {
@@ -23,11 +23,11 @@ pipeline {
             git remote get-url origin > ${env.WORKSPACE}/.git_url
             git branch --remotes --contains `git rev-parse HEAD` | grep -v HEAD | tail -n 1 > ${env.WORKSPACE}/.git_branch_name
           """
-          env.GIT_URL = readFile "${env.WORKSPACE}/.git_url"
-          env.GIT_BRANCH = readFile "${env.WORKSPACE}/.git_branch"
+          env.APP_GIT_URL = readFile "${env.WORKSPACE}/.git_url"
+          env.APP_GIT_BRANCH = readFile "${env.WORKSPACE}/.git_branch"
           branch = readFile "${env.WORKSPACE}/.git_branch_name"
-          env.BRANCH_NAME = branch.replaceAll(/\s+origin\//, "").trim()
-          deployer = docker.image("ukti/deployer:${env.BRANCH_NAME}")
+          env.APP_BRANCH_NAME = branch.replaceAll(/\s+origin\//, "").trim()
+          deployer = docker.image("ukti/deployer:${env.APP_BRANCH_NAME}")
           deployer.pull()
         }
       }
@@ -80,12 +80,12 @@ pipeline {
             error 'Invalid Environment!'
           }
 
-          if (!env.Git_Commit) {
+          if (!env.Version) {
             git_commit = input(
               id: 'git_commit', message: 'Please enter your git branch/tag/commit: ', parameters: [
-              [$class: 'StringParameterDefinition', name: 'Git Commit', description: 'GitCommit', defaultValue: 'master']
+              [$class: 'StringParameterDefinition', name: 'Git Commit', description: 'GitCommit']
             ])
-            env.Git_Commit = git_commit
+            env.Version = git_commit
           }
         }
       }
@@ -121,10 +121,10 @@ pipeline {
       steps {
         script {
           deployer.inside {
-            if (env.Git_Commit =~ /[a-fA-F0-9]{40}/) {
-              checkout([$class: 'GitSCM', url: env.SCM, branches: [[name: env.Git_Commit]], recursiveSubmodules: true, credentialsId: env.SCM_CREDENTIAL])
+            if (env.Version =~ /[a-fA-F0-9]{40}/) {
+              checkout([$class: 'GitSCM', url: env.SCM, branches: [[name: env.Version]], recursiveSubmodules: true, credentialsId: env.SCM_CREDENTIAL])
             } else {
-              git url: env.SCM, branch: env.Git_Commit, credentialsId: env.SCM_CREDENTIAL
+              git url: env.SCM, branch: env.Version, credentialsId: env.SCM_CREDENTIAL
             }
 
             node_ver_exist = fileExists "${env.WORKSPACE}/.nvmrc"
