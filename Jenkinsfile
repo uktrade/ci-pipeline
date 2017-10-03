@@ -122,7 +122,8 @@ pipeline {
         script {
           deployer.inside {
             if (env.Version =~ /[a-fA-F0-9]{40}/) {
-              checkout([$class: 'GitSCM', url: env.SCM, branches: [[name: "${env.Version}"]], recursiveSubmodules: true, credentialsId: env.SCM_CREDENTIAL])
+              checkout([$class: 'GitSCM', branches: [[name: '$Version']], doGenerateSubmoduleConfigurations: false, extensions: [[$class: 'SubmoduleOption', disableSubmodules: false, parentCredentials: true, recursiveSubmodules: true, reference: '', trackingSubmodules: false]], submoduleCfg: [], userRemoteConfigs: [[credentialsId: '$SCM_CREDENTIAL', url: '$SCM']]])
+
             } else {
               git url: env.SCM, branch: env.Version, credentialsId: env.SCM_CREDENTIAL
             }
