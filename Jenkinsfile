@@ -112,6 +112,7 @@ pipeline {
         script {
           envars.each { key, value ->
             env."${key}" = value
+            echo key = value
           }
         }
       }
