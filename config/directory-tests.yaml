@@ -1,0 +1,13 @@
+---
+name: directory-tests
+namespace: directory
+scm: git@github.com:uktrade/directory-tests.git
+environments:
+  - environment: dev
+    type: gds
+    app: dit-staging/dev-directory/directory-tests
+    vars:
+      - API: 'api'
+    secrets: true
+    run:
+      - "true"

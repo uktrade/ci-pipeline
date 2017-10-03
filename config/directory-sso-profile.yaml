@@ -7,13 +7,21 @@ environments:
     type: gds
     app: dit-staging/dev-directory/directory-sso-profile-dev
     vars:
-      - API_CLIENT_BASE_URL: 'http://directory-sso-profile-dev.cloudapps.digital/'
+      - DISABLE_COLLECTSTATIC: 1
     secrets: true
     run:
       - "true"
   - environment: staging
     type: gds
     app: dit-staging/staging-directory/directory-sso-profile-staging
+    vars:
+      - DISABLE_COLLECTSTATIC: 1
+    secrets: true
+    run:
+      - "true"
+  - environment: prod
+    type: gds
+    app: dit-services/directory/directory-sso-profile
     vars:
       - DISABLE_COLLECTSTATIC: 1
     secrets: true
