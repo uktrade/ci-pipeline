@@ -25,6 +25,17 @@ environments:
     secrets: true
     run:
       - "true"
+  - environment: demo
+    type: gds
+    app: dit-staging/demo-datahub/datahub-api-demo
+    vars:
+      - DEBUG: 1
+      - DATAHUB_FRONTEND_BASE_URL: https://datahub-demo.cloudapps.digital
+      - DJANGO_SETTINGS_MODULE: config.settings.dev
+      - DISABLE_COLLECTSTATIC: 1
+    secrets: true
+    run:
+      - "true"
   - environment: staging
     type: gds
     app: dit-staging/staging-datahub/datahub-api-staging
