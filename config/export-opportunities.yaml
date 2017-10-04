@@ -1,0 +1,23 @@
+---
+name: export-opportunities
+namespace: exopps
+scm: git@github.com:uktrade/export-opportunities.git
+environments:
+  - environment: continuous-deployment
+    type: gds
+    app: dit-staging/dev-exopps/export-opportunities-continuous-deployment
+    secrets: true
+    run:
+      - "true"
+  - environment: staging
+    type: gds
+    app: dit-staging/staging-exopps/export-opportunities-staging
+    secrets: true
+    run:
+      - "true"
+  - environment: production
+    type: gds
+    app: dit-services/exopps/export-opportunities
+    secrets: true
+    run:
+      - "true"
