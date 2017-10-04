@@ -6,18 +6,24 @@ environments:
   - environment: continuous-deployment
     type: gds
     app: dit-staging/dev-exopps/export-opportunities-continuous-deployment
+    vars:
+      - RAILS_ENV: production
     secrets: true
     run:
       - "true"
   - environment: staging
     type: gds
     app: dit-staging/staging-exopps/export-opportunities-staging
+    vars:
+      - RAILS_ENV: production
     secrets: true
     run:
       - "true"
   - environment: production
     type: gds
     app: dit-services/exopps/export-opportunities
+    vars:
+      - RAILS_ENV: production
     secrets: true
     run:
       - "true"
