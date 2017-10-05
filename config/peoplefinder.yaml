@@ -1,6 +1,6 @@
 ---
 name: peoplefinder
-namespace: peoplefinder
+namespace: intranet
 scm: git@github.com:uktrade/peoplefinder.git
 environments:
   - environment: dev
