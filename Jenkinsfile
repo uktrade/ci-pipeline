@@ -129,7 +129,7 @@ pipeline {
 
             node_ver_exist = fileExists "${env.WORKSPACE}/.nvmrc"
             py_ver_exist = fileExists "${env.WORKSPACE}/.python-version"
-            rb_ver_exist = fileExists "${env.WORKSPACE}/.rvmrc"
+            rb_ver_exist = fileExists "${env.WORKSPACE}/.ruby-version"
             if (node_ver_exist) {
               node_ver = readFile "${env.WORKSPACE}/.nvmrc"
               echo "Detected Nodejs version ${node_ver}"
@@ -145,7 +145,7 @@ pipeline {
               }
             }
             if (rb_ver_exist) {
-              rb_ver = readFile "${env.WORKSPACE}/.rvmrc"
+              rb_ver = readFile "${env.WORKSPACE}/.ruby-version"
               echo "Detected Ruby version ${rb_ver}"
               ansiColor('xterm') {
                 sh "bash -l -c 'rvm install ${rb_ver}'"
