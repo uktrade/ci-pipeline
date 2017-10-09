@@ -47,23 +47,12 @@ environments:
     secrets: true
     run:
       - "true"
-  - environment: migration
-    type: gds
-    app: dit-staging/staging-datahub/datahub-api-mig
-    vars:
-      - DEBUG: 1
-      - DATAHUB_FRONTEND_BASE_URL: https://datahub-mig.cloudapps.digital
-      - DJANGO_SETTINGS_MODULE: config.settings.staging
-      - DISABLE_COLLECTSTATIC: 1
-    secrets: true
-    run:
-      - "true"
   - environment: production
     type: gds
     app: dit-services/datahub/datahub-api
     vars:
       - DEBUG: 1
-      - DATAHUB_FRONTEND_BASE_URL: https://datahub.cloudapps.digital
+      - DATAHUB_FRONTEND_BASE_URL: https://www.datahub.trade.gov.uk
       - DJANGO_SETTINGS_MODULE: config.settings.production
       - DISABLE_COLLECTSTATIC: 1
     secrets: true
