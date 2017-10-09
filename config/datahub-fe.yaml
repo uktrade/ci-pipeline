@@ -39,21 +39,12 @@ environments:
     secrets: true
     run:
       - "true"
-  - environment: migration
-    type: gds
-    app: dit-staging/staging-datahub/datahub-mig
-    vars:
-      - LOG_LEVEL: info
-      - API_ROOT: https://datahub-api-mig.cloudapps.digital
-    secrets: true
-    run:
-      - "true"
   - environment: production
     type: gds
     app: dit-services/datahub/datahub
     vars:
       - LOG_LEVEL: info
-      - API_ROOT: https://datahub-api.cloudapps.digital
+      - API_ROOT: https://api.datahub.trade.gov.uk
     secrets: true
     run:
       - "true"
