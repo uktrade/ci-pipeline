@@ -1,0 +1,21 @@
+---
+name: dt06-algorithm
+namespace: datasci
+scm: git@github.com:uktrade/dt06-algorithm.git
+environments:
+  - environment: staging
+    type: gds
+    app: dit-staging/staging-datasci/dt06-staging
+    vars:
+      - DISABLE_COLLECTSTATIC: 1
+    secrets: true
+    run:
+      - "true"
+  - environment: production
+    type: gds
+    app: dit-staging/staging-datasci/dt06
+    vars:
+      - DISABLE_COLLECTSTATIC: 1
+    secrets: true
+    run:
+      - "true"
