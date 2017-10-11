@@ -10,6 +10,7 @@ environments:
       - DEBUG: 1
       - DATAHUB_FRONTEND_BASE_URL: https://datahub-dev.cloudapps.digital
       - DJANGO_SETTINGS_MODULE: config.settings.dev
+      - DISABLE_COLLECTSTATIC: 1
     secrets: true
     run:
       - "true"
@@ -20,6 +21,7 @@ environments:
       - DEBUG: 1
       - DATAHUB_FRONTEND_BASE_URL: https://datahub-uat.cloudapps.digital
       - DJANGO_SETTINGS_MODULE: config.settings.dev
+      - DISABLE_COLLECTSTATIC: 1
     secrets: true
     run:
       - "true"
@@ -30,6 +32,7 @@ environments:
       - DEBUG: 1
       - DATAHUB_FRONTEND_BASE_URL: https://datahub-demo.cloudapps.digital
       - DJANGO_SETTINGS_MODULE: config.settings.dev
+      - DISABLE_COLLECTSTATIC: 1
     secrets: true
     run:
       - "true"
@@ -40,6 +43,7 @@ environments:
       - DEBUG: 1
       - DATAHUB_FRONTEND_BASE_URL: https://datahub-staging.cloudapps.digital
       - DJANGO_SETTINGS_MODULE: config.settings.staging
+      - DISABLE_COLLECTSTATIC: 1
     secrets: true
     run:
       - "true"
@@ -50,6 +54,7 @@ environments:
       - DEBUG: 0
       - DATAHUB_FRONTEND_BASE_URL: https://www.datahub.trade.gov.uk
       - DJANGO_SETTINGS_MODULE: config.settings.production
+      - DISABLE_COLLECTSTATIC: 1
     secrets: true
     run:
       - "true"
