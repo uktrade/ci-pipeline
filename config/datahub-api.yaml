@@ -51,7 +51,7 @@ environments:
     type: gds
     app: dit-services/datahub/datahub-api
     vars:
-      - DEBUG: 1
+      - DEBUG: 0
       - DATAHUB_FRONTEND_BASE_URL: https://www.datahub.trade.gov.uk
       - DJANGO_SETTINGS_MODULE: config.settings.production
       - DISABLE_COLLECTSTATIC: 1
