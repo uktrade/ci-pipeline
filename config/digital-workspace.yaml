@@ -4,7 +4,7 @@ scm: git@github.com:uktrade/digital-workspace.git
 environments:
   - environment: dev
     type: gds
-    app: dit-staging/dev-peoplefinder/digital-workspace-dev
+    app: dit-staging/dev-intranet/digital-workspace-dev
     vars:
       - API: 'digital-workspace-dev.cloudapps.digital/'
     secrets: true
@@ -12,7 +12,7 @@ environments:
       - "true"
   - environment: staging
     type: gds
-    app: dit-staging/staging-peoplefinder/digital-workspace-staging
+    app: dit-staging/staging-intranet/digital-workspace-staging
     vars:
       - DISABLE_COLLECTSTATIC: 1
     secrets: true
@@ -20,7 +20,7 @@ environments:
       - "true"
   - environment: prod
     type: gds
-    app: dit-services/peoplefinder/digital-workspace
+    app: dit-services/intranet/digital-workspace
     vars:
       - DISABLE_COLLECTSTATIC: 1
     secrets: true
