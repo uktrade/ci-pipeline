@@ -1,0 +1,29 @@
+---
+name: datahub-omis-fe
+namespace: datahub
+scm: git@github.com:uktrade/omis-frontend.git
+environments:
+  - environment: dev
+    type: gds
+    app: dit-staging/dev-datahub/datahub-omis-dev
+    vars:
+      - API_ROOT: https://api.datahub.dev.uktrade.io
+    secrets: true
+    run:
+      - "true"
+  - environment: staging
+    type: gds
+    app: dit-staging/staging-datahub/datahub-omis-staging
+    vars:
+      - API_ROOT: https://api.datahub.staging.uktrade.io
+    secrets: true
+    run:
+      - "true"
+  - environment: production
+    type: gds
+    app: dit-services/datahub/datahub-omis
+    vars:
+      - API_ROOT: https://api.datahub.trade.gov.uk
+    secrets: true
+    run:
+      - "true"
