@@ -12,6 +12,7 @@ environments:
     secrets: true
     run:
       - "npm run-script build"
+      - "node node_modules/iigb-aws-helpers/refreshSingleSearch.js build"
   - environment: production
     type: s3
     app: www.great.gov.uk
@@ -21,3 +22,4 @@ environments:
     secrets: true
     run:
       - "npm run-script build"
+      - "node node_modules/iigb-aws-helpers/refreshSingleSearch.js build"
