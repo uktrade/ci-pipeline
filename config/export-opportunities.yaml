@@ -16,6 +16,7 @@ environments:
     app: dit-staging/staging-exopps/export-opportunities-staging
     vars:
       - RAILS_ENV: production
+      - DOMAIN: opportunities.export.staging.uktrade.io 
     secrets: true
     run:
       - "true"
