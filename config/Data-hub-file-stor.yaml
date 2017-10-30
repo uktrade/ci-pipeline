@@ -1,0 +1,13 @@
+---
+name: Data-hub-file-stor
+namespace: webops
+scm: git@github.com:uktrade/Data-hub-file-stor.git
+environments:
+  - environment: prod
+    type: gds
+    app: dit-services/webops/Data-hub-file-stor
+    vars:
+      - DISABLE_COLLECTSTATIC: 1
+    secrets: true
+    run:
+      - "true"
