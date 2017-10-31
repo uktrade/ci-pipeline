@@ -157,7 +157,7 @@ pipeline {
                     sh """
                       cf login -a ${env.GDS_PAAS} -u ${gds_user} -p ${gds_pass} -o ${gds_app[0]} -s ${gds_app[1]}
                       cf target -o ${gds_app[0]} -s ${gds_app[1]}
-                      cf push ${gds_app[2]} --no-start
+                      cf v3-create-app ${gds_app[2]}
                     """
                     cfignore_exist = fileExists "${env.WORKSPACE}/.cfignore"
                     if (!cfignore_exist) {
@@ -166,7 +166,7 @@ pipeline {
                   }
                   envars.each { key, value ->
                     ansiColor('xterm') {
-                      sh "cf set-env ${gds_app[2]} ${input.bash_escape(key)} ${input.bash_escape(value)}"
+                      sh "cf v3-set-env ${gds_app[2]} ${input.bash_escape(key)} ${input.bash_escape(value)}"
                     }
                   }
                   ansiColor('xterm') {
