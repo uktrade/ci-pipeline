@@ -123,13 +123,13 @@ pipeline {
           deployer.inside {
             if (env.Version =~ /[a-fA-F0-9]{40}/) {
               checkout([$class: 'GitSCM', branches: [[name: env.Version]], doGenerateSubmoduleConfigurations: false, extensions: [[$class: 'SubmoduleOption', disableSubmodules: false, parentCredentials: true, recursiveSubmodules: true, reference: '', trackingSubmodules: false]], submoduleCfg: [], userRemoteConfigs: [[credentialsId: env.SCM_CREDENTIAL, url: env.SCM]]])
-
             } else {
               git url: env.SCM, branch: env.Version, credentialsId: env.SCM_CREDENTIAL
             }
 
             node_ver_exist = fileExists "${env.WORKSPACE}/.nvmrc"
             py_ver_exist = fileExists "${env.WORKSPACE}/.python-version"
+            rb_ver_exist = fileExists "${env.WORKSPACE}/.ruby-version"
             if (node_ver_exist) {
               node_ver = readFile "${env.WORKSPACE}/.nvmrc"
               echo "Detected Nodejs version ${node_ver}"
@@ -142,6 +142,13 @@ pipeline {
               echo "Detected Python version ${py_ver}"
               ansiColor('xterm') {
                 sh "bash -l -c 'pyenv install ${py_ver}'"
+              }
+            }
+            if (rb_ver_exist) {
+              rb_ver = readFile "${env.WORKSPACE}/.ruby-version"
+              echo "Detected Ruby version ${rb_ver}"
+              ansiColor('xterm') {
+                sh "bash -l -c 'rvm install ${rb_ver}'"
               }
             }
 

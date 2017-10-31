@@ -1,0 +1,29 @@
+---
+name: peoplefinder
+namespace: intranet
+scm: git@github.com:uktrade/peoplefinder.git
+environments:
+  - environment: dev
+    type: gds
+    app: dit-staging/dev-intranet/peoplefinder-dev
+    vars:
+      - DISABLE_COLLECTSTATIC: 1
+    secrets: true
+    run:
+      - "true"
+  - environment: staging
+    type: gds
+    app: dit-staging/staging-intranet/peoplefinder-staging
+    vars:
+      - DISABLE_COLLECTSTATIC: 1
+    secrets: true
+    run:
+      - "true"
+  - environment: prod
+    type: gds
+    app: dit-services/intranet/peoplefinder
+    vars:
+      - DISABLE_COLLECTSTATIC: 1
+    secrets: true
+    run:
+      - "true"

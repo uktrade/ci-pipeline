@@ -21,6 +21,15 @@ environments:
     secrets: true
     run:
       - "true"
+  - environment: demo
+    type: gds
+    app: dit-staging/dev-datahub/datahub-demo
+    vars:
+      - LOG_LEVEL: info
+      - API_ROOT: https://datahub-api-demo.cloudapps.digital
+    secrets: true
+    run:
+      - "true"
   - environment: staging
     type: gds
     app: dit-staging/staging-datahub/datahub-staging
@@ -35,7 +44,7 @@ environments:
     app: dit-services/datahub/datahub
     vars:
       - LOG_LEVEL: info
-      - API_ROOT: https://datahub-api.cloudapps.digital
+      - API_ROOT: https://api.datahub.trade.gov.uk
     secrets: true
     run:
       - "true"

@@ -1,0 +1,21 @@
+---
+name: dt05-clean
+namespace: datasci
+scm: git@github.com:uktrade/dt05-clean.git
+environments:
+  - environment: staging
+    type: gds
+    app: dit-staging/staging-datasci/dt05-staging
+    vars:
+      - DISABLE_COLLECTSTATIC: 1
+    secrets: true
+    run:
+      - "true"
+  - environment: production
+    type: gds
+    app: dit-staging/staging-datasci/dt05
+    vars:
+      - DISABLE_COLLECTSTATIC: 1
+    secrets: true
+    run:
+      - "true"

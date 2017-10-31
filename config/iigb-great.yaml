@@ -1,0 +1,25 @@
+---
+name: great
+namespace: iigb
+scm: git@github.com:uktrade/iigb-beta-website.git
+environments:
+  - environment: staging
+    type: s3
+    app: staging.great.gov.uk
+    vars:
+      - S3_WEBSITE_SRC: build
+      - S3_WEBSITE_REDIRECT: conf/s3/great.staging/website.json
+    secrets: true
+    run:
+      - "npm run-script build"
+      - "node node_modules/iigb-aws-helpers/refreshSingleSearch.js build"
+  - environment: production
+    type: s3
+    app: www.great.gov.uk
+    vars:
+      - S3_WEBSITE_SRC: build
+      - S3_WEBSITE_REDIRECT: conf/s3/great.prod/website.json
+    secrets: true
+    run:
+      - "npm run-script build"
+      - "node node_modules/iigb-aws-helpers/refreshSingleSearch.js build"
