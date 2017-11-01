@@ -5,7 +5,7 @@ scm: git@github.com:uktrade/Data-hub-file-stor.git
 environments:
   - environment: dev
     type: gds
-    app: dit-services/datahub/datahub-filebrowser-dev
+    app: dit-staging/dev-datahub/datahub-filebrowser-dev
     vars:
       - DISABLE_COLLECTSTATIC: 1
     secrets: true
@@ -13,7 +13,15 @@ environments:
       - "true"
   - environment: demo
     type: gds
-    app: dit-services/datahub/datahub-filebrowser-demo
+    app: dit-staging/dev-datahub/datahub-filebrowser-demo
+    vars:
+      - DISABLE_COLLECTSTATIC: 1
+    secrets: true
+    run:
+      - "true"
+  - environment: uat
+    type: gds
+    app: dit-staging/uat-datahub/datahub-filebrowser-uat
     vars:
       - DISABLE_COLLECTSTATIC: 1
     secrets: true
@@ -21,7 +29,7 @@ environments:
       - "true"
   - environment: staging
     type: gds
-    app: dit-services/datahub/datahub-filebrowser-staging
+    app: dit-staging/staging-datahub/datahub-filebrowser-staging
     vars:
       - DISABLE_COLLECTSTATIC: 1
     secrets: true
