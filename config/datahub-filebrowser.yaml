@@ -1,11 +1,11 @@
 ---
-name: data-hub-filebrowser
+name: datahub-filebrowser
 namespace: datahub
 scm: git@github.com:uktrade/data-hub-file-browser.git
 environments:
   - environment: dev
     type: gds
-    app: dit-staging/dev-datahub/data-hub-filebrowser-dev
+    app: dit-staging/dev-datahub/datahub-filebrowser-dev
     vars:
       - DISABLE_COLLECTSTATIC: 1
     secrets: true
@@ -13,7 +13,7 @@ environments:
       - "true"
   - environment: demo
     type: gds
-    app: dit-staging/dev-datahub/data-hub-filebrowser-demo
+    app: dit-staging/dev-datahub/datahub-filebrowser-demo
     vars:
       - DISABLE_COLLECTSTATIC: 1
     secrets: true
@@ -21,7 +21,7 @@ environments:
       - "true"
   - environment: uat
     type: gds
-    app: dit-staging/uat-datahub/data-hub-filebrowser-uat
+    app: dit-staging/uat-datahub/datahub-filebrowser-uat
     vars:
       - DISABLE_COLLECTSTATIC: 1
     secrets: true
@@ -29,7 +29,7 @@ environments:
       - "true"
   - environment: staging
     type: gds
-    app: dit-staging/staging-datahub/data-hub-filebrowser-staging
+    app: dit-staging/staging-datahub/datahub-filebrowser-staging
     vars:
       - DISABLE_COLLECTSTATIC: 1
     secrets: true
@@ -37,7 +37,7 @@ environments:
       - "true"
   - environment: prod
     type: gds
-    app: dit-services/datahub/data-hub-filebrowser
+    app: dit-services/datahub/datahub-filebrowser
     vars:
       - DISABLE_COLLECTSTATIC: 1
     secrets: true
