@@ -25,7 +25,7 @@ environments:
       - OAUTH2_TOKEN_FETCH_URL: https://sso.trade.gov.uk/o/token/
       - OAUTH2_USER_PROFILE_URL: https://sso.trade.gov.uk/api/v1/user/me/
       - OAUTH2_AUTH_URL: https://sso.trade.gov.uk/o/authorize/
-      - OAUTH2_REDIRECT_URL: https://sso.trade.gov.uk/oauth/callback
+      - OAUTH2_REDIRECT_URL: https://www.datahub.uat.uktrade.io/oauth/callback
     secrets: true
     run:
       - "true"
@@ -38,7 +38,7 @@ environments:
       - OAUTH2_TOKEN_FETCH_URL: https://sso.trade.gov.uk/o/token/
       - OAUTH2_USER_PROFILE_URL: https://sso.trade.gov.uk/api/v1/user/me/
       - OAUTH2_AUTH_URL: https://sso.trade.gov.uk/o/authorize/
-      - OAUTH2_REDIRECT_URL: https://sso.trade.gov.uk/oauth/callback
+      - OAUTH2_REDIRECT_URL: https://www.datahub.demo.uktrade.io/oauth/callback
     secrets: true
     run:
       - "true"
@@ -60,7 +60,7 @@ environments:
       - OAUTH2_TOKEN_FETCH_URL: https://sso.trade.gov.uk/o/token/
       - OAUTH2_USER_PROFILE_URL: https://sso.trade.gov.uk/api/v1/user/me/
       - OAUTH2_AUTH_URL: https://sso.trade.gov.uk/o/authorize/
-      - OAUTH2_REDIRECT_URL: https://sso.trade.gov.uk/oauth/callback
+      - OAUTH2_REDIRECT_URL: https://www.datahub.trade.gov.uk/oauth/callback
     secrets: true
     run:
       - "true"
