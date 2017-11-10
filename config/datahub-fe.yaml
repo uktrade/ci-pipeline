@@ -48,6 +48,10 @@ environments:
     vars:
       - LOG_LEVEL: info
       - API_ROOT: https://datahub-api-staging.cloudapps.digital
+      - OAUTH2_TOKEN_FETCH_URL: https://sso.trade.gov.uk/o/token/
+      - OAUTH2_USER_PROFILE_URL: https://sso.trade.gov.uk/api/v1/user/me/
+      - OAUTH2_AUTH_URL: https://sso.trade.gov.uk/o/authorize/
+      - OAUTH2_REDIRECT_URL: https://www.datahub.staging.uktrade.io/oauth/callback
     secrets: true
     run:
       - "true"
