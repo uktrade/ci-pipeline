@@ -11,6 +11,22 @@ environments:
     secrets: true
     run:
       - "true"
+  - environment: uat
+    type: gds
+    app: dit-staging/dev-datahub/datahub-omis-uat
+    vars:
+      - API_ROOT: https://api.datahub.uat.uktrade.io
+    secrets: true
+    run:
+      - "true"
+  - environment: demo
+    type: gds
+    app: dit-staging/dev-datahub/datahub-omis-demo
+    vars:
+      - API_ROOT: https://api.datahub.demo.uktrade.io
+    secrets: true
+    run:
+      - "true"
   - environment: staging
     type: gds
     app: dit-staging/staging-datahub/datahub-omis-staging
