@@ -1,7 +1,7 @@
 ---
 name: datahub-filebrowser
 namespace: datahub
-scm: git@github.com:uktrade/Data-hub-file-stor.git
+scm: git@github.com:uktrade/data-hub-file-browser.git
 environments:
   - environment: dev
     type: gds
