@@ -18,7 +18,7 @@ environments:
     type: gds
     app: dit-staging/uat-datahub/datahub-api-uat
     vars:
-      - DEBUG: 1
+      - DEBUG: 0
       - DATAHUB_FRONTEND_BASE_URL: https://datahub-uat.cloudapps.digital
       - DJANGO_SETTINGS_MODULE: config.settings.dev
       - DISABLE_COLLECTSTATIC: 1
@@ -29,7 +29,7 @@ environments:
     type: gds
     app: dit-staging/dev-datahub/datahub-api-demo
     vars:
-      - DEBUG: 1
+      - DEBUG: 0
       - DATAHUB_FRONTEND_BASE_URL: https://datahub-demo.cloudapps.digital
       - DJANGO_SETTINGS_MODULE: config.settings.dev
       - DISABLE_COLLECTSTATIC: 1
@@ -40,7 +40,7 @@ environments:
     type: gds
     app: dit-staging/staging-datahub/datahub-api-staging
     vars:
-      - DEBUG: 1
+      - DEBUG: 0
       - DATAHUB_FRONTEND_BASE_URL: https://datahub-staging.cloudapps.digital
       - DJANGO_SETTINGS_MODULE: config.settings.staging
       - DISABLE_COLLECTSTATIC: 1
