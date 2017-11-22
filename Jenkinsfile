@@ -173,7 +173,7 @@ pipeline {
                       if (cf_manifest.applications.size() != 1) {
                         echo "WARNING: CF V2 manifest.yml contains more than 1 application defined!"
                       } else if (cf_manifest.applications[0].size() != 1) {
-                        echo "WARNING: CF V2 manifest.yml contains more than 1 attribute for application ${cf_manifest.applications[0].name}!"
+                        echo "WARNING: CF V2 manifest.yml contains more than 1 attribute for application defined!"
                       } else if (cf_manifest.applications[0].buildpack) {
                         env.PAAS_BUILDPACK = cf_manifest.applications[0].buildpack
                       } else {
