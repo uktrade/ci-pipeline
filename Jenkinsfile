@@ -169,6 +169,7 @@ pipeline {
 
                     cf_manifest_exist = fileExists "${env.WORKSPACE}/manifest.yml"
                     if (cf_manifest_exist) {
+                      echo "Detected CF V2 manifest.yml"
                       cf_manifest = readYaml file: "${env.WORKSPACE}/manifest.yml"
                       if (cf_manifest.applications.size() != 1) {
                         echo "WARNING: CF V2 manifest.yml contains more than 1 application defined!"
