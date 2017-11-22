@@ -172,13 +172,13 @@ pipeline {
                       echo "Detected CF V2 manifest.yml"
                       cf_manifest = readYaml file: "${env.WORKSPACE}/manifest.yml"
                       if (cf_manifest.applications.size() != 1) {
-                        echo "WARNING: CF V2 manifest.yml contains more than 1 application defined!"
+                        echo "WARNING: CF V2 manifest.yml contains more than 1 application defined! \u001B[31mRed\u001B[m"
                       } else if (cf_manifest.applications[0].size() != 1) {
-                        echo "WARNING: CF V2 manifest.yml contains more than 1 attribute for application defined!"
+                        echo "WARNING: CF V2 manifest.yml contains more than 1 attribute for application defined! \u001B[31mRed\u001B[m"
                       } else if (cf_manifest.applications[0].buildpack) {
                         env.PAAS_BUILDPACK = cf_manifest.applications[0].buildpack
                       } else {
-                        echo "WARNING: Invalid CF V2 manifest.yml ignored."
+                        echo "WARNING: Invalid CF V2 manifest.yml ignored. \u001B[31mRed\u001B[m"
                       }
                     }
 
