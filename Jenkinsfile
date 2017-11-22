@@ -166,18 +166,39 @@ pipeline {
                       cf target -o ${gds_app[0]} -s ${gds_app[1]}
                       cf v3-create-app ${gds_app[2]}
                     """
+
+                    cf_manifest_exist = fileExists "${env.WORKSPACE}/manifest.yml"
+                    if (cf_manifest_exist) {
+                      cf_manifest = readYaml file: "${env.WORKSPACE}/manifest.yml"
+                      if (cf_manifest.applications.size() != 1) {
+                        echo "WARNING: CF V2 manifest.yml contains more than 1 application defined!"
+                      } else if (cf_manifest.applications[0].size() != 1) {
+                        echo "WARNING: CF V2 manifest.yml contains more than 1 attribute for application ${cf_manifest.applications[0].name}!"
+                      } else if (cf_manifest.applications[0].buildpack) {
+                        env.PAAS_BUILDPACK = cf_manifest.applications[0].buildpack
+                      } else {
+                        echo "WARNING: Invalid CF V2 manifest.yaml ignored."
+                      }
+                    }
+
                     cfignore_exist = fileExists "${env.WORKSPACE}/.cfignore"
                     if (!cfignore_exist) {
                       sh "ln -snf ${env.WORKSPACE}/.gitignore ${env.WORKSPACE}/.cfignore"
                     }
                   }
+
                   envars.each { key, value ->
                     ansiColor('xterm') {
                       sh "cf v3-set-env ${gds_app[2]} ${input.bash_escape(key)} ${input.bash_escape(value)}"
                     }
                   }
+
                   ansiColor('xterm') {
-                    sh "cf v3-push ${gds_app[2]}"
+                    if (env.PAAS_BUILDPACK) {
+                      sh "cf v3-push ${gds_app[2]} -b ${env.PAAS_BUILDPACK}"
+                    } else {
+                      sh "cf v3-push ${gds_app[2]}"
+                    }
                   }
                 }
                 break
