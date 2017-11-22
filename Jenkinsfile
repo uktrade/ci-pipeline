@@ -177,7 +177,7 @@ pipeline {
                       } else if (cf_manifest.applications[0].buildpack) {
                         env.PAAS_BUILDPACK = cf_manifest.applications[0].buildpack
                       } else {
-                        echo "WARNING: Invalid CF V2 manifest.yaml ignored."
+                        echo "WARNING: Invalid CF V2 manifest.yml ignored."
                       }
                     }
 
