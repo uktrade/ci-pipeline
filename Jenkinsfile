@@ -172,10 +172,10 @@ pipeline {
                       echo "INFO: Detected CF V2 manifest.yml"
                       cf_manifest = readYaml file: "${env.WORKSPACE}/manifest.yml"
                       if (cf_manifest.applications.size() != 1) {
-                        echo "\u001B[31mWARNING: CF V2 manifest.yml contains more than 1 application defined! Only `buildpack` att is accepted.\u001B[m"
+                        echo "\u001B[31mWARNING: CF V2 manifest.yml contains more than 1 application defined! Only `buildpack` attribute is accepted.\u001B[m"
                       }
                       if (cf_manifest.applications[0].size() != 1) {
-                        echo "\u001B[31mWARNING: CF V2 manifest.yml contains more than 1 attribute for application defined! Only `buildpack` att is accepted.\u001B[m"
+                        echo "\u001B[31mWARNING: CF V2 manifest.yml contains more than 1 attribute for application defined! Only `buildpack` attribute is accepted.\u001B[m"
                       }
                       if (cf_manifest.applications[0].buildpack) {
                         echo "\u001B[32mINFO: Setting application ${gds_app[2]} buildpack to ${cf_manifest.applications[0].buildpack}\u001B[m"
