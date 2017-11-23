@@ -13,7 +13,7 @@ environments:
       - "true"
   - environment: uat
     type: gds
-    app: dit-staging/dev-datahub/datahub-omis-uat
+    app: dit-staging/uat-datahub/datahub-omis-uat
     vars:
       - API_ROOT: https://api.datahub.uat.uktrade.io
     secrets: true
