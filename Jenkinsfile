@@ -132,21 +132,21 @@ pipeline {
             rb_ver_exist = fileExists "${env.WORKSPACE}/.ruby-version"
             if (node_ver_exist) {
               node_ver = readFile "${env.WORKSPACE}/.nvmrc"
-              echo "Detected Nodejs version ${node_ver}"
+              echo "INFO: Detected Nodejs version ${node_ver}"
               ansiColor('xterm') {
                 sh "bash -l -c 'nvm install ${node_ver}'"
               }
             }
             if (py_ver_exist) {
               py_ver = readFile "${env.WORKSPACE}/.python-version"
-              echo "Detected Python version ${py_ver}"
+              echo "INFO: Detected Python version ${py_ver}"
               ansiColor('xterm') {
                 sh "bash -l -c 'pyenv install ${py_ver}'"
               }
             }
             if (rb_ver_exist) {
               rb_ver = readFile "${env.WORKSPACE}/.ruby-version"
-              echo "Detected Ruby version ${rb_ver}"
+              echo "INFO: Detected Ruby version ${rb_ver}"
               ansiColor('xterm') {
                 sh "bash -l -c 'rvm install ${rb_ver}'"
               }
@@ -166,18 +166,41 @@ pipeline {
                       cf target -o ${gds_app[0]} -s ${gds_app[1]}
                       cf v3-create-app ${gds_app[2]}
                     """
+
+                    cf_manifest_exist = fileExists "${env.WORKSPACE}/manifest.yml"
+                    if (cf_manifest_exist) {
+                      echo "INFO: Detected CF V2 manifest.yml"
+                      cf_manifest = readYaml file: "${env.WORKSPACE}/manifest.yml"
+                      if (cf_manifest.applications.size() != 1) {
+                        echo "\u001B[31mWARNING: CF V2 manifest.yml contains more than 1 application defined! Only 'buildpack' attribute is accepted.\u001B[m"
+                      }
+                      if (cf_manifest.applications[0].size() != 1) {
+                        echo "\u001B[31mWARNING: CF V2 manifest.yml contains more than 1 attribute for application defined! Only 'buildpack' attribute is accepted.\u001B[m"
+                      }
+                      if (cf_manifest.applications[0].buildpack) {
+                        echo "\u001B[32mINFO: Setting application ${gds_app[2]} buildpack to ${cf_manifest.applications[0].buildpack}\u001B[m"
+                        env.PAAS_BUILDPACK = cf_manifest.applications[0].buildpack
+                      }
+                    }
+
                     cfignore_exist = fileExists "${env.WORKSPACE}/.cfignore"
                     if (!cfignore_exist) {
                       sh "ln -snf ${env.WORKSPACE}/.gitignore ${env.WORKSPACE}/.cfignore"
                     }
                   }
+
                   envars.each { key, value ->
                     ansiColor('xterm') {
                       sh "cf v3-set-env ${gds_app[2]} ${input.bash_escape(key)} ${input.bash_escape(value)}"
                     }
                   }
+
                   ansiColor('xterm') {
-                    sh "cf v3-push ${gds_app[2]}"
+                    if (env.PAAS_BUILDPACK) {
+                      sh "cf v3-push ${gds_app[2]} -b ${env.PAAS_BUILDPACK}"
+                    } else {
+                      sh "cf v3-push ${gds_app[2]}"
+                    }
                   }
                 }
                 break
