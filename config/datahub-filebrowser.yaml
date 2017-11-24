@@ -35,7 +35,7 @@ environments:
     secrets: true
     run:
       - "true"
-  - environment: prod
+  - environment: production
     type: gds
     app: dit-services/datahub/datahub-filebrowser
     vars:
