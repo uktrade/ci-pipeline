@@ -197,9 +197,9 @@ pipeline {
 
                   ansiColor('xterm') {
                     if (env.PAAS_BUILDPACK) {
-                      sh "cf v3-push ${gds_app[2]} -b ${env.PAAS_BUILDPACK}"
+                      sh "cf v3-push ${gds_app[2]} -b ${env.PAAS_BUILDPACK} -p ."
                     } else {
-                      sh "cf v3-push ${gds_app[2]}"
+                      sh "cf v3-push ${gds_app[2]} -p ."
                     }
                   }
                 }
