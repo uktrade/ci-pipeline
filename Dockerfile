@@ -1,6 +1,9 @@
 FROM ubuntu:16.04
 
-ENV NVM_VER v0.33.2
+ENV NVM_VER v0.33.6
+ENV CF_CLI_VER 6.32.0
+ENV OC_REL v1.5.1
+ENV OC_BUILD 7b451fc
 
 RUN groupadd -g 1000 ubuntu && \
     useradd -u 1000 -g 1000 -m -s /bin/bash ubuntu
@@ -14,13 +17,13 @@ RUN apt-get update && \
     apt-get install -y python3 python3-pip ruby-full rubygems bundler gettext && \
     rm -rf /var/lib/apt/lists/*
 
-RUN curl -Lfs https://github.com/openshift/origin/releases/download/v1.5.1/openshift-origin-client-tools-v1.5.1-7b451fc-linux-64bit.tar.gz | tar -xzf - -C /usr/local/bin --strip 1 --wildcards */oc && \
+RUN curl -Lfs "https://github.com/openshift/origin/releases/download/$OC_REL/openshift-origin-client-tools-$OC_REL-$OC_BUILD-linux-64bit.tar.gz" | tar -xzf - -C /usr/local/bin --strip 1 --wildcards */oc && \
     pip3 install --upgrade awscli virtualenv && \
     wget -qO- https://cli-assets.heroku.com/install-ubuntu.sh | sh && \
     wget -q -O - https://packages.cloudfoundry.org/debian/cli.cloudfoundry.org.key | apt-key add - && \
     echo "deb http://packages.cloudfoundry.org/debian stable main" | tee /etc/apt/sources.list.d/cloudfoundry-cli.list && \
     apt-get update && \
-    apt-get install -y cf-cli && \
+    apt-get install -y cf-cli=$CF_CLI_VER && \
     rm -rf /var/lib/apt/lists/*
 
 COPY Gemfile* /tmp/
@@ -37,6 +40,3 @@ RUN curl -Lfs https://raw.githubusercontent.com/pyenv/pyenv-installer/master/bin
     echo 'export PATH="$HOME/.pyenv/bin:$PATH"' >> ~/.profile && \
     echo 'eval "$(pyenv init -)"\neval "$(pyenv virtualenv-init -)"' >> ~/.profile && \
     echo 'export NVM_DIR="$HOME/.nvm"\n[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"' >> ~/.profile
-
-RUN cf add-plugin-repo CF-Community https://plugins.cloudfoundry.org && \
-    cf install-plugin -r CF-Community "blue-green-deploy" -f
