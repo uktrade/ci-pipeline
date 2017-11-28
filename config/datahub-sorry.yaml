@@ -1,0 +1,13 @@
+---
+name: datahub-sorry
+namespace: datahub
+scm: git@github.com:uktrade/service-shuttering-page.git
+environments:
+  - environment: production
+    type: s3
+    app: sorry.trade.gov.uk
+    vars:
+      - AWS_DEFAULT_REGION: eu-west-2
+    secrets: true
+    run:
+      - "true"
