@@ -13,7 +13,7 @@ environments:
       - "true"
   - environment: production
     type: gds
-    app: dit-staging/staging-datasci/dt07
+    app: dit-services/datasci/dt07
     vars:
       - DISABLE_COLLECTSTATIC: 1
     secrets: true
