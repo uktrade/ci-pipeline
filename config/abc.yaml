@@ -1,0 +1,29 @@
+---
+name: staff-sso
+namespace: webops
+scm: git@github.com:uktrade/staff-sso.git
+environments:
+  - environment: dev
+    type: gds
+    app: dit-staging/dev-datahub/staff-sso-dev
+    vars:
+      - HERE: 1
+    secrets: true
+    run:
+      - "true"
+  - environment: staging
+    type: gds
+    app: dit-staging/staging-datahub/staff-sso-staging
+    vars:
+      - HERE: 1
+    secrets: true
+    run:
+      - "true"
+  - environment: prod
+    type: gds
+    app: dit-services/datahub/staff-sso
+    vars:
+      - HERE: 1
+    secrets: true
+    run:
+      - "true"
