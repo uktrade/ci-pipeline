@@ -1,6 +1,6 @@
 ---
 name: staff-sso
-namespace: webops
+namespace: datahub
 scm: git@github.com:uktrade/staff-sso.git
 environments:
   - environment: dev
