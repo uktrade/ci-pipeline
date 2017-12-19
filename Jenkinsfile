@@ -238,12 +238,12 @@ pipeline {
 
                   sh """
                     oc process -f oc-pipeline.yml \
-                      -p APP_ID=${oc_app[2]} \
-                      -p NAMESPACE=${oc_app[1]} \
-                      -p SCM=${env.SCM} \
-                      -p SCM_COMMIT=${env.Version} \
-                      -p PORT=${env.PORT} \
-                      -p DOMAIN=${env.OC_DOMAIN} \
+                      -v APP_ID=${oc_app[2]} \
+                      -v NAMESPACE=${oc_app[1]} \
+                      -v SCM=${env.SCM} \
+                      -v SCM_COMMIT=${env.Version} \
+                      -v PORT=${env.PORT} \
+                      -v DOMAIN=${env.OC_DOMAIN} \
                       | oc apply -f -
                   """
 
