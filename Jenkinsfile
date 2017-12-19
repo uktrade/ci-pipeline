@@ -240,7 +240,6 @@ pipeline {
                         -v NAMESPACE=${oc_app[1]} \
                         -v SCM=${env.SCM} \
                         -v SCM_COMMIT=${env.Version} \
-                        -v PORT=${env.PORT} \
                         -v DOMAIN=apps.${env.oc_app[0]} \
                         | oc apply -f -
                     """
