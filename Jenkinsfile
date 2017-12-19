@@ -233,7 +233,7 @@ pipeline {
                       oc project ${oc_app[1]}
                     """
 
-                    env.OC_BUILD_ID = sh(script: "expr \$(oc get bc/${oc_app[2]} -o json | jq -rc '.status.lastVersion') + 1".trim(), returnStdout: true)
+                    env.OC_BUILD_ID = sh(script: "expr \$(oc get bc/${oc_app[2]} -o json | jq -rc '.status.lastVersion') + 1", returnStdout: true).trim()
                     sh """
                       oc process -f oc-pipeline.yml \
                         -v APP_ID=${oc_app[2]} \
