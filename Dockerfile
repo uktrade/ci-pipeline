@@ -3,7 +3,7 @@ FROM ubuntu:16.04
 ENV NVM_VER v0.33.6
 ENV CF_CLI_VER 6.32.0
 ENV OC_REL v1.4.1
-ENV OC_BUILD 7b451fc
+ENV OC_BUILD 3f9807a
 
 RUN groupadd -g 1000 ubuntu && \
     useradd -u 1000 -g 1000 -m -s /bin/bash ubuntu
