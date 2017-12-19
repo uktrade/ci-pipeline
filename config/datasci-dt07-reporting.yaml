@@ -3,6 +3,14 @@ name: dt07-reporting
 namespace: datasci
 scm: git@github.com:uktrade/dt07-reporting.git
 environments:
+  - environment: dev
+    type: openshift
+    app: data.dev.uktrade.io/input/dt07
+    vars:
+      - DISABLE_COLLECTSTATIC: 1
+    secrets: true
+    run:
+      - "true"
   - environment: staging
     type: gds
     app: dit-staging/staging-datasci/dt07-staging

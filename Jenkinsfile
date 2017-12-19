@@ -223,6 +223,38 @@ pipeline {
                 break
 
               case "openshift":
+                oc_app = env.PAAS_APP.split("/")
+                ansiColor('xterm') {
+                  sh """
+                    oc login https://dashboard.${oc_app[0]} --token=${env.OC_TOKEN}
+                    oc project ${oc_app[1]}
+                    PREV_OC_BUILD_ID=$(oc get bc/${oc_app[2]} -o json | jq -rc '.status.lastVersion')
+                    export OC_BUILD_ID=$(expr $PREV_OC_BUILD_ID + 1)
+                  """
+
+                  sh """
+                    oc process -f oc-pipeline.yml \
+                      -p APP_ID=${oc_app[2]} \
+                      -p NAMESPACE=${oc_app[1]} \
+                      -p SCM=${env.SCM} \
+                      -p SCM_COMMIT=${env.Version} \
+                      -p PORT=${env.PORT} \
+                      -p DOMAIN=${env.OC_DOMAIN} \
+                      | oc apply -f -
+                  """
+
+                  envars.each { key, value ->
+                    sh "oc set env dc/${oc_app[2]} ${input.bash_escape(key)}=${input.bash_escape(value)}"
+                  }
+
+                  sh """
+                    while [ $(oc get bc/${oc_app[2]} -o json | jq -rc '.status.lastVersion') -ne ${env.OC_BUILD_ID} ]; do
+                      sleep 10
+                    done
+                    oc logs -f --version=${env.OC_BUILD_ID} bc/${oc_app[2]}
+                    oc logs -f dc/${oc_app[2]}
+                  """
+                }
                 break
 
               case "heroku":
