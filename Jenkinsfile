@@ -226,35 +226,37 @@ pipeline {
 
               case "openshift":
                 oc_app = env.PAAS_APP.split("/")
-                ansiColor('xterm') {
-                  sh """
-                    oc login https://dashboard.${oc_app[0]} --token=${env.OC_TOKEN}
-                    oc project ${oc_app[1]}
-                    export OC_BUILD_ID=$(expr `oc get bc/${oc_app[2]} -o json | jq -rc '.status.lastVersion'` + 1)
-                  """
+                withCredentials([string(credentialsId: env.OC_TOKEN_ID, variable: 'OC_TOKEN')]) {
+                  ansiColor('xterm') {
+                    sh """
+                      oc login https://dashboard.${oc_app[0]} --insecure-skip-tls-verify=true --token=${OC_TOKEN}
+                      oc project ${oc_app[1]}
+                      export OC_BUILD_ID=$(expr `oc get bc/${oc_app[2]} -o json | jq -rc '.status.lastVersion'` + 1)
+                    """
 
-                  sh """
-                    oc process -f oc-pipeline.yml \
-                      -v APP_ID=${oc_app[2]} \
-                      -v NAMESPACE=${oc_app[1]} \
-                      -v SCM=${env.SCM} \
-                      -v SCM_COMMIT=${env.Version} \
-                      -v PORT=${env.PORT} \
-                      -v DOMAIN=apps.${env.oc_app[0]} \
-                      | oc apply -f -
-                  """
+                    sh """
+                      oc process -f oc-pipeline.yml \
+                        -v APP_ID=${oc_app[2]} \
+                        -v NAMESPACE=${oc_app[1]} \
+                        -v SCM=${env.SCM} \
+                        -v SCM_COMMIT=${env.Version} \
+                        -v PORT=${env.PORT} \
+                        -v DOMAIN=apps.${env.oc_app[0]} \
+                        | oc apply -f -
+                    """
 
-                  envars.each { key, value ->
-                    sh "oc set env dc/${oc_app[2]} ${input.bash_escape(key)}=${input.bash_escape(value)}"
+                    envars.each { key, value ->
+                      sh "oc set env dc/${oc_app[2]} ${input.bash_escape(key)}=${input.bash_escape(value)}"
+                    }
+
+                    sh """
+                      while [ $(oc get bc/${oc_app[2]} -o json | jq -rc '.status.lastVersion') -ne ${env.OC_BUILD_ID} ]; do
+                        sleep 10
+                      done
+                      oc logs -f --version=${env.OC_BUILD_ID} bc/${oc_app[2]}
+                      oc logs -f dc/${oc_app[2]}
+                    """
                   }
-
-                  sh """
-                    while [ $(oc get bc/${oc_app[2]} -o json | jq -rc '.status.lastVersion') -ne ${env.OC_BUILD_ID} ]; do
-                      sleep 10
-                    done
-                    oc logs -f --version=${env.OC_BUILD_ID} bc/${oc_app[2]}
-                    oc logs -f dc/${oc_app[2]}
-                  """
                 }
                 break
 
