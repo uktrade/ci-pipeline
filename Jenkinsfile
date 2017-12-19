@@ -211,15 +211,17 @@ pipeline {
                 } else {
                   s3_path = "${env.WORKSPACE}/${env.S3_WEBSITE_SRC}"
                 }
-                sh """
-                  export AWS_DEFAULT_REGION=${env.AWS_DEFAULT_REGION}
-                  export AWS_ACCESS_KEY_ID=${env.AWS_ACCESS_KEY_ID}
-                  export AWS_SECRET_ACCESS_KEY=${env.AWS_SECRET_ACCESS_KEY}
-                  aws s3 sync --sse --acl public-read --delete --exclude '.*' ${s3_path} s3://${env.PAAS_APP}
-                  if [ -f ${env.WORKSPACE}/${env.S3_WEBSITE_REDIRECT} ]; then
-                    aws s3api put-bucket-website --bucket ${env.PAAS_APP} --website-configuration file://${env.WORKSPACE}/${env.S3_WEBSITE_REDIRECT}
-                  fi
-                """
+                ansiColor('xterm') {
+                  sh """
+                    export AWS_DEFAULT_REGION=${env.AWS_DEFAULT_REGION}
+                    export AWS_ACCESS_KEY_ID=${env.AWS_ACCESS_KEY_ID}
+                    export AWS_SECRET_ACCESS_KEY=${env.AWS_SECRET_ACCESS_KEY}
+                    aws s3 sync --sse --acl public-read --delete --exclude '.*' ${s3_path} s3://${env.PAAS_APP}
+                    if [ -f ${env.WORKSPACE}/${env.S3_WEBSITE_REDIRECT} ]; then
+                      aws s3api put-bucket-website --bucket ${env.PAAS_APP} --website-configuration file://${env.WORKSPACE}/${env.S3_WEBSITE_REDIRECT}
+                    fi
+                  """
+                }
                 break
 
               case "openshift":
@@ -227,6 +229,8 @@ pipeline {
                 ansiColor('xterm') {
                   sh """
                     oc login https://dashboard.${oc_app[0]} --token=${env.OC_TOKEN}
+                  """
+                  sh """
                     oc project ${oc_app[1]}
                     PREV_OC_BUILD_ID=$(oc get bc/${oc_app[2]} -o json | jq -rc '.status.lastVersion')
                     export OC_BUILD_ID=$(expr $PREV_OC_BUILD_ID + 1)
