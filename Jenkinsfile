@@ -225,9 +225,9 @@ pipeline {
                 break
 
               case "openshift":
-                oc_app = env.PAAS_APP.split("/")
                 withCredentials([string(credentialsId: env.OC_TOKEN_ID, variable: 'OC_TOKEN')]) {
                   ansiColor('xterm') {
+                    oc_app = env.PAAS_APP.split("/")
                     sh """
                       oc login https://dashboard.${oc_app[0]} --insecure-skip-tls-verify=true --token=${OC_TOKEN}
                       oc project ${oc_app[1]}
