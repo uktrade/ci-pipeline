@@ -230,8 +230,7 @@ pipeline {
                   sh """
                     oc login https://dashboard.${oc_app[0]} --token=${env.OC_TOKEN}
                     oc project ${oc_app[1]}
-                    PREV_OC_BUILD_ID=$(oc get bc/${oc_app[2]} -o json | jq -rc '.status.lastVersion')
-                    export OC_BUILD_ID=$(expr $PREV_OC_BUILD_ID + 1)
+                    export OC_BUILD_ID=$(expr `oc get bc/${oc_app[2]} -o json | jq -rc '.status.lastVersion'` + 1)
                   """
 
                   sh """
