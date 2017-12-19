@@ -241,7 +241,7 @@ pipeline {
                       -v SCM=${env.SCM} \
                       -v SCM_COMMIT=${env.Version} \
                       -v PORT=${env.PORT} \
-                      -v DOMAIN=${env.OC_DOMAIN} \
+                      -v DOMAIN=apps.${env.oc_app[0]} \
                       | oc apply -f -
                   """
 
