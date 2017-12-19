@@ -231,9 +231,9 @@ pipeline {
                     sh """
                       oc login https://dashboard.${oc_app[0]} --insecure-skip-tls-verify=true --token=${OC_TOKEN}
                       oc project ${oc_app[1]}
-                      export OC_BUILD_ID=$(expr `oc get bc/${oc_app[2]} -o json | jq -rc '.status.lastVersion'` + 1)
                     """
 
+                    env.OC_BUILD_ID = sh(script: "expr \$(oc get bc/${oc_app[2]} -o json | jq -rc '.status.lastVersion') + 1".trim(), returnStdout: true)
                     sh """
                       oc process -f oc-pipeline.yml \
                         -v APP_ID=${oc_app[2]} \
@@ -249,7 +249,7 @@ pipeline {
                     }
 
                     sh """
-                      while [ $(oc get bc/${oc_app[2]} -o json | jq -rc '.status.lastVersion') -ne ${env.OC_BUILD_ID} ]; do
+                      while [ \$(oc get bc/${oc_app[2]} -o json | jq -rc '.status.lastVersion') -ne ${env.OC_BUILD_ID} ]; do
                         sleep 10
                       done
                       oc logs -f --version=${env.OC_BUILD_ID} bc/${oc_app[2]}
