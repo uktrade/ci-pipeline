@@ -41,6 +41,11 @@ parameters:
     displayName: Number of app instances
     required: true
     value: '1'
+  - name: GIT_SSH_KEY
+    description: GIT SSH private key
+    displayName: GIT SSH private key
+    required: true
+    value: null
 objects:
   - apiVersion: v1
     kind: DeploymentConfig
@@ -167,3 +172,12 @@ objects:
       tls:
         termination: edge
       wildcardPolicy: None
+  - apiVersion: v1
+    kind: Secret
+    metadata:
+      name: '${APP_ID}-git-sshauth'
+      namespace: ${NAMESPACE}
+    data:
+      ssh-privatekey: >-
+        ${{GIT_SSH_KEY}}
+    type: kubernetes.io/ssh-auth
