@@ -178,5 +178,5 @@ objects:
       name: ${APP_ID}
       namespace: ${NAMESPACE}
     data:
-      ssh-privatekey: ${{GIT_SSH_KEY}}
+      ssh-privatekey: ${GIT_SSH_KEY}
     type: kubernetes.io/ssh-auth
