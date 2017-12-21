@@ -102,6 +102,7 @@ pipeline {
               sh "${env.WORKSPACE}/bootstrap.rb ${env.Team} ${env.Project} ${env.Environment}"
             }
             envars = readProperties file: "${env.WORKSPACE}/.env"
+            sh "mv oc-pipeline.yml .oc.yml "
           }
         }
       }
@@ -228,25 +229,34 @@ pipeline {
                 withCredentials([string(credentialsId: env.OC_TOKEN_ID, variable: 'OC_TOKEN')]) {
                   ansiColor('xterm') {
                     oc_app = env.PAAS_APP.split("/")
+
+                    withCredentials([sshUserPrivateKey(credentialsId: env.SCM_CREDENTIAL, keyFileVariable: 'GIT_SSH_KEY', passphraseVariable: '', usernameVariable: '')]) {
+                      writeFile file: '.ssh/id_rsa', text: GIT_SSH_KEY
+                    }
+
                     sh """
                       oc login https://dashboard.${oc_app[0]} --insecure-skip-tls-verify=true --token=${OC_TOKEN}
                       oc project ${oc_app[1]}
                     """
 
                     OC_APP_EXIST = sh(script: "oc get bc -o json | jq '[.items[] | select(.metadata.name==\"${oc_app[2]}\")] | length'", returnStdout: true).trim()
-                    if (OC_APP_EXIST == 0) {
-                      env.OC_BUILD_ID = 1
+                    if (OC_APP_EXIST == "0") {
+                      env.OC_BUILD_ID = "1"
+                      sh """
+                        oc secrets new-sshauth ${oc_app[2]}-git-sshauth --ssh-privatekey=.ssh/id_rsa
+                        oc secrets add serviceaccount/builder secrets/${oc_app[2]}-git-sshauth
+                      """
                     } else {
                       env.OC_BUILD_ID = sh(script: "expr \$(oc get bc/${oc_app[2]} -o json | jq -rc '.status.lastVersion') + 1", returnStdout: true).trim()
                     }
 
                     sh """
-                      oc process -f oc-pipeline.yml \
+                      oc process -f .oc.yml \
                         -v APP_ID=${oc_app[2]} \
                         -v NAMESPACE=${oc_app[1]} \
                         -v SCM=${env.SCM} \
                         -v SCM_COMMIT=${env.Version} \
-                        -v DOMAIN=apps.${env.oc_app[0]} \
+                        -v DOMAIN=apps.${oc_app[0]} \
                         | oc apply -f -
                     """
 
@@ -259,7 +269,6 @@ pipeline {
                         sleep 10
                       done
                       oc logs -f --version=${env.OC_BUILD_ID} bc/${oc_app[2]}
-                      oc logs -f dc/${oc_app[2]}
                     """
                   }
                 }
