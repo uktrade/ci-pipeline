@@ -116,7 +116,8 @@ objects:
         git:
           uri: '${SCM}'
           ref: ${SCM_COMMIT}
-        sourceSecret: ${APP_ID}
+        sourceSecret:
+          name: ${APP_ID}
       strategy:
         type: Source
         sourceStrategy:
