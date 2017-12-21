@@ -111,7 +111,7 @@ objects:
         git:
           uri: '${SCM}'
           ref: ${SCM_COMMIT}
-        sourceSecret: ${APP_ID}-git-sshauth
+        sourceSecret: '${APP_ID}-git-sshauth'
       strategy:
         type: Source
         sourceStrategy:
