@@ -14,7 +14,7 @@ RUN echo "force-unsafe-io" > /etc/dpkg/dpkg.cfg.d/02apt-speedup && \
     rm -rf /var/lib/apt/lists/*
 
 RUN apt-get update && \
-    apt-get install -y python3 python3-pip ruby-full rubygems bundler gettext && \
+    apt-get install -y python3 python3-pip ruby-full rubygems bundler gettext jq && \
     rm -rf /var/lib/apt/lists/*
 
 RUN curl -Lfs "https://github.com/openshift/origin/releases/download/$OC_REL/openshift-origin-client-tools-$OC_REL-$OC_BUILD-linux-64bit.tar.gz" | tar -xzf - -C /usr/local/bin --strip 1 --wildcards */oc && \
