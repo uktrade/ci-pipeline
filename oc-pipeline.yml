@@ -175,7 +175,7 @@ objects:
   - apiVersion: v1
     kind: Secret
     metadata:
-      name: '${APP_ID}-git-sshauth'
+      name: ${APP_ID}
       namespace: ${NAMESPACE}
     data:
       ssh-privatekey: >-
