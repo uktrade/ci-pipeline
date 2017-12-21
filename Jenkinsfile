@@ -242,7 +242,6 @@ pipeline {
                     }
 
                     withCredentials([sshUserPrivateKey(credentialsId: env.SCM_CREDENTIAL, keyFileVariable: 'GIT_SSH_KEY', passphraseVariable: '', usernameVariable: '')]) {
-                      writeFile file: '.ssh/id_rsa', text: GIT_SSH_KEY
                       sh """
                         oc process -f .oc.yml \
                           -v APP_ID=${oc_app[2]} \
@@ -250,11 +249,12 @@ pipeline {
                           -v SCM=${env.SCM} \
                           -v SCM_COMMIT=${env.Version} \
                           -v DOMAIN=apps.${oc_app[0]} \
-                          -v GIT_SSH_KEY=${GIT_SSH_KEY} \
+                          -v GIT_SSH_KEY=\"${GIT_SSH_KEY}\" \
                           | oc apply -f -
                       """
-                      sh "oc secrets add serviceaccount/builder secrets/${oc_app[2]}-git-sshauth"
                     }
+
+                    sh "oc secrets add serviceaccount/builder secrets/${oc_app[2]}"
 
                     envars.each { key, value ->
                       sh "oc set env dc/${oc_app[2]} ${input.bash_escape(key)}=${input.bash_escape(value)}"
