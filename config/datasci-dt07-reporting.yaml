@@ -5,7 +5,7 @@ scm: git@github.com:uktrade/dt07-reporting.git
 environments:
   - environment: dev
     type: openshift
-    app: data.dev.uktrade.io/input/dt07
+    app: data.dev.uktrade.io/output/dt07
     vars:
       - DISABLE_COLLECTSTATIC: 1
     secrets: true
