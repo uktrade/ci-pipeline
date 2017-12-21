@@ -233,7 +233,7 @@ pipeline {
                       oc project ${oc_app[1]}
                     """
 
-                    OC_APP_EXIST = sh(script: "oc get bc -o json | jq '[.items[] | select(.metadata.name==\"${oc_app[2]}\")] | length'")
+                    OC_APP_EXIST = sh(script: "oc get bc -o json | jq '[.items[] | select(.metadata.name==\"${oc_app[2]}\")] | length'", returnStdout: true).trim()
                     if (OC_APP_EXIST) {
                       env.OC_BUILD_ID = sh(script: "expr \$(oc get bc/${oc_app[2]} -o json | jq -rc '.status.lastVersion') + 1", returnStdout: true).trim()
                     } else {
