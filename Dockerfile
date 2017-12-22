@@ -2,8 +2,8 @@ FROM ubuntu:16.04
 
 ENV NVM_VER v0.33.6
 ENV CF_CLI_VER 6.32.0
-ENV OC_REL v1.5.1
-ENV OC_BUILD 7b451fc
+ENV OC_REL v1.4.1
+ENV OC_BUILD 3f9807a
 
 RUN groupadd -g 1000 ubuntu && \
     useradd -u 1000 -g 1000 -m -s /bin/bash ubuntu
@@ -14,7 +14,7 @@ RUN echo "force-unsafe-io" > /etc/dpkg/dpkg.cfg.d/02apt-speedup && \
     rm -rf /var/lib/apt/lists/*
 
 RUN apt-get update && \
-    apt-get install -y python3 python3-pip ruby-full rubygems bundler gettext && \
+    apt-get install -y python3 python3-pip ruby-full rubygems bundler gettext jq && \
     rm -rf /var/lib/apt/lists/*
 
 RUN curl -Lfs "https://github.com/openshift/origin/releases/download/$OC_REL/openshift-origin-client-tools-$OC_REL-$OC_BUILD-linux-64bit.tar.gz" | tar -xzf - -C /usr/local/bin --strip 1 --wildcards */oc && \

@@ -102,6 +102,7 @@ pipeline {
               sh "${env.WORKSPACE}/bootstrap.rb ${env.Team} ${env.Project} ${env.Environment}"
             }
             envars = readProperties file: "${env.WORKSPACE}/.env"
+            sh "mv oc-pipeline.yml .oc.yml "
           }
         }
       }
@@ -211,18 +212,62 @@ pipeline {
                 } else {
                   s3_path = "${env.WORKSPACE}/${env.S3_WEBSITE_SRC}"
                 }
-                sh """
-                  export AWS_DEFAULT_REGION=${env.AWS_DEFAULT_REGION}
-                  export AWS_ACCESS_KEY_ID=${env.AWS_ACCESS_KEY_ID}
-                  export AWS_SECRET_ACCESS_KEY=${env.AWS_SECRET_ACCESS_KEY}
-                  aws s3 sync --sse --acl public-read --delete --exclude '.*' ${s3_path} s3://${env.PAAS_APP}
-                  if [ -f ${env.WORKSPACE}/${env.S3_WEBSITE_REDIRECT} ]; then
-                    aws s3api put-bucket-website --bucket ${env.PAAS_APP} --website-configuration file://${env.WORKSPACE}/${env.S3_WEBSITE_REDIRECT}
-                  fi
-                """
+                ansiColor('xterm') {
+                  sh """
+                    export AWS_DEFAULT_REGION=${env.AWS_DEFAULT_REGION}
+                    export AWS_ACCESS_KEY_ID=${env.AWS_ACCESS_KEY_ID}
+                    export AWS_SECRET_ACCESS_KEY=${env.AWS_SECRET_ACCESS_KEY}
+                    aws s3 sync --sse --acl public-read --delete --exclude '.*' ${s3_path} s3://${env.PAAS_APP}
+                    if [ -f ${env.WORKSPACE}/${env.S3_WEBSITE_REDIRECT} ]; then
+                      aws s3api put-bucket-website --bucket ${env.PAAS_APP} --website-configuration file://${env.WORKSPACE}/${env.S3_WEBSITE_REDIRECT}
+                    fi
+                  """
+                }
                 break
 
               case "openshift":
+                withCredentials([string(credentialsId: env.OC_TOKEN_ID, variable: 'OC_TOKEN')]) {
+                  ansiColor('xterm') {
+                    oc_app = env.PAAS_APP.split("/")
+                    sh """
+                      oc login https://dashboard.${oc_app[0]} --insecure-skip-tls-verify=true --token=${OC_TOKEN}
+                      oc project ${oc_app[1]}
+                    """
+
+                    OC_APP_EXIST = sh(script: "oc get bc -o json | jq '[.items[] | select(.metadata.name==\"${oc_app[2]}\")] | length'", returnStdout: true).trim()
+                    if (OC_APP_EXIST == "0") {
+                      env.OC_BUILD_ID = "1"
+                    } else {
+                      env.OC_BUILD_ID = sh(script: "expr \$(oc get bc/${oc_app[2]} -o json | jq -rc '.status.lastVersion') + 1", returnStdout: true).trim()
+                    }
+
+                    withCredentials([sshUserPrivateKey(credentialsId: env.SCM_CREDENTIAL, keyFileVariable: 'GIT_SSH_KEY', passphraseVariable: '', usernameVariable: '')]) {
+                      sh "cat ${GIT_SSH_KEY} | sed '\$d' | base64 | tr -d '\n'> .ssh_encoded"
+                      sh """
+                        oc process -f .oc.yml \
+                          -v APP_ID=${oc_app[2]} \
+                          -v NAMESPACE=${oc_app[1]} \
+                          -v SCM=${env.SCM} \
+                          -v SCM_COMMIT=${env.Version} \
+                          -v DOMAIN=apps.${oc_app[0]} \
+                          -v GIT_SSH_KEY=\$(<.ssh_encoded) \
+                          | oc apply -f -
+                      """
+                    }
+                    sh "oc secrets add serviceaccount/builder secrets/${oc_app[2]}"
+
+                    envars.each { key, value ->
+                      sh "oc set env dc/${oc_app[2]} ${input.bash_escape(key)}=${input.bash_escape(value)}"
+                    }
+
+                    sh """
+                      while [ \$(oc get bc/${oc_app[2]} -o json | jq -rc '.status.lastVersion') -ne ${env.OC_BUILD_ID} ]; do
+                        sleep 10
+                      done
+                      oc logs -f --version=${env.OC_BUILD_ID} bc/${oc_app[2]}
+                    """
+                  }
+                }
                 break
 
               case "heroku":
