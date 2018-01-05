@@ -205,10 +205,12 @@ pipeline {
                   }
 
                   ansiColor('xterm') {
-                    if (env.PAAS_HEALTHCHECK_TYPE && env.PAAS_HEALTHCHECK_ENDPOINT) {
+                    if (env.PAAS_HEALTHCHECK_TYPE) {
                       switch(env.PAAS_HEALTHCHECK_TYPE) {
                         case "http"
-                          sh "cf v3-set-health-check ${gds_app[2]} ${env.PAAS_HEALTHCHECK_TYPE} --endpoint ${env.PAAS_HEALTHCHECK_ENDPOINT}"
+                          if (env.PAAS_HEALTHCHECK_ENDPOINT) {
+                            sh "cf v3-set-health-check ${gds_app[2]} ${env.PAAS_HEALTHCHECK_TYPE} --endpoint ${env.PAAS_HEALTHCHECK_ENDPOINT}"
+                          }
                           break
                       }
                     }
