@@ -6,13 +6,9 @@ environments:
   - environment: dev
     type: gds
     app: dit-services/sandbox/cf-nodejs
-    vars:
-      - FOO: bar
+    vars: []
     secrets: true
-    run:
-      - "ls -al ${WORKSPACE}"
-      - "env | sort"
-      - "echo hello\ world"
+    run: []
   - environment: s3
     type: s3
     app: ci-pipeline-s3-test
