@@ -11,6 +11,7 @@ environments:
       - S3_WEBSITE_REDIRECT: conf/s3/invest.staging/website.json
     secrets: true
     run:
+      - "npm install"
       - "npm run-script build"
   - environment: production
     type: s3
@@ -20,4 +21,5 @@ environments:
       - S3_WEBSITE_REDIRECT: conf/s3/invest.prod/website.json
     secrets: true
     run:
+      - "npm install"
       - "npm run-script build"
