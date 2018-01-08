@@ -182,14 +182,6 @@ pipeline {
                         echo "\u001B[32mINFO: Setting application ${gds_app[2]} buildpack to ${cf_manifest.applications[0].buildpack}\u001B[m"
                         env.PAAS_BUILDPACK = cf_manifest.applications[0].buildpack
                       }
-                      if (cf_manifest.applications[0].health-check-type) {
-                        echo "\u001B[32mINFO: Setting application ${gds_app[2]} health-check-type to ${cf_manifest.applications[0].health-check-type}\u001B[m"
-                        env.PAAS_HEALTHCHECK_TYPE = cf_manifest.applications[0].health-check-type
-                      }
-                      if (cf_manifest.applications[0].health-check-http-endpoint) {
-                        echo "\u001B[32mINFO: Setting application ${gds_app[2]} health-check-http-endpoint to ${cf_manifest.applications[0].health-check-http-endpoint}\u001B[m"
-                        env.PAAS_HEALTHCHECK_ENDPOINT = cf_manifest.applications[0].health-check-http-endpoint
-                      }
                     }
 
                     cfignore_exist = fileExists "${env.WORKSPACE}/.cfignore"
@@ -205,16 +197,6 @@ pipeline {
                   }
 
                   ansiColor('xterm') {
-                    if (env.PAAS_HEALTHCHECK_TYPE) {
-                      switch(env.PAAS_HEALTHCHECK_TYPE) {
-                        case "http":
-                          if (env.PAAS_HEALTHCHECK_ENDPOINT) {
-                            sh "cf v3-set-health-check ${gds_app[2]} ${env.PAAS_HEALTHCHECK_TYPE} --endpoint ${env.PAAS_HEALTHCHECK_ENDPOINT}"
-                          }
-                          break
-                      }
-                    }
-
                     if (env.PAAS_BUILDPACK) {
                       sh "cf v3-push ${gds_app[2]} -b ${env.PAAS_BUILDPACK}"
                     } else {
