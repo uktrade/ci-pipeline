@@ -6,57 +6,18 @@ environments:
   - environment: dev
     type: gds
     app: dit-staging/dev-exopps/contact-ukti-dev
-    vars:
-      - LOG_LEVEL: debug
-      - EMAIL_HOST: email-smtp.eu-west-1.amazonaws.com
-      - EMAIL_PORT: 587
-      - STUNNEL_ENABLED: true
-      - REDIS_USE_TLS: true
-      - REDIS_USE_SENTINEL: true
-      - USE_AUTH: false
-      - REDIS_HOST: contactukti-redis.gds-dev.uktrade.io
-      - REDIS_URL: contactukti-redis.gds-dev.uktrade.io
-      - REDIS_PORT: 26379
-      - ZENDESK_URL: https://staging-uktrade.zendesk.com/api/v2
-      - ZENDESK_TAG: contact-dit-staging
+    vars: []
     secrets: true
-    run:
-      - "true"
+    run: []
   - environment: staging
     type: gds
     app: dit-staging/staging-exopps/contact-ukti-staging
-    vars:
-      - NODE_MODULES_CACHE: false
-      - NPM_CONFIG_PRODUCTION: false
-      - LOG_LEVEL: debug
-      - EMAIL_HOST: email-smtp.eu-west-1.amazonaws.com
-      - EMAIL_PORT: 587
-      - STUNNEL_ENABLED: true
-      - REDIS_USE_SENTINEL: true
-      - USE_AUTH: false
-      - REDIS_HOST: contactukti-redis.gds-dev.uktrade.io
-      - REDIS_URL: contactukti-redis.gds-dev.uktrade.io
-      - REDIS_PORT: 26379
-      - ZENDESK_URL: https://staging-uktrade.zendesk.com/api/v2
-      - ZENDESK_TAG: contact-dit-staging
+    vars: []
     secrets: true
-    run:
-      - "true"
+    run: []
   - environment: production
     type: gds
     app: dit-services/exopps/contact-ukti
-    vars:
-      - NODE_MODULES_CACHE: false
-      - NPM_CONFIG_PRODUCTION: false
-      - EMAIL_HOST: email-smtp.eu-west-1.amazonaws.com
-      - EMAIL_PORT: 587
-      - STUNNEL_ENABLED: true
-      - REDIS_USE_SENTINEL: true
-      - REDIS_HOST: contactukti-redis.gds.uktrade.io
-      - REDIS_URL: contactukti-redis.gds.uktrade.io
-      - REDIS_PORT: 26379
-      - ZENDESK_URL: https://uktrade.zendesk.com/api/v2
-      - ZENDESK_TAG: contact-dit
+    vars: []
     secrets: true
-    run:
-      - "true"
+    run: []

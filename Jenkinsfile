@@ -122,39 +122,33 @@ pipeline {
       steps {
         script {
           deployer.inside {
-            if (env.Version =~ /[a-fA-F0-9]{40}/) {
-              checkout([$class: 'GitSCM', branches: [[name: env.Version]], doGenerateSubmoduleConfigurations: false, extensions: [[$class: 'SubmoduleOption', disableSubmodules: false, parentCredentials: true, recursiveSubmodules: true, reference: '', trackingSubmodules: false]], submoduleCfg: [], userRemoteConfigs: [[credentialsId: env.SCM_CREDENTIAL, url: env.SCM]]])
-            } else {
-              git url: env.SCM, branch: env.Version, credentialsId: env.SCM_CREDENTIAL
-            }
+            ansiColor('xterm') {
+              if (env.Version =~ /[a-fA-F0-9]{40}/) {
+                checkout([$class: 'GitSCM', branches: [[name: env.Version]], doGenerateSubmoduleConfigurations: false, extensions: [[$class: 'SubmoduleOption', disableSubmodules: false, parentCredentials: true, recursiveSubmodules: true, reference: '', trackingSubmodules: false]], submoduleCfg: [], userRemoteConfigs: [[credentialsId: env.SCM_CREDENTIAL, url: env.SCM]]])
+              } else {
+                git url: env.SCM, branch: env.Version, credentialsId: env.SCM_CREDENTIAL
+              }
 
-            node_ver_exist = fileExists "${env.WORKSPACE}/.nvmrc"
-            py_ver_exist = fileExists "${env.WORKSPACE}/.python-version"
-            rb_ver_exist = fileExists "${env.WORKSPACE}/.ruby-version"
-            if (node_ver_exist) {
-              node_ver = readFile "${env.WORKSPACE}/.nvmrc"
-              echo "INFO: Detected Nodejs version ${node_ver}"
-              ansiColor('xterm') {
+              node_ver_exist = fileExists "${env.WORKSPACE}/.nvmrc"
+              py_ver_exist = fileExists "${env.WORKSPACE}/.python-version"
+              rb_ver_exist = fileExists "${env.WORKSPACE}/.ruby-version"
+              if (node_ver_exist) {
+                node_ver = readFile "${env.WORKSPACE}/.nvmrc"
+                echo "INFO: Detected Nodejs version ${node_ver}"
                 sh "bash -l -c 'nvm install ${node_ver}'"
               }
-            }
-            if (py_ver_exist) {
-              py_ver = readFile "${env.WORKSPACE}/.python-version"
-              echo "INFO: Detected Python version ${py_ver}"
-              ansiColor('xterm') {
+              if (py_ver_exist) {
+                py_ver = readFile "${env.WORKSPACE}/.python-version"
+                echo "INFO: Detected Python version ${py_ver}"
                 sh "bash -l -c 'pyenv install ${py_ver}'"
               }
-            }
-            if (rb_ver_exist) {
-              rb_ver = readFile "${env.WORKSPACE}/.ruby-version"
-              echo "INFO: Detected Ruby version ${rb_ver}"
-              ansiColor('xterm') {
+              if (rb_ver_exist) {
+                rb_ver = readFile "${env.WORKSPACE}/.ruby-version"
+                echo "INFO: Detected Ruby version ${rb_ver}"
                 sh "bash -l -c 'rvm install ${rb_ver}'"
               }
-            }
 
-            if (env.PAAS_RUN) {
-              ansiColor('xterm') {
+              if (env.PAAS_RUN) {
                 sh "bash -l -c \"${env.PAAS_RUN}\""
               }
             }
@@ -195,15 +189,11 @@ pipeline {
                     if (!cfignore_exist) {
                       sh "ln -snf ${env.WORKSPACE}/.gitignore ${env.WORKSPACE}/.cfignore"
                     }
-                  }
 
-                  envars.each { key, value ->
-                    ansiColor('xterm') {
+                    envars.each { key, value ->
                       sh "cf v3-set-env ${gds_app[2]} ${input.bash_escape(key)} ${input.bash_escape(value)}"
                     }
-                  }
 
-                  ansiColor('xterm') {
                     if (env.PAAS_HEALTHCHECK_TYPE) {
                       switch(env.PAAS_HEALTHCHECK_TYPE) {
                         case "http":
