@@ -3,6 +3,27 @@ name: help
 namespace: enav
 scm: git@github.com:uktrade/help.git
 environments:
+  - environment: dev
+    type: gds
+    app: dit-dev/dev-enav/enav-help-dev
+    vars:
+      - ALLOW_ADMIN: True
+      - ALLOW_AUTHENTICATED: True
+      - DJANGO_SETTINGS_MODULE: help.settings.staging
+      - HELP_HOST: http://contact-us.export.dev.uktrade.io/
+      - PROFILE_HOST: https://dev.profile.uktrade.io/
+      - RESTRICT_IPS: True
+      - SOO_HOST: http://selling-online-overseas.export.staging.uktrade.io/
+      - SSO_HOST: https://stage.sso.uktrade.io/
+      - USE_CAPTCHA: True
+      - ZENDESK_URL: https://staging-uktrade.zendesk.com/api/v2/tickets.json
+      - ZENDESK_TEST_URL: https://staging-uktrade.zendesk.com/api/v2/users.json
+      - DISABLE_COLLECTSTATIC: 1
+    secrets: true
+    run:
+      - "pip install -r requirements.txt"
+      - "npm install && npm run build"
+      - "python manage.py collectstatic --noinput"
   - environment: staging
     type: gds
     app: dit-staging/staging-enav/enav-help-staging
