@@ -5,7 +5,7 @@ scm: git@github.com:uktrade/help.git
 environments:
   - environment: dev
     type: gds
-    app: dit-dev/dev-enav/enav-help-dev
+    app: dit-staging/dev-enav/enav-help-dev
     vars:
       - ALLOW_ADMIN: True
       - ALLOW_AUTHENTICATED: True
