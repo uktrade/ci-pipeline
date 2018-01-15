@@ -108,7 +108,7 @@ objects:
       triggers:
         - type: ImageChange
           imageChange:
-            lastTriggeredImageID: docker-registry-default.${DOMAIN}:5000/tools/cf-builder:latest
+            lastTriggeredImageID: docker-registry.default.svc:5000/tools/${BUILDER}
         - type: ConfigChange
       runPolicy: Serial
       source:
