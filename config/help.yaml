@@ -20,7 +20,6 @@ environments:
       - ZENDESK_TEST_URL: https://staging-uktrade.zendesk.com/api/v2/users.json
     secrets: true
     run:
-      - "pip install -r requirements.txt"
       - "npm install && npm run build"
   - environment: staging
     type: gds
@@ -39,7 +38,6 @@ environments:
       - ZENDESK_TEST_URL: https://staging-uktrade.zendesk.com/api/v2/users.json
     secrets: true
     run:
-      - "pip install -r requirements.txt"
       - "npm install && npm run build"
   - environment: production
     type: gds
@@ -53,5 +51,4 @@ environments:
       - ZENDESK_URL: https://uktrade.zendesk.com/api/v2/tickets.json
     secrets: true
     run:
-      - "pip install -r requirements.txt"
       - "npm install && npm run build"
