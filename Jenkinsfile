@@ -37,7 +37,7 @@ pipeline {
       steps {
         script {
           deployer.inside {
-            checkout([$class: 'GitSCM', url: env.GIT_URL, branches: [[name: env.GIT_BRANCH]], recursiveSubmodules: true, credentialsId: env.SCM_CREDENTIAL])
+            checkout([$class: 'GitSCM', branches: [[name: env.GIT_BRANCH]], doGenerateSubmoduleConfigurations: false, extensions: [[$class: 'SubmoduleOption', disableSubmodules: false, parentCredentials: true, recursiveSubmodules: true, reference: '', trackingSubmodules: false]], submoduleCfg: [], userRemoteConfigs: [[credentialsId: env.SCM_CREDENTIAL, url: env.GIT_URL]]])
             sh 'bundle check || bundle install'
             sh "${env.WORKSPACE}/bootstrap.rb"
             options_json = readJSON file: "${env.WORKSPACE}/.option.json"
@@ -95,7 +95,7 @@ pipeline {
       steps {
         script {
           deployer.inside {
-            checkout([$class: 'GitSCM', url: env.GIT_URL, branches: [[name: env.GIT_BRANCH]], recursiveSubmodules: true, credentialsId: env.SCM_CREDENTIAL])
+            checkout([$class: 'GitSCM', branches: [[name: env.GIT_BRANCH]], doGenerateSubmoduleConfigurations: false, extensions: [[$class: 'SubmoduleOption', disableSubmodules: false, parentCredentials: true, recursiveSubmodules: true, reference: '', trackingSubmodules: false]], submoduleCfg: [], userRemoteConfigs: [[credentialsId: env.SCM_CREDENTIAL, url: env.GIT_URL]]])
             sh 'bundle check || bundle install'
             withCredentials([string(credentialsId: env.VAULT_TOKEN_ID, variable: 'TOKEN')]) {
               env.VAULT_SERECT_ID = TOKEN
