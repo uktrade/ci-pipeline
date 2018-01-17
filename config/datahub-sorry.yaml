@@ -9,5 +9,4 @@ environments:
     vars:
       - AWS_DEFAULT_REGION: eu-west-2
     secrets: true
-    run:
-      - "true"
+    run: []
