@@ -7,39 +7,34 @@ environments:
     type: gds
     app: dit-staging/dev-datahub/datahub-omis-dev
     vars:
-      - API_ROOT: https://api.datahub.dev.uktrade.io
+      - API_ROOT: https://datahub-api-dev.cloudapps.digital
     secrets: true
-    run:
-      - "true"
+    run: []
   - environment: uat
     type: gds
     app: dit-staging/uat-datahub/datahub-omis-uat
     vars:
-      - API_ROOT: https://api.datahub.uat.uktrade.io
+      - API_ROOT: https://datahub-api-uat.cloudapps.digital
     secrets: true
-    run:
-      - "true"
+    run: []
   - environment: demo
     type: gds
     app: dit-staging/dev-datahub/datahub-omis-demo
     vars:
-      - API_ROOT: https://api.datahub.demo.uktrade.io
+      - API_ROOT: https://datahub-api-demo.cloudapps.digital
     secrets: true
-    run:
-      - "true"
+    run: []
   - environment: staging
     type: gds
     app: dit-staging/staging-datahub/datahub-omis-staging
     vars:
-      - API_ROOT: https://api.datahub.staging.uktrade.io
+      - API_ROOT: https://datahub-api-staging.cloudapps.digital
     secrets: true
-    run:
-      - "true"
+    run: []
   - environment: production
     type: gds
     app: dit-services/datahub/datahub-omis
     vars:
-      - API_ROOT: https://api.datahub.trade.gov.uk
+      - API_ROOT: https://datahub-api.cloudapps.digital
     secrets: true
-    run:
-      - "true"
+    run: []

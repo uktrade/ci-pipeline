@@ -13,8 +13,7 @@ environments:
       - DJANGO_SETTINGS_MODULE: config.settings.dev
       - DISABLE_COLLECTSTATIC: 1
     secrets: true
-    run:
-      - "true"
+    run: []
   - environment: uat
     type: gds
     app: dit-staging/uat-datahub/datahub-api-uat
@@ -25,8 +24,7 @@ environments:
       - DJANGO_SETTINGS_MODULE: config.settings.dev
       - DISABLE_COLLECTSTATIC: 1
     secrets: true
-    run:
-      - "true"
+    run: []
   - environment: demo
     type: gds
     app: dit-staging/dev-datahub/datahub-api-demo
@@ -37,8 +35,7 @@ environments:
       - DJANGO_SETTINGS_MODULE: config.settings.dev
       - DISABLE_COLLECTSTATIC: 1
     secrets: true
-    run:
-      - "true"
+    run: []
   - environment: staging
     type: gds
     app: dit-staging/staging-datahub/datahub-api-staging
@@ -49,8 +46,7 @@ environments:
       - DJANGO_SETTINGS_MODULE: config.settings.staging
       - DISABLE_COLLECTSTATIC: 1
     secrets: true
-    run:
-      - "true"
+    run: []
   - environment: production
     type: gds
     app: dit-services/datahub/datahub-api
@@ -61,5 +57,4 @@ environments:
       - DJANGO_SETTINGS_MODULE: config.settings.production
       - DISABLE_COLLECTSTATIC: 1
     secrets: true
-    run:
-      - "true"
+    run: []

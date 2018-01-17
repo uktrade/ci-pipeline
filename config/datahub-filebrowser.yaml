@@ -9,8 +9,7 @@ environments:
     vars:
       - DISABLE_COLLECTSTATIC: 1
     secrets: true
-    run:
-      - "true"
+    run: []
   - environment: demo
     type: gds
     app: dit-staging/dev-datahub/datahub-filebrowser-demo
@@ -25,21 +24,18 @@ environments:
     vars:
       - DISABLE_COLLECTSTATIC: 1
     secrets: true
-    run:
-      - "true"
+    run: []
   - environment: staging
     type: gds
     app: dit-staging/staging-datahub/datahub-filebrowser-staging
     vars:
       - DISABLE_COLLECTSTATIC: 1
     secrets: true
-    run:
-      - "true"
+    run: []
   - environment: production
     type: gds
     app: dit-services/datahub/datahub-filebrowser
     vars:
       - DISABLE_COLLECTSTATIC: 1
     secrets: true
-    run:
-      - "true"
+    run: []
