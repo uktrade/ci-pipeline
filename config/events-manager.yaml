@@ -1,0 +1,26 @@
+---
+name: events-manager
+namespace: events
+scm: git@github.com:uktrade/events-manager.git
+environments:
+  - environment: dev
+    type: gds
+    app: dit-staging/dev-events/events-manager-dev
+    vars:
+      - DEBUG: 1
+    secrets: true
+    run: []
+  - environment: staging
+    type: gds
+    app: dit-staging/staging-events/events-manager-staging
+    vars:
+      - DEBUG: 0
+    secrets: true
+    run: []
+  - environment: production
+    type: gds
+    app: dit-services/events/events-manager
+    vars:
+      - DEBUG: 0
+    secrets: true
+    run: []
