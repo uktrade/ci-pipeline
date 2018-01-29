@@ -12,7 +12,7 @@ environments:
       - "true"
   - environment: staging
     type: gds
-    app: dit-staging/dev-traderemedies/trade-remedies-api-staging
+    app: dit-staging/staging-traderemedies/trade-remedies-api-staging
     vars: []
     secrets: true
     run:
