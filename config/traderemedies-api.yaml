@@ -1,0 +1,21 @@
+---
+name: traderemediesapi
+namespace: traderemedies
+scm: git@github.com:uktrade/trade-remedies-api.git
+environments:
+  - environment: dev
+    type: gds
+    app: dit-staging/dev-traderemedies/traderemediesapi
+    vars:
+      - DISABLE_COLLECTSTATIC: 1
+    secrets: true
+    run:
+      - "true"
+  - environment: staging
+    type: gds
+    app: dit-staging/staging-traderemedies/traderemediesapi
+    vars:
+      - DISABLE_COLLECTSTATIC: 1
+    secrets: true
+    run:
+      - "true"
