@@ -1,7 +1,7 @@
 ---
 name: trade-remedies-public
 namespace: traderemedies
-scm: git@github.com:uktrade/trade-remedies-public-ui.git
+scm: git@github.com:uktrade/trade-remedies-public.git
 environments:
   - environment: dev
     type: gds
