@@ -6,16 +6,14 @@ environments:
   - environment: dev
     type: gds
     app: dit-staging/dev-traderemedies/trade-remedies-api-dev
-    vars:
-      - []
+    vars: []
     secrets: true
     run:
       - "true"
   - environment: staging
     type: gds
     app: dit-staging/dev-traderemedies/trade-remedies-api-staging
-    vars:
-      - []
+    vars: []
     secrets: true
     run:
       - "true"

@@ -11,15 +11,18 @@ environments:
   - environment: dev
     type: gds
     app: dit-staging/dev-events/events-manager-dev
+    vars: []
     secrets: true
     run: []
   - environment: staging
     type: gds
     app: dit-staging/staging-events/events-manager-staging
+    vars: []
     secrets: true
     run: []
   - environment: production
     type: gds
     app: dit-services/events/events-manager
+    vars: []
     secrets: true
     run: []
