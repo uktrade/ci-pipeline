@@ -7,7 +7,7 @@ environments:
     type: gds
     app: dit-staging/dev-traderemedies/traderemediesapi
     vars:
-      - DISABLE_COLLECTSTATIC: 1
+      - []
     secrets: true
     run:
       - "true"
@@ -15,7 +15,7 @@ environments:
     type: gds
     app: dit-staging/staging-traderemedies/traderemediesapi
     vars:
-      - DISABLE_COLLECTSTATIC: 1
+      - []
     secrets: true
     run:
       - "true"
