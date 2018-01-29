@@ -1,7 +1,7 @@
 ---
 name: trade-remedies-caseworker
 namespace: traderemedies
-scm: git@github.com:uktrade/trade-remedies-caseworker-ui.git
+scm: git@github.com:uktrade/trade-remedies-caseworker.git
 environments:
   - environment: dev
     type: gds
