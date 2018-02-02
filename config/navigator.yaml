@@ -9,18 +9,18 @@ environments:
     vars: []
     secrets: true
     run:
-      - "npm install && npm rebuild node-sass && npm run build && rm -rf node_modules"
+      - "npm install && npm rebuild node-sass && npm run build && python3 app/manage.py build_index && python3 app/manage.py collectstatic --noinput && rm -rf node_modules"
   - environment: staging
     type: gds
     app: dit-staging/staging-enav/navigator-staging
     vars: []
     secrets: true
     run:
-      - "npm install && npm rebuild node-sass && npm run build && rm -rf node_modules"
+      - "npm install && npm rebuild node-sass && npm run build && python3 app/manage.py build_index && python3 app/manage.py collectstatic --noinput && rm -rf node_modules"
   - environment: production
     type: gds
     app: dit-services/enav/navigator
     vars: []
     secrets: true
     run:
-      - "npm install && npm rebuild node-sass && npm run build && rm -rf node_modules"
+      - "npm install && npm rebuild node-sass && npm run build && python3 app/manage.py build_index && python3 app/manage.py collectstatic --noinput && rm -rf node_modules"
