@@ -1,7 +1,7 @@
 FROM ubuntu:16.04
 
 ENV NVM_VER v0.33.8
-ENV CF_CLI_VER 6.32.0
+ENV CF_CLI_VER 6.34.1
 ENV OC_REL v3.7.0
 ENV OC_BUILD 7ed6862
 
@@ -40,3 +40,5 @@ RUN curl -Lfs https://raw.githubusercontent.com/pyenv/pyenv-installer/master/bin
     echo 'export PATH="$HOME/.pyenv/bin:$PATH"' >> ~/.profile && \
     echo 'eval "$(pyenv init -)"\neval "$(pyenv virtualenv-init -)"' >> ~/.profile && \
     echo 'export NVM_DIR="$HOME/.nvm"\n[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"' >> ~/.profile
+
+ENTRYPOINT ["bash", "-c"]

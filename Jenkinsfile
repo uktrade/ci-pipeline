@@ -248,12 +248,12 @@ pipeline {
                       sh "cat ${GIT_SSH_KEY} | sed '\$d' | base64 | tr -d '\n'> .ssh_encoded"
                       sh """
                         oc process -f .oc.yml \
-                          -v APP_ID=${oc_app[2]} \
-                          -v NAMESPACE=${oc_app[1]} \
-                          -v SCM=${env.SCM} \
-                          -v SCM_COMMIT=${env.Version} \
-                          -v DOMAIN=apps.${oc_app[0]} \
-                          -v GIT_SSH_KEY=\$(<.ssh_encoded) \
+                          --param APP_ID=${oc_app[2]} \
+                          --param NAMESPACE=${oc_app[1]} \
+                          --param SCM=${env.SCM} \
+                          --param SCM_COMMIT=${env.Version} \
+                          --param DOMAIN=apps.${oc_app[0]} \
+                          --param GIT_SSH_KEY=\$(<.ssh_encoded) \
                           | oc apply -f -
                       """
                     }
