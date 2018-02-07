@@ -187,7 +187,11 @@ pipeline {
                     }
 
                     envars.each { key, value ->
-                      sh "cf v3-set-env ${gds_app[2]} ${input.bash_escape(key)} ${input.bash_escape(value)}"
+                      echo "\u001B[32mINFO: Setting application ${gds_app[2]} envar ${input.bash_escape(key)}\u001B[m"
+                      sh """
+                        set +x
+                        cf v3-set-env ${gds_app[2]} ${input.bash_escape(key)} ${input.bash_escape(value)} 1>/dev/null
+                      """
                     }
 
                     if (env.PAAS_HEALTHCHECK_TYPE) {
