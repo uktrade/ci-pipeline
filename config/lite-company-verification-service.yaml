@@ -1,0 +1,49 @@
+---
+name: lite-company-verification-service
+namespace: lite
+scm: git@github.com:uktrade/lite-company-verification-service.git
+environments:
+  - environment: dev
+    type: gds
+    app: dit-staging/dev-lite/lite-company-verification-service-dev
+    vars:
+      - JAVA_EXTENSION: jar
+      - NEXUS_PATH: lite-builds/uk/gov/bis/lite/lite-company-verification-service
+      - USE_NEXUS: true
+      - PAAS_BUILDPACK: java_buildpack
+    secrets: true
+    run:
+      - "true"
+  - environment: uat
+    type: gds
+    app: dit-staging/uat-lite/lite-company-verification-service-uat
+    vars:
+      - JAVA_EXTENSION: jar
+      - NEXUS_PATH: lite-builds/uk/gov/bis/lite/lite-company-verification-service
+      - USE_NEXUS: true
+      - PAAS_BUILDPACK: java_buildpack
+    secrets: true
+    run:
+      - "true"
+  - environment: staging
+    type: gds
+    app: dit-staging/staging-lite/lite-company-verification-service-staging
+    vars:
+      - JAVA_EXTENSION: jar
+      - NEXUS_PATH: lite-builds/uk/gov/bis/lite/lite-company-verification-service
+      - USE_NEXUS: true
+      - PAAS_BUILDPACK: java_buildpack
+    secrets: true
+    run:
+      - "true"
+  - environment: prod
+    type: gds
+    app: dit-services/lite/lite-company-verification-service
+    vars:
+      - JAVA_EXTENSION: jar
+      - NEXUS_PATH: lite-builds/uk/gov/bis/lite/lite-company-verification-service
+      - USE_NEXUS: true
+      - PAAS_BUILDPACK: java_buildpack
+    secrets: true
+    run:
+      - "true"
