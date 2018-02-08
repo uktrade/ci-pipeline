@@ -102,7 +102,7 @@ pipeline {
               sh "${env.WORKSPACE}/bootstrap.rb ${env.Team} ${env.Project} ${env.Environment}"
             }
             envars = readProperties file: "${env.WORKSPACE}/.env"
-            sh "mv oc-pipeline.yml .oc.yml "
+            stash name: "oc-pipeline", includes: "oc-pipeline.yml"
           }
         }
       }
@@ -248,18 +248,21 @@ pipeline {
                     }
 
                     withCredentials([sshUserPrivateKey(credentialsId: env.SCM_CREDENTIAL, keyFileVariable: 'GIT_SSH_KEY', passphraseVariable: '', usernameVariable: '')]) {
-                      sh "cat ${GIT_SSH_KEY} | sed '\$d' | base64 | tr -d '\n'> .ssh_encoded"
-                      sh """
-                        oc process -f .oc.yml \
-                          --param APP_ID=${oc_app[2]} \
-                          --param NAMESPACE=${oc_app[1]} \
-                          --param SCM=${env.SCM} \
-                          --param SCM_COMMIT=${env.Version} \
-                          --param DOMAIN=apps.${oc_app[0]} \
-                          --param GIT_SSH_KEY=\$(<.ssh_encoded) \
-                          | oc apply -f -
-                      """
+                      SSH_KEY = readFile GIT_SSH_KEY
                     }
+
+                    unstash "oc-pipeline"
+                    SSH_KEY_ENCODED = sh(script: "set +x && echo '${SSH_KEY}' | base64 -w 0", returnStdout: true).trim()
+                    sh """
+                      oc process -f oc-pipeline.yml \
+                        --param APP_ID=${oc_app[2]} \
+                        --param NAMESPACE=${oc_app[1]} \
+                        --param SCM=${env.SCM} \
+                        --param SCM_COMMIT=${env.Version} \
+                        --param DOMAIN=apps.${oc_app[0]} \
+                        --param GIT_SSH_KEY=${SSH_KEY_ENCODED} \
+                        | oc apply -f -
+                    """
                     sh "oc secrets add serviceaccount/builder secrets/${oc_app[2]}"
 
                     envars.each { key, value ->

@@ -9,21 +9,18 @@ environments:
     vars:
       - DISABLE_COLLECTSTATIC: 1
     secrets: true
-    run:
-      - "true"
+    run: []
   - environment: staging
     type: gds
     app: dit-staging/staging-datasci/dt04-staging
     vars:
       - DISABLE_COLLECTSTATIC: 1
     secrets: true
-    run:
-      - "true"
+    run: []
   - environment: production
     type: gds
     app: dit-services/datasci/dt04
     vars:
       - DISABLE_COLLECTSTATIC: 1
     secrets: true
-    run:
-      - "true"
+    run: []
