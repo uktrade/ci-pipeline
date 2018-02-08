@@ -50,14 +50,12 @@ objects:
   - apiVersion: v1
     kind: DeploymentConfig
     metadata:
-      creationTimestamp: null
-      generation: 1
+      name: ${APP_ID}
+      namespace: ${NAMESPACE}
       labels:
         app: ${APP_ID}
-        namespace: ${NAMESPACE}
-      name: ${APP_ID}
     spec:
-      replicas: 1
+      replicas: ${APP_REPLICA}
       selector:
         deploymentconfig: ${APP_ID}
       strategy:
@@ -78,10 +76,10 @@ objects:
             deploymentconfig: ${APP_ID}
         spec:
           containers:
-          - imagePullPolicy: Always
-            name: ${APP_ID}
+          - name: ${APP_ID}
+            imagePullPolicy: Always
             ports:
-            - containerPort: 8080
+            - containerPort: ${APP_PORT}
               protocol: TCP
             resources: {}
             terminationMessagePath: /dev/termination-log
@@ -100,7 +98,7 @@ objects:
           from:
             kind: ImageStreamTag
             name: ${APP_ID}:latest
-            namespace: compute
+            namespace: ${NAMESPACE}
         type: ImageChange
       - type: ConfigChange
   - apiVersion: v1
