@@ -275,7 +275,7 @@ pipeline {
 
                     sh """
                       set +x
-                      echo "INFO: Check buildconfig ${oc_app[2]} status."
+                      echo "INFO: Check ${oc_app[2]} builds/${oc_app[2]}-${env.OC_BUILD_ID} status."
                       while [ \$(oc get bc/${oc_app[2]} -o json | jq -rc '.status.lastVersion') -ne ${env.OC_BUILD_ID} ]; do
                         echo "INFO: Wait for 10 seconds..."
                         sleep 10
