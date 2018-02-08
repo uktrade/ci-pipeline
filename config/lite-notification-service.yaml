@@ -1,0 +1,49 @@
+---
+name: lite-notification-service
+namespace: lite
+scm: git@github.com:uktrade/lite-notification-service.git
+environments:
+  - environment: dev
+    type: gds
+    app: dit-staging/dev-lite/lite-notification-service-dev
+    vars:
+      - JAVA_EXTENSION: jar
+      - NEXUS_PATH: lite-builds/uk/gov/bis/lite/lite-notification-service
+      - USE_NEXUS: true
+      - PAAS_BUILDPACK: java_buildpack
+    secrets: true
+    run:
+      - "true"
+  - environment: uat
+    type: gds
+    app: dit-staging/uat-lite/lite-notification-service-uat
+    vars:
+      - JAVA_EXTENSION: jar
+      - NEXUS_PATH: lite-builds/uk/gov/bis/lite/lite-notification-service
+      - USE_NEXUS: true
+      - PAAS_BUILDPACK: java_buildpack
+    secrets: true
+    run:
+      - "true"
+  - environment: staging
+    type: gds
+    app: dit-staging/staging-lite/lite-notification-service-staging
+    vars:
+      - JAVA_EXTENSION: jar
+      - NEXUS_PATH: lite-builds/uk/gov/bis/lite/lite-notification-service
+      - USE_NEXUS: true
+      - PAAS_BUILDPACK: java_buildpack
+    secrets: true
+    run:
+      - "true"
+  - environment: prod
+    type: gds
+    app: dit-services/lite/lite-notification-service
+    vars:
+      - JAVA_EXTENSION: jar
+      - NEXUS_PATH: lite-builds/uk/gov/bis/lite/lite-notification-service
+      - USE_NEXUS: true
+      - PAAS_BUILDPACK: java_buildpack
+    secrets: true
+    run:
+      - "true"

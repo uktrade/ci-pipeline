@@ -1,0 +1,49 @@
+---
+name: lite-permissions-finder
+namespace: lite
+scm: git@github.com:uktrade/lite-permissions-finder.git
+environments:
+  - environment: dev
+    type: gds
+    app: dit-staging/dev-lite/lite-permissions-finder-dev
+    vars:
+      - JAVA_EXTENSION: zip
+      - NEXUS_PATH: lite-builds-raw/lite-permissions-finder/lite-permissions-finder
+      - USE_NEXUS: true
+      - PAAS_BUILDPACK: java_buildpack
+    secrets: true
+    run:
+      - "true"
+  - environment: uat
+    type: gds
+    app: dit-staging/uat-lite/lite-permissions-finder-uat
+    vars:
+      - JAVA_EXTENSION: zip
+      - NEXUS_PATH: lite-builds-raw/lite-permissions-finder/lite-permissions-finder
+      - USE_NEXUS: true
+      - PAAS_BUILDPACK: java_buildpack
+    secrets: true
+    run:
+      - "true"
+  - environment: staging
+    type: gds
+    app: dit-staging/staging-lite/lite-permissions-finder-staging
+    vars:
+      - JAVA_EXTENSION: zip
+      - NEXUS_PATH: lite-builds-raw/lite-permissions-finder/lite-permissions-finder
+      - USE_NEXUS: true
+      - PAAS_BUILDPACK: java_buildpack
+    secrets: true
+    run:
+      - "true"
+  - environment: prod
+    type: gds
+    app: dit-services/lite/lite-permissions-finder
+    vars:
+      - JAVA_EXTENSION: zip
+      - NEXUS_PATH: lite-builds-raw/lite-permissions-finder/lite-permissions-finder
+      - USE_NEXUS: true
+      - PAAS_BUILDPACK: java_buildpack
+    secrets: true
+    run:
+      - "true"

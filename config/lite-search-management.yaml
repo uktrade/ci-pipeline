@@ -1,0 +1,49 @@
+---
+name: lite-search-management
+namespace: lite
+scm: git@github.com:uktrade/lite-search-management.git
+environments:
+  - environment: dev
+    type: gds
+    app: dit-staging/dev-lite/lite-search-management-dev
+    vars:
+      - JAVA_EXTENSION: jar
+      - NEXUS_PATH: lite-builds/uk/gov/bis/lite/lite-search-management
+      - USE_NEXUS: true
+      - PAAS_BUILDPACK: java_buildpack
+    secrets: true
+    run:
+      - "true"
+  - environment: uat
+    type: gds
+    app: dit-staging/uat-lite/lite-search-management-uat
+    vars:
+      - JAVA_EXTENSION: jar
+      - NEXUS_PATH: lite-builds/uk/gov/bis/lite/lite-search-management
+      - USE_NEXUS: true
+      - PAAS_BUILDPACK: java_buildpack
+    secrets: true
+    run:
+      - "true"
+  - environment: staging
+    type: gds
+    app: dit-staging/staging-lite/lite-search-management-staging
+    vars:
+      - JAVA_EXTENSION: jar
+      - NEXUS_PATH: lite-builds/uk/gov/bis/lite/lite-search-management
+      - USE_NEXUS: true
+      - PAAS_BUILDPACK: java_buildpack
+    secrets: true
+    run:
+      - "true"
+  - environment: prod
+    type: gds
+    app: dit-services/lite/lite-search-management
+    vars:
+      - JAVA_EXTENSION: jar
+      - NEXUS_PATH: lite-builds/uk/gov/bis/lite/lite-search-management
+      - USE_NEXUS: true
+      - PAAS_BUILDPACK: java_buildpack
+    secrets: true
+    run:
+      - "true"
