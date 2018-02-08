@@ -254,6 +254,7 @@ pipeline {
                     unstash "oc-pipeline"
                     SSH_KEY_ENCODED = sh(script: "set +x && echo '${SSH_KEY}' | base64 -w 0", returnStdout: true).trim()
                     sh """
+                      set +x
                       oc process -f oc-pipeline.yml \
                         --param APP_ID=${oc_app[2]} \
                         --param NAMESPACE=${oc_app[1]} \
@@ -266,11 +267,17 @@ pipeline {
                     sh "oc secrets add serviceaccount/builder secrets/${oc_app[2]}"
 
                     envars.each { key, value ->
-                      sh "oc set env dc/${oc_app[2]} ${input.bash_escape(key)}=${input.bash_escape(value)}"
+                      sh """
+                        set +x
+                        oc set env dc/${oc_app[2]} ${input.bash_escape(key)}=${input.bash_escape(value)}
+                      """
                     }
 
                     sh """
+                      set +x
+                      echo "INFO: Check buildconfig ${oc_app[2]} status."
                       while [ \$(oc get bc/${oc_app[2]} -o json | jq -rc '.status.lastVersion') -ne ${env.OC_BUILD_ID} ]; do
+                        echo "INFO: Wait for 10 seconds..."
                         sleep 10
                       done
                       oc logs -f --version=${env.OC_BUILD_ID} bc/${oc_app[2]}
