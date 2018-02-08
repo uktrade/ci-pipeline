@@ -5,7 +5,7 @@ scm: git@github.com:uktrade/datascience-fe.git
 environments:
   - environment: dev
     type: gds
-    app: dit-staging/dev-datasci/datascience-fe-dev
+    app: dit-staging/staging-datasci/datascience-fe-dev
     vars: []
     secrets: true
     run: []
