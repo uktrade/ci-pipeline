@@ -203,7 +203,14 @@ pipeline {
                       }
                     }
 
-                    if (env.PAAS_BUILDPACK) {
+                    if (env.USE_NEXUS && env.PAAS_BUILDPACK) {
+                      withCredentials([usernamePassword(credentialsId: env.NEXUS_CREDENTIAL, passwordVariable: 'nexus_pass', usernameVariable: 'nexus_user')]) {
+                        sh """
+                          curl -LOfs https://${nexus_user}:${nexus_pass}@${env.NEXUS_URL}/repository/${env.NEXUS_PATH}/${env.Version}/${env.Project}-${env.Version}.${env.JAVA_EXTENSION.toLowerCase()}
+                          cf v3-push ${gds_app[2]} -b ${env.PAAS_BUILDPACK} -p ${env.Project}-${env.Version}.${env.JAVA_EXTENSION.toLowerCase()}
+                        """
+                      }
+                    } else if (env.PAAS_BUILDPACK) {
                       sh "cf v3-push ${gds_app[2]} -b ${env.PAAS_BUILDPACK}"
                     } else {
                       sh "cf v3-push ${gds_app[2]}"
