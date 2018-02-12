@@ -7,5 +7,5 @@ environments:
     type: gds
     app: dit-services/webops/rtfm
     secrets: true
-    run:
-      - "true"
+    vars: []
+    run: []
