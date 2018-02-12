@@ -298,7 +298,7 @@ pipeline {
 
   post {
     failure {
-      emailext subject: "${currentBuild.result}: ${env.Project} ${env.Environmen}", body: "${PROJECT_DEFAULT_CONTENT}", recipientProviders: [[$class: 'CulpritsRecipientProvider'], [$class: 'DevelopersRecipientProvider'], [$class: 'RequesterRecipientProvider']], attachLog: true
+      emailext attachLog: true, body: '${PROJECT_DEFAULT_CONTENT}', recipientProviders: [[$class: 'CulpritsRecipientProvider'], [$class: 'DevelopersRecipientProvider'], [$class: 'RequesterRecipientProvider'], [$class: 'UpstreamComitterRecipientProvider']], subject: '${currentBuild.result}: ${env.Project} ${env.Environment}'
     }
 
     always {
