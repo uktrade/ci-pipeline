@@ -1,0 +1,17 @@
+---
+name: iigb-invest
+namespace: iigb
+scm: https://github.com/uktrade/invest
+environments:
+  - environment: staging 
+    type: gds
+    app: dit-staging/staging-iigb/invest-staging
+    secrets: true
+    vars: []
+    run: []
+  - environment: prod 
+    type: gds
+    app: dit-services/iigb/invest-prod
+    secrets: true
+    vars: []
+    run: []
