@@ -240,13 +240,6 @@ pipeline {
                       oc project ${oc_app[1]}
                     """
 
-                    OC_APP_EXIST = sh(script: "oc get bc -o json | jq '[.items[] | select(.metadata.name==\"${oc_app[2]}\")] | length'", returnStdout: true).trim()
-                    if (OC_APP_EXIST == "0") {
-                      env.OC_BUILD_ID = "1"
-                    } else {
-                      env.OC_BUILD_ID = sh(script: "expr \$(oc get bc/${oc_app[2]} -o json | jq -rc '.status.lastVersion') + 1", returnStdout: true).trim()
-                    }
-
                     withCredentials([sshUserPrivateKey(credentialsId: env.SCM_CREDENTIAL, keyFileVariable: 'GIT_SSH_KEY', passphraseVariable: '', usernameVariable: '')]) {
                       SSH_KEY = readFile GIT_SSH_KEY
                     }
@@ -259,7 +252,6 @@ pipeline {
                         --param APP_ID=${oc_app[2]} \
                         --param NAMESPACE=${oc_app[1]} \
                         --param SCM=${env.SCM} \
-                        --param SCM_COMMIT=${env.Version} \
                         --param DOMAIN=apps.${oc_app[0]} \
                         --param GIT_SSH_KEY=${SSH_KEY_ENCODED} \
                         | oc apply -f -
@@ -273,15 +265,7 @@ pipeline {
                       """
                     }
 
-                    sh """
-                      set +x
-                      echo "INFO: Check ${oc_app[2]} builds/${oc_app[2]}-${env.OC_BUILD_ID} status."
-                      while [ \$(oc get bc/${oc_app[2]} -o json | jq -rc '.status.lastVersion') -ne ${env.OC_BUILD_ID} ]; do
-                        echo "INFO: Wait for 10 seconds..."
-                        sleep 10
-                      done
-                      oc logs -f --version=${env.OC_BUILD_ID} bc/${oc_app[2]}
-                    """
+                    sh "oc start-build ${oc_app[2]} --commit=${env.Version} --follow"
                   }
                 }
                 break
