@@ -8,19 +8,16 @@ environments:
     app: dit-staging/dev-enav/navigator-dev
     vars: []
     secrets: true
-    run:
-      - "npm install && npm rebuild node-sass && npm run build && rm -rf node_modules"
+    run: []
   - environment: staging
     type: gds
     app: dit-staging/staging-enav/navigator-staging
     vars: []
     secrets: true
-    run:
-      - "npm install && npm run build && rm -rf node_modules"
+    run: []
   - environment: production
     type: gds
     app: dit-services/enav/navigator
     vars: []
     secrets: true
-    run:
-      - "npm install && npm run build && rm -rf node_modules"
+    run: []
