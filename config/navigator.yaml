@@ -16,11 +16,11 @@ environments:
     vars: []
     secrets: true
     run:
-      - "npm install && npm rebuild node-sass && npm run build && rm -rf node_modules"
+      - "npm install && npm run build && rm -rf node_modules"
   - environment: production
     type: gds
     app: dit-services/enav/navigator
     vars: []
     secrets: true
     run:
-      - "npm install && npm rebuild node-sass && npm run build && rm -rf node_modules"
+      - "npm install && npm run build && rm -rf node_modules"
