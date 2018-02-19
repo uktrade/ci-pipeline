@@ -38,7 +38,7 @@ environments:
       - "env | sort"
       - "echo hello\ world"
 ```
-Config files are validated using a [json schema][schema.json].
+Config files are validated using a [json schema](schema.json).
 
 
 ## Supported PaaS
@@ -98,7 +98,7 @@ For more info: https://docs.cloudfoundry.org/devguide/deploy-apps/manifest.html
 
 ### OpenShift
 
-OpenShift deployments uses [`oc-pipeline.yml`] as template.
+OpenShift deployments uses [`oc-pipeline.yml`](oc-pipeline.yml) as template.
 For more info: https://docs.openshift.org/latest/dev_guide/templates.html
 
 
