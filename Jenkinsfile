@@ -212,7 +212,7 @@ pipeline {
                           }
                         }'
                       """
-                      package_guid = sh(script: "cf v3-create-package ${new_app_name} | perl -lne 'print $$& if /(\{{0,1}([0-9a-fA-F]){8}-([0-9a-fA-F]){4}-([0-9a-fA-F]){4}-([0-9a-fA-F]){4}-([0-9a-fA-F]){12}\}{0,1})/'", returnStdout: true).trim()
+                      package_guid = sh(script: "cf v3-create-package ${new_app_name} | perl -lne 'print \$& if /(\{{0,1}([0-9a-fA-F]){8}-([0-9a-fA-F]){4}-([0-9a-fA-F]){4}-([0-9a-fA-F]){4}-([0-9a-fA-F]){12}\}{0,1})/'", returnStdout: true).trim()
                       sh "cf v3-stage --package-guid ${package_guid}"
                       release_guid = sh(script: "cf curl '/v3/apps/${new_app_guid}/droplets' | jq -r '.resources[] | select(.links.package.href | test(\"${package_guid}\")==true) | .guid'", returnStdout: true).trim()
 
