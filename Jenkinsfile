@@ -206,7 +206,7 @@ pipeline {
                         cf curl '/v3/apps/${new_app_guid}' -X PATCH -d '{"name": "${new_app_name}","lifecycle": {"type":"buildpack","data": {"buildpacks": ["${env.PAAS_BUILDPACK}"]}}}'
                       """
                       package_guid = sh(script: "cf v3-create-package ${new_app_name} | perl -lne 'print \$& if /(\\{{0,1}([0-9a-fA-F]){8}-([0-9a-fA-F]){4}-([0-9a-fA-F]){4}-([0-9a-fA-F]){4}-([0-9a-fA-F]){12}\\}{0,1})/'", returnStdout: true).trim()
-                      sh "cf v3-stage --package-guid ${package_guid}"
+                      sh "cf v3-stage ${new_app_name} --package-guid ${package_guid}"
                       release_guid = sh(script: "cf curl '/v3/apps/${new_app_guid}/droplets' | jq -r '.resources[] | select(.links.package.href | test(\"${package_guid}\")==true) | .guid'", returnStdout: true).trim()
 
                       app_routes_json = sh(script: "cf curl '/v3/apps/${gds_app[2]}/env' | jq '.application_env_json.VCAP_APPLICATION.uris'", returnStdout: true).trim()
