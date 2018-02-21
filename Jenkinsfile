@@ -199,6 +199,7 @@ pipeline {
 
                       app_guid = sh(script: "cf v3-app ${gds_app[2]} --guid", returnStdout: true).trim()
                       new_app_name = gds_app[2] + "-" + env.Version
+                      sh "cf v3-create-app ${new_app_name}"
                       new_app_guid = sh(script: "cf v3-app ${new_app_name} --guid", returnStdout: true).trim()
 
                       sh """
