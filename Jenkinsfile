@@ -197,10 +197,32 @@ pipeline {
                         sh "ln -snf ${env.WORKSPACE}/.gitignore ${env.WORKSPACE}/.cfignore"
                       }
 
+                      app_guid = sh(script: "cf v3-app ${gds_app[2]} --guid", returnStdout: true).trim()
+                      new_app_name = gds_app[2] + "-" + env.Version
+                      new_app_guid = sh(script: "cf v3-app ${new_app_name} --guid", returnStdout: true).trim()
+
+                      sh """
+                        cf curl '/v3/apps/${new_app_guid}' -X PATCH -d '{
+                          "name": "${new_app_name}",
+                          "lifecycle": {
+                            "type": "buildpack",
+                            "data": {
+                              "buildpacks": ["${env.PAAS_BUILDPACK}"],
+                            }
+                          }
+                        }'
+                      """
+                      package_guid = sh(script: "cf v3-create-package ${new_app_name} | perl -lne 'print $& if /(\{{0,1}([0-9a-fA-F]){8}-([0-9a-fA-F]){4}-([0-9a-fA-F]){4}-([0-9a-fA-F]){4}-([0-9a-fA-F]){12}\}{0,1})/'", returnStdout: true).trim()
+                      sh "cf v3-stage --package-guid ${package_guid}"
+                      release_guid = sh(script: "cf curl '/v3/apps/${new_app_guid}/droplets' | jq -r '.resources[] | select(.links.package.href | test(\"${package_guid}\")==true) | .guid'", returnStdout: true).trim()
+
+                      app_routes_json = sh(script: "cf curl "/v3/apps/${gds_app[2]}/env" | jq '.application_env_json.VCAP_APPLICATION.uris'", returnStdout: true).trim()
+                      app_routes = readJSON text: app_routes_json
+
                       envars.each { key, value ->
                         sh """
                           set +x
-                          cf v3-set-env ${gds_app[2]} ${input.bash_escape(key)} ${input.bash_escape(value)}
+                          cf v3-set-env ${new_app_name} ${input.bash_escape(key)} ${input.bash_escape(value)}
                         """
                       }
 
@@ -208,16 +230,37 @@ pipeline {
                         switch(env.PAAS_HEALTHCHECK_TYPE) {
                           case "http":
                             if (env.PAAS_HEALTHCHECK_ENDPOINT) {
-                              sh "cf v3-set-health-check ${gds_app[2]} ${env.PAAS_HEALTHCHECK_TYPE} --endpoint ${env.PAAS_HEALTHCHECK_ENDPOINT}"
+                              sh "cf v3-set-health-check ${new_app_name} ${env.PAAS_HEALTHCHECK_TYPE} --endpoint ${env.PAAS_HEALTHCHECK_ENDPOINT}"
                             }
                             break
                         }
                       }
 
-                      if (env.PAAS_BUILDPACK) {
-                        sh "cf v3-push ${gds_app[2]} -b ${env.PAAS_BUILDPACK}"
+                      sh """
+                        cf v3-set-droplet ${new_app_name} --droplet-guid ${release_guid}
+                        cf v3-start ${new_app_name}
+                      """
+
+                      app_ready_wait = 0
+                      while (app_ready_wait < 120) {
+                        app_ready = sh(script: "cf curl "/v3/apps/${new_app_name}/processes/web/stats" | jq '.resources[] | select(.type=\"web\").state | test(\"RUNNING\")'", returnStdout: true).trim()
+                        if (app_ready) {
+                          app_ready_wait = 120
+                        } else {
+                          app_ready_wait += 10
+                          sleep 10
+                        }
+                      }
+
+                      if (app_ready) {
+                        app_routes.each { route ->
+                          sh """
+                            cf unmap-route ${gds_app[2]} ${route}
+                            cf map-route ${new_app_name} ${route}
+                          """
+                        }
                       } else {
-                        sh "cf v3-push ${gds_app[2]}"
+                        error 'FAIL'
                       }
                     }
                   }
