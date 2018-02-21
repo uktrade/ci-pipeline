@@ -202,9 +202,12 @@ pipeline {
                       sh "cf v3-create-app ${new_app_name}"
                       new_app_guid = sh(script: "cf v3-app ${new_app_name} --guid | perl -lne 'print \$& if /(\\{{0,1}([0-9a-fA-F]){8}-([0-9a-fA-F]){4}-([0-9a-fA-F]){4}-([0-9a-fA-F]){4}-([0-9a-fA-F]){12}\\}{0,1})/'", returnStdout: true).trim()
 
-                      sh """
-                        cf curl '/v3/apps/${new_app_guid}' -X PATCH -d '{"name": "${new_app_name}","lifecycle": {"type":"buildpack","data": {"buildpacks": ["${env.PAAS_BUILDPACK}"]}}}'
-                      """
+                      if (env.PAAS_BUILDPACK) {
+                        sh """
+                          cf curl '/v3/apps/${new_app_guid}' -X PATCH -d '{"name": "${new_app_name}","lifecycle": {"type":"buildpack","data": {"buildpacks": ["${env.PAAS_BUILDPACK}"]}}}'
+                        """
+                      }
+
                       package_guid = sh(script: "cf v3-create-package ${new_app_name} | perl -lne 'print \$& if /(\\{{0,1}([0-9a-fA-F]){8}-([0-9a-fA-F]){4}-([0-9a-fA-F]){4}-([0-9a-fA-F]){4}-([0-9a-fA-F]){12}\\}{0,1})/'", returnStdout: true).trim()
                       sh "cf v3-stage ${new_app_name} --package-guid ${package_guid}"
                       release_guid = sh(script: "cf curl '/v3/apps/${new_app_guid}/droplets' | jq -r '.resources[] | select(.links.package.href | test(\"${package_guid}\")==true) | .guid'", returnStdout: true).trim()
@@ -219,6 +222,11 @@ pipeline {
                         """
                       }
 
+                      sh """
+                        cf v3-set-droplet ${new_app_name} --droplet-guid ${release_guid}
+                        cf v3-start ${new_app_name}
+                      """
+
                       if (env.PAAS_HEALTHCHECK_TYPE) {
                         switch(env.PAAS_HEALTHCHECK_TYPE) {
                           case "http":
@@ -228,11 +236,6 @@ pipeline {
                             break
                         }
                       }
-
-                      sh """
-                        cf v3-set-droplet ${new_app_name} --droplet-guid ${release_guid}
-                        cf v3-start ${new_app_name}
-                      """
 
                       app_ready_wait = 0
                       while (app_ready_wait < 120) {
