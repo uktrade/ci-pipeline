@@ -239,7 +239,7 @@ pipeline {
 
                       app_ready_wait = 0
                       while (app_ready_wait < 120) {
-                        app_ready = sh(script: "cf curl '/v3/apps/${new_app_name}/processes/web/stats' | jq '.resources[] | select(.type=\"web\").state | test(\"RUNNING\")'", returnStdout: true).trim()
+                        app_ready = sh(script: "cf curl '/v3/apps/${new_app_guid}/processes/web/stats' | jq -r '.resources[] | select(.type=\"web\").state | test(\"RUNNING\")'", returnStdout: true).trim()
                         if (app_ready) {
                           app_ready_wait = 120
                         } else {
