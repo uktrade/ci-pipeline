@@ -243,7 +243,7 @@ pipeline {
                         if (app_ready) {
                           app_ready_wait = 120
                         } else {
-                          app_ready_wait += 10
+                          app_ready_wait = app_ready_wait + 10
                           sleep 10
                         }
                       }
