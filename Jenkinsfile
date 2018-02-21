@@ -255,6 +255,10 @@ pipeline {
                             cf map-route ${new_app_name} ${route}
                           """
                         }
+                        sh """
+                          cf delete -f ${gds_app[2]}
+                          cf rename ${new_app_name} ${gds_app[2]}
+                        """
                       } else {
                         error 'FAIL'
                       }
