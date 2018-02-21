@@ -216,7 +216,7 @@ pipeline {
                       sh "cf v3-stage --package-guid ${package_guid}"
                       release_guid = sh(script: "cf curl '/v3/apps/${new_app_guid}/droplets' | jq -r '.resources[] | select(.links.package.href | test(\"${package_guid}\")==true) | .guid'", returnStdout: true).trim()
 
-                      app_routes_json = sh(script: "cf curl "/v3/apps/${gds_app[2]}/env" | jq '.application_env_json.VCAP_APPLICATION.uris'", returnStdout: true).trim()
+                      app_routes_json = sh(script: "cf curl '/v3/apps/${gds_app[2]}/env' | jq '.application_env_json.VCAP_APPLICATION.uris'", returnStdout: true).trim()
                       app_routes = readJSON text: app_routes_json
 
                       envars.each { key, value ->
