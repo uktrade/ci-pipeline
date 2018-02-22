@@ -268,6 +268,7 @@ pipeline {
                       while (app_ready_wait < 120) {
                         app_ready = sh(script: "cf curl '/v3/apps/${new_app_guid}/processes/web/stats' | jq -r '.resources[] | select(.type=\"web\").state'", returnStdout: true).trim()
                         if (app_ready == "RUNNING") {
+                          echo "\u001B[32mINFO: App ${new_app_name} is ready\u001B[m"
                           app_ready_wait = 120
                         } else {
                           echo "\u001B[32mINFO: App ${new_app_name} not ready, wait for 10 seconds...\u001B[m"
@@ -277,11 +278,10 @@ pipeline {
                       }
 
                       if (app_ready) {
-                        echo "\u001B[32mINFO: App ${new_app_name} is ready\u001B[m"
+                        echo "\u001B[32mINFO: Switching app routes\u001B[m"
                         app_routes.each {
-                          echo "\u001B[32mINFO: Switching app route ${it}\u001B[m"
                           sh """
-                            cf curl '/v2/routes/${it}/apps/${new_app_guid}' -X PUT
+                            cf curl '/v2/routes/${it}/apps/${new_app_guid}' -X PUT | jq -C
                             cf curl '/v2/routes/${it}/apps/${app_guid}' -X DELETE
                           """
                         }
