@@ -228,7 +228,7 @@ pipeline {
                           svc_name = sh(script: "cf curl '/v2/service_instances/${it}' | jq -r '.entity.name'", returnStdout: true).trim()
                           echo "\u001B[32mINFO: Migrating service ${svc_name} to ${new_app_name}\u001B[m"
                           sh """
-                            cf curl /v2/service_bindings -X POST -i --output /dev/null -d '{"service_instance_guid": "${it}", "app_guid": "${new_app_guid}"}'
+                            cf curl /v2/service_bindings -X POST -d '{"service_instance_guid": "${it}", "app_guid": "${new_app_guid}"}' | jq -C 'del(.entity.credentials)'
                           """
                         }
                       }
