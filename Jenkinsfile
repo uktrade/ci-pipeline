@@ -281,7 +281,7 @@ pipeline {
                         echo "\u001B[32mINFO: Switching app routes\u001B[m"
                         app_routes.each {
                           sh """
-                            cf curl '/v2/routes/${it}/apps/${new_app_guid}' -X PUT | jq -C
+                            cf curl '/v2/routes/${it}/apps/${new_app_guid}' -X PUT | jq -C '.'
                             cf curl '/v2/routes/${it}/apps/${app_guid}' -X DELETE
                           """
                         }
