@@ -212,7 +212,7 @@ pipeline {
                       if (env.PAAS_BUILDPACK) {
                         echo "\u001B[32mINFO: Setting buildpack to ${env.PAAS_BUILDPACK}\u001B[m"
                         sh """
-                          cf curl '/v3/apps/${new_app_guid}' -X PATCH -d '{"name": "${new_app_name}","lifecycle": {"type":"buildpack","data": {"buildpacks": ["${env.PAAS_BUILDPACK}"]}}}'
+                          cf curl '/v3/apps/${new_app_guid}' -X PATCH -d '{"name": "${new_app_name}","lifecycle": {"type":"buildpack","data": {"buildpacks": ["${env.PAAS_BUILDPACK}"]}}}' | jq -C 'del(.links, .relationships)'
                         """
                       }
 
