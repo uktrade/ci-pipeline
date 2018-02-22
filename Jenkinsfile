@@ -204,10 +204,13 @@ pipeline {
                       app_svc_json = sh(script: "cf curl '/v2/service_instances' | jq '.resources[] | select(.entity.space_guid==\"${space_guid}\").metadata.guid' | xargs -I{} cf curl /v2/service_instances/{}/service_bindings | jq '.resources[] | select(.entity.app_guid==\"${app_guid}\") | [.entity.service_instance_guid]'", returnStdout: true).trim()
 
                       new_app_name = gds_app[2] + "-" + env.Version
+                      echo "\u001B[32mINFO: Creating new app ${new_app_name}\u001B[m"
                       sh "cf v3-create-app ${new_app_name}"
                       new_app_guid = sh(script: "cf v3-app ${new_app_name} --guid | perl -lne 'print \$& if /(\\{{0,1}([0-9a-fA-F]){8}-([0-9a-fA-F]){4}-([0-9a-fA-F]){4}-([0-9a-fA-F]){4}-([0-9a-fA-F]){12}\\}{0,1})/'", returnStdout: true).trim()
 
+                      echo "\u001B[32mINFO: Configuring new app ${new_app_name}\u001B[m"
                       if (env.PAAS_BUILDPACK) {
+                        echo "\u001B[32mINFO: Setting buildpack to ${env.PAAS_BUILDPACK}\u001B[m"
                         sh """
                           cf curl '/v3/apps/${new_app_guid}' -X PATCH -d '{"name": "${new_app_name}","lifecycle": {"type":"buildpack","data": {"buildpacks": ["${env.PAAS_BUILDPACK}"]}}}'
                         """
@@ -222,6 +225,8 @@ pipeline {
                       if (app_svc_json != "") {
                         app_svc = readJSON text: app_svc_json
                         app_svc.each {
+                          svc_name = sh(script: "cf curl '/v2/service_instances/${it}' | jq -r '.entity.name'", returnStdout: true).trim()
+                          echo "\u001B[32mINFO: Migrating service ${svc_name} to ${new_app_name}\u001B[m"
                           sh """
                             cf curl /v2/service_bindings -X POST -i --output /dev/null -d '{"service_instance_guid": "${it}", "app_guid": "${new_app_guid}"}'
                           """
@@ -229,15 +234,20 @@ pipeline {
                       }
 
                       if (env.USE_NEXUS) {
+                        echo "\u001B[32mINFO: Downloading artifact ${env.Project}-${env.Version}.${env.JAVA_EXTENSION.toLowerCase()}\u001B[m"
                         withCredentials([usernamePassword(credentialsId: env.NEXUS_CREDENTIAL, passwordVariable: 'nexus_pass', usernameVariable: 'nexus_user')]) {
-                        sh """
-                          curl -LOfs https://${nexus_user}:${nexus_pass}@${env.NEXUS_URL}/repository/${env.NEXUS_PATH}/${env.Version}/${env.Project}-${env.Version}.${env.JAVA_EXTENSION.toLowerCase()}
-                        """
-                        package_guid = sh(script: "cf v3-create-package ${new_app_name} -p ${env.Project}-${env.Version}.${env.JAVA_EXTENSION.toLowerCase()} | perl -lne 'print \$& if /(\\{{0,1}([0-9a-fA-F]){8}-([0-9a-fA-F]){4}-([0-9a-fA-F]){4}-([0-9a-fA-F]){4}-([0-9a-fA-F]){12}\\}{0,1})/'", returnStdout: true).trim()
+                          sh "curl -LOfs 'https://${nexus_user}:${nexus_pass}@${env.NEXUS_URL}/repository/${env.NEXUS_PATH}/${env.Version}/${env.Project}-${env.Version}.${env.JAVA_EXTENSION.toLowerCase()}'"
+                          env.APP_PATH = "${env.Version}/${env.Project}-${env.Version}.${env.JAVA_EXTENSION.toLowerCase()}"
+                        }
+                      }
+
+                      if (env.APP_PATH) {
+                        package_guid = sh(script: "cf v3-create-package ${new_app_name} -p ${env.APP_PATH} | perl -lne 'print \$& if /(\\{{0,1}([0-9a-fA-F]){8}-([0-9a-fA-F]){4}-([0-9a-fA-F]){4}-([0-9a-fA-F]){4}-([0-9a-fA-F]){12}\\}{0,1})/'", returnStdout: true).trim()
                       } else {
                         package_guid = sh(script: "cf v3-create-package ${new_app_name} | perl -lne 'print \$& if /(\\{{0,1}([0-9a-fA-F]){8}-([0-9a-fA-F]){4}-([0-9a-fA-F]){4}-([0-9a-fA-F]){4}-([0-9a-fA-F]){12}\\}{0,1})/'", returnStdout: true).trim()
                       }
 
+                      echo "\u001B[32mINFO: Creating app ${new_app_name} release\u001B[m"
                       sh "cf v3-stage ${new_app_name} --package-guid ${package_guid}"
                       release_guid = sh(script: "cf curl '/v3/apps/${new_app_guid}/droplets' | jq -r '.resources[] | select(.links.package.href | test(\"${package_guid}\")==true) | .guid'", returnStdout: true).trim()
 
@@ -251,6 +261,7 @@ pipeline {
                             break
                         }
                       }
+                      echo "\u001B[32mINFO: Start app ${new_app_name}\u001B[m"
                       sh "cf v3-start ${new_app_name}"
 
                       app_ready_wait = 0
@@ -259,24 +270,28 @@ pipeline {
                         if (app_ready == "RUNNING") {
                           app_ready_wait = 120
                         } else {
+                          echo "\u001B[32mINFO: App ${new_app_name} not ready, wait for 10 seconds...\u001B[m"
                           app_ready_wait = app_ready_wait + 10
                           sleep 10
                         }
                       }
 
                       if (app_ready) {
+                        echo "\u001B[32mINFO: App ${new_app_name} is ready\u001B[m"
                         app_routes.each {
+                          echo "\u001B[32mINFO: Switching app route ${it}\u001B[m"
                           sh """
                             cf curl '/v2/routes/${it}/apps/${new_app_guid}' -X PUT
                             cf curl '/v2/routes/${it}/apps/${app_guid}' -X DELETE
                           """
                         }
+                        echo "\u001B[32mINFO: Cleanup old app\u001B[m"
                         sh """
                           cf delete -f ${gds_app[2]}
                           cf rename ${new_app_name} ${gds_app[2]}
                         """
                       } else {
-                        error 'FAIL'
+                        error "\u001B[31mERROR: App failed to start.\u001B[m"
                       }
                     }
                   }
