@@ -228,7 +228,16 @@ pipeline {
                         }
                       }
 
-                      package_guid = sh(script: "cf v3-create-package ${new_app_name} | perl -lne 'print \$& if /(\\{{0,1}([0-9a-fA-F]){8}-([0-9a-fA-F]){4}-([0-9a-fA-F]){4}-([0-9a-fA-F]){4}-([0-9a-fA-F]){12}\\}{0,1})/'", returnStdout: true).trim()
+                      if (env.USE_NEXUS) {
+                        withCredentials([usernamePassword(credentialsId: env.NEXUS_CREDENTIAL, passwordVariable: 'nexus_pass', usernameVariable: 'nexus_user')]) {
+                        sh """
+                          curl -LOfs https://${nexus_user}:${nexus_pass}@${env.NEXUS_URL}/repository/${env.NEXUS_PATH}/${env.Version}/${env.Project}-${env.Version}.${env.JAVA_EXTENSION.toLowerCase()}
+                        """
+                        package_guid = sh(script: "cf v3-create-package ${new_app_name} -p ${env.Project}-${env.Version}.${env.JAVA_EXTENSION.toLowerCase()} | perl -lne 'print \$& if /(\\{{0,1}([0-9a-fA-F]){8}-([0-9a-fA-F]){4}-([0-9a-fA-F]){4}-([0-9a-fA-F]){4}-([0-9a-fA-F]){12}\\}{0,1})/'", returnStdout: true).trim()
+                      } else {
+                        package_guid = sh(script: "cf v3-create-package ${new_app_name} | perl -lne 'print \$& if /(\\{{0,1}([0-9a-fA-F]){8}-([0-9a-fA-F]){4}-([0-9a-fA-F]){4}-([0-9a-fA-F]){4}-([0-9a-fA-F]){12}\\}{0,1})/'", returnStdout: true).trim()
+                      }
+
                       sh "cf v3-stage ${new_app_name} --package-guid ${package_guid}"
                       release_guid = sh(script: "cf curl '/v3/apps/${new_app_guid}/droplets' | jq -r '.resources[] | select(.links.package.href | test(\"${package_guid}\")==true) | .guid'", returnStdout: true).trim()
 
