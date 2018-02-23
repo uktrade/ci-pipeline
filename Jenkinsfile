@@ -237,7 +237,7 @@ pipeline {
                         echo "\u001B[32mINFO: Downloading artifact ${env.Project}-${env.Version}.${env.JAVA_EXTENSION.toLowerCase()}\u001B[m"
                         withCredentials([usernamePassword(credentialsId: env.NEXUS_CREDENTIAL, passwordVariable: 'nexus_pass', usernameVariable: 'nexus_user')]) {
                           sh "curl -LOfs 'https://${nexus_user}:${nexus_pass}@${env.NEXUS_URL}/repository/${env.NEXUS_PATH}/${env.Version}/${env.Project}-${env.Version}.${env.JAVA_EXTENSION.toLowerCase()}'"
-                          env.APP_PATH = "${env.Version}/${env.Project}-${env.Version}.${env.JAVA_EXTENSION.toLowerCase()}"
+                          env.APP_PATH = "${env.Project}-${env.Version}.${env.JAVA_EXTENSION.toLowerCase()}"
                         }
                       }
 
