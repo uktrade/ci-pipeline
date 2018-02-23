@@ -158,13 +158,12 @@ pipeline {
                 if (env.PAAS_RUN) {
                   sh "bash -l -c \"${env.PAAS_RUN}\""
                 }
-              }
 
-              switch(env.PAAS_TYPE) {
-                case "gds":
-                  withCredentials([usernamePassword(credentialsId: env.GDS_PAAS_CREDENTIAL, passwordVariable: 'gds_pass', usernameVariable: 'gds_user')]) {
-                    gds_app = env.PAAS_APP.split("/")
-                    ansiColor('xterm') {
+                switch(env.PAAS_TYPE) {
+                  case "gds":
+                    withCredentials([usernamePassword(credentialsId: env.GDS_PAAS_CREDENTIAL, passwordVariable: 'gds_pass', usernameVariable: 'gds_user')]) {
+                      CHECKPOINT = ""
+                      gds_app = env.PAAS_APP.split("/")
                       sh """
                         cf login -a ${env.GDS_PAAS} -u ${gds_user} -p ${gds_pass} -o ${gds_app[0]} -s ${gds_app[1]}
                         cf target -o ${gds_app[0]} -s ${gds_app[1]}
@@ -207,6 +206,7 @@ pipeline {
                       echo "\u001B[32mINFO: Creating new app ${new_app_name}\u001B[m"
                       sh "cf v3-create-app ${new_app_name}"
                       new_app_guid = sh(script: "cf v3-app ${new_app_name} --guid | perl -lne 'print \$& if /(\\{{0,1}([0-9a-fA-F]){8}-([0-9a-fA-F]){4}-([0-9a-fA-F]){4}-([0-9a-fA-F]){4}-([0-9a-fA-F]){12}\\}{0,1})/'", returnStdout: true).trim()
+                      CHECKPOINT = "APP_CREATED"
 
                       echo "\u001B[32mINFO: Configuring new app ${new_app_name}\u001B[m"
                       if (env.PAAS_BUILDPACK) {
@@ -223,6 +223,7 @@ pipeline {
                         """
                       }
                       if (app_svc_json != "") {
+                        CHECKPOINT = "APP_SERVICE"
                         app_svc = readJSON text: app_svc_json
                         app_svc.each {
                           svc_name = sh(script: "cf curl '/v2/service_instances/${it}' | jq -r '.entity.name'", returnStdout: true).trim()
@@ -231,6 +232,7 @@ pipeline {
                             cf curl /v2/service_bindings -X POST -d '{"service_instance_guid": "${it}", "app_guid": "${new_app_guid}"}' | jq -C 'del(.entity.credentials)'
                           """
                         }
+                        CHECKPOINT = "APP_SERVICE_COMPLETE"
                       }
 
                       if (env.USE_NEXUS) {
@@ -241,6 +243,7 @@ pipeline {
                         }
                       }
 
+                      CHECKPOINT = "APP_STAGE"
                       if (env.APP_PATH) {
                         package_guid = sh(script: "cf v3-create-package ${new_app_name} -p ${env.APP_PATH} | perl -lne 'print \$& if /(\\{{0,1}([0-9a-fA-F]){8}-([0-9a-fA-F]){4}-([0-9a-fA-F]){4}-([0-9a-fA-F]){4}-([0-9a-fA-F]){12}\\}{0,1})/'", returnStdout: true).trim()
                       } else {
@@ -263,6 +266,7 @@ pipeline {
                       }
                       echo "\u001B[32mINFO: Start app ${new_app_name}\u001B[m"
                       sh "cf v3-start ${new_app_name}"
+                      CHECKPOINT = "APP_START"
 
                       app_ready_wait = 0
                       while (app_ready_wait < 120) {
@@ -280,10 +284,12 @@ pipeline {
                       if (app_ready) {
                         echo "\u001B[32mINFO: Switching app routes\u001B[m"
                         app_routes.each {
+                          CHECKPOINT = "APP_ROUTES"
                           sh """
                             cf curl '/v2/routes/${it}/apps/${new_app_guid}' -X PUT | jq -C '.'
                             cf curl '/v2/routes/${it}/apps/${app_guid}' -X DELETE
                           """
+                          CHECKPOINT = "APP_ROUTES_COMPLETE"
                         }
                         echo "\u001B[32mINFO: Cleanup old app\u001B[m"
                         sh """
@@ -291,72 +297,73 @@ pipeline {
                           cf rename ${new_app_name} ${gds_app[2]}
                         """
                       } else {
+                        CHECKPOINT = "APP_FAIL"
                         error "\u001B[31mERROR: App failed to start.\u001B[m"
                       }
                     }
-                  }
                   break
 
-                case "s3":
+                  case "s3":
                   if (env.S3_WEBSITE_SRC == null) {
                     s3_path = env.WORKSPACE
                   } else {
                     s3_path = "${env.WORKSPACE}/${env.S3_WEBSITE_SRC}"
                   }
-                  ansiColor('xterm') {
-                    sh """
-                      export AWS_DEFAULT_REGION=${env.AWS_DEFAULT_REGION}
-                      export AWS_ACCESS_KEY_ID=${env.AWS_ACCESS_KEY_ID}
-                      export AWS_SECRET_ACCESS_KEY=${env.AWS_SECRET_ACCESS_KEY}
-                      aws s3 sync --sse --acl public-read --delete --exclude '.*' ${s3_path} s3://${env.PAAS_APP}
-                      if [ -f ${env.WORKSPACE}/${env.S3_WEBSITE_REDIRECT} ]; then
-                        aws s3api put-bucket-website --bucket ${env.PAAS_APP} --website-configuration file://${env.WORKSPACE}/${env.S3_WEBSITE_REDIRECT}
-                      fi
-                    """
-                  }
+                  sh """
+                    export AWS_DEFAULT_REGION=${env.AWS_DEFAULT_REGION}
+                    export AWS_ACCESS_KEY_ID=${env.AWS_ACCESS_KEY_ID}
+                    export AWS_SECRET_ACCESS_KEY=${env.AWS_SECRET_ACCESS_KEY}
+                    aws s3 sync --sse --acl public-read --delete --exclude '.*' ${s3_path} s3://${env.PAAS_APP}
+                    if [ -f ${env.WORKSPACE}/${env.S3_WEBSITE_REDIRECT} ]; then
+                      aws s3api put-bucket-website --bucket ${env.PAAS_APP} --website-configuration file://${env.WORKSPACE}/${env.S3_WEBSITE_REDIRECT}
+                    fi
+                  """
                   break
 
-                case "openshift":
+                  case "openshift":
                   withCredentials([string(credentialsId: env.OC_TOKEN_ID, variable: 'OC_TOKEN')]) {
-                    ansiColor('xterm') {
-                      oc_app = env.PAAS_APP.split("/")
-                      sh """
-                        oc login https://dashboard.${oc_app[0]} --insecure-skip-tls-verify=true --token=${OC_TOKEN}
-                        oc project ${oc_app[1]}
-                      """
+                    oc_app = env.PAAS_APP.split("/")
+                    sh """
+                      oc login https://dashboard.${oc_app[0]} --insecure-skip-tls-verify=true --token=${OC_TOKEN}
+                      oc project ${oc_app[1]}
+                    """
 
-                      withCredentials([sshUserPrivateKey(credentialsId: env.SCM_CREDENTIAL, keyFileVariable: 'GIT_SSH_KEY', passphraseVariable: '', usernameVariable: '')]) {
-                        SSH_KEY = readFile GIT_SSH_KEY
-                      }
+                    withCredentials([sshUserPrivateKey(credentialsId: env.SCM_CREDENTIAL, keyFileVariable: 'GIT_SSH_KEY', passphraseVariable: '', usernameVariable: '')]) {
+                      SSH_KEY = readFile GIT_SSH_KEY
+                    }
 
-                      unstash "oc-pipeline"
-                      SSH_KEY_ENCODED = sh(script: "set +x && echo '${SSH_KEY}' | base64 -w 0", returnStdout: true).trim()
+                    unstash "oc-pipeline"
+                    SSH_KEY_ENCODED = sh(script: "set +x && echo '${SSH_KEY}' | base64 -w 0", returnStdout: true).trim()
+                    sh """
+                      set +x
+                      oc process -f oc-pipeline.yml \
+                        --param APP_ID=${oc_app[2]} \
+                        --param NAMESPACE=${oc_app[1]} \
+                        --param SCM=${env.SCM} \
+                        --param DOMAIN=apps.${oc_app[0]} \
+                        --param GIT_SSH_KEY=${SSH_KEY_ENCODED} \
+                        | oc apply -f -
+                    """
+                    sh "oc secrets add serviceaccount/builder secrets/${oc_app[2]}"
+
+                    envars.each { key, value ->
                       sh """
                         set +x
-                        oc process -f oc-pipeline.yml \
-                          --param APP_ID=${oc_app[2]} \
-                          --param NAMESPACE=${oc_app[1]} \
-                          --param SCM=${env.SCM} \
-                          --param DOMAIN=apps.${oc_app[0]} \
-                          --param GIT_SSH_KEY=${SSH_KEY_ENCODED} \
-                          | oc apply -f -
+                        oc set env dc/${oc_app[2]} ${input.bash_escape(key)}=${input.bash_escape(value)}
                       """
-                      sh "oc secrets add serviceaccount/builder secrets/${oc_app[2]}"
-
-                      envars.each { key, value ->
-                        sh """
-                          set +x
-                          oc set env dc/${oc_app[2]} ${input.bash_escape(key)}=${input.bash_escape(value)}
-                        """
-                      }
-
-                      sh "oc start-build ${oc_app[2]} --commit=${env.Version} --follow"
                     }
+
+                    sh "oc start-build ${oc_app[2]} --commit=${env.Version} --follow"
                   }
                   break
 
-                case "heroku":
-                  break
+                  case "heroku":
+                    break
+
+                  default:
+                    error "\u001B[31mERROR: Not Supported.\u001B[m"
+                    break
+                }
               }
             }
           }
@@ -368,7 +375,27 @@ pipeline {
 
   post {
     failure {
-      emailext attachLog: true, body: "${PROJECT_DEFAULT_CONTENT}", recipientProviders: [[$class: 'CulpritsRecipientProvider'], [$class: 'DevelopersRecipientProvider'], [$class: 'RequesterRecipientProvider'], [$class: 'UpstreamComitterRecipientProvider']], subject: "${currentBuild.result}: ${env.Project} ${env.Environment}"
+      script {
+        timestamps {
+          ansiColor('xterm') {
+            switch(env.PAAS_TYPE) {
+              case "gds":
+                echo "\u001B[31mWARNING: Rollback app\u001B[m"
+                switch(CHECKPOINT) {
+                  case "APP_ROUTES":
+                    app_routes.each {
+                      sh "cf curl '/v2/routes/${it}/apps/${app_guid}' -X PUT | jq -C '.' || true"
+                    }
+                  default:
+                    sh "cf delete -f ${new_app_name}"
+                    break
+                }
+                break
+              }
+            emailext attachLog: true, body: "${PROJECT_DEFAULT_CONTENT}", recipientProviders: [[$class: 'CulpritsRecipientProvider'], [$class: 'DevelopersRecipientProvider'], [$class: 'RequesterRecipientProvider'], [$class: 'UpstreamComitterRecipientProvider']], subject: "${currentBuild.result}: ${env.Project} ${env.Environment}"
+          }
+        }
+      }
     }
 
     always {
