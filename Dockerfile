@@ -23,7 +23,7 @@ RUN curl -Lfs "https://github.com/openshift/origin/releases/download/$OC_REL/ope
     wget -q -O - https://packages.cloudfoundry.org/debian/cli.cloudfoundry.org.key | apt-key add - && \
     echo "deb http://packages.cloudfoundry.org/debian stable main" | tee /etc/apt/sources.list.d/cloudfoundry-cli.list && \
     apt-get update && \
-    apt-get install -y cf-cli=$CF_CLI_VER && \
+    apt-get install -y --allow-unauthenticated cf-cli=$CF_CLI_VER && \
     rm -rf /var/lib/apt/lists/*
 
 COPY Gemfile* /tmp/
