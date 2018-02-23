@@ -132,8 +132,8 @@ pipeline {
       steps {
         script {
           timestamps {
-            deployer.inside {
-              ansiColor('xterm') {
+            ansiColor('xterm') {
+              deployer.inside {
                 checkout([$class: 'GitSCM', branches: [[name: env.Version]], doGenerateSubmoduleConfigurations: false, extensions: [[$class: 'SubmoduleOption', disableSubmodules: false, parentCredentials: true, recursiveSubmodules: true, reference: '', trackingSubmodules: false]], submoduleCfg: [], userRemoteConfigs: [[credentialsId: env.SCM_CREDENTIAL, url: env.SCM]]])
 
                 node_ver_exist = fileExists "${env.WORKSPACE}/.nvmrc"
@@ -379,19 +379,27 @@ pipeline {
       script {
         timestamps {
           ansiColor('xterm') {
-            switch(env.PAAS_TYPE) {
-              case "gds":
-                echo "\u001B[31mWARNING: Rollback app\u001B[m"
-                switch(CHECKPOINT) {
-                  case "APP_ROUTES":
-                    app_routes.each {
-                      sh "cf curl '/v2/routes/${it}/apps/${app_guid}' -X PUT | jq -C '.' || true"
-                    }
-                  default:
-                    sh "cf delete -f ${new_app_name}"
-                  break
-                }
-              break
+            deployer.inside {
+              switch(env.PAAS_TYPE) {
+                case "gds":
+                  echo "\u001B[31mWARNING: Rollback app\u001B[m"
+                  withCredentials([usernamePassword(credentialsId: env.GDS_PAAS_CREDENTIAL, passwordVariable: 'gds_pass', usernameVariable: 'gds_user')]) {
+                    sh """
+                      cf login -a ${env.GDS_PAAS} -u ${gds_user} -p ${gds_pass} -o ${gds_app[0]} -s ${gds_app[1]}
+                      cf target -o ${gds_app[0]} -s ${gds_app[1]}
+                    """
+                  }
+                  switch(CHECKPOINT) {
+                    case "APP_ROUTES":
+                      app_routes.each {
+                        sh "cf curl '/v2/routes/${it}/apps/${app_guid}' -X PUT | jq -C '.' || true"
+                      }
+                    case String:
+                      sh "cf delete -f ${new_app_name}"
+                    break
+                  }
+                break
+              }
             }
             emailext attachLog: true, body: "${PROJECT_DEFAULT_CONTENT}", recipientProviders: [[$class: 'CulpritsRecipientProvider'], [$class: 'DevelopersRecipientProvider'], [$class: 'RequesterRecipientProvider'], [$class: 'UpstreamComitterRecipientProvider']], subject: "${currentBuild.result}: ${env.Project} ${env.Environment}"
           }
