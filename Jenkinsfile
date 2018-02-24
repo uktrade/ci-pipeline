@@ -395,7 +395,7 @@ pipeline {
                         sh "cf curl '/v2/routes/${it}/apps/${app_guid}' -X PUT | jq -C '.' || true"
                       }
                     case String:
-                      sh "cf delete -f ${new_app_name}"
+                      sh "cf v3-delete -f ${new_app_name}"
                     break
                   }
                 break
