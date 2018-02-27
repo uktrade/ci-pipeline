@@ -224,7 +224,7 @@ pipeline {
                         cf v3-set-env ${new_app_name} ${input.bash_escape(key)} ${input.bash_escape(value)}
                       """
                     }
-                    if (app_svc_json != "") {
+                    if (app_svc_json != 'null') {
                       CHECKPOINT = "APP_SERVICE"
                       app_svc = readJSON text: app_svc_json
                       app_svc.each {
