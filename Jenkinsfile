@@ -198,7 +198,7 @@ pipeline {
                     CHECKPOINT = "INIT"
                     sh "cf v3-create-app ${gds_app[2]}"
 
-                    space_guid = sh(script: "cf space sandbox  --guid", returnStdout: true).trim()
+                    space_guid = sh(script: "cf space ${gds_app[1]}  --guid", returnStdout: true).trim()
                     app_guid = sh(script: "cf v3-app ${gds_app[2]} --guid | perl -lne 'print \$& if /(\\{{0,1}([0-9a-fA-F]){8}-([0-9a-fA-F]){4}-([0-9a-fA-F]){4}-([0-9a-fA-F]){4}-([0-9a-fA-F]){12}\\}{0,1})/'", returnStdout: true).trim()
                     app_routes_json = sh(script: "cf curl '/v2/apps/${app_guid}/route_mappings' | jq -r '[.resources[].entity.route_guid]'", returnStdout: true).trim()
                     app_routes = readJSON text: app_routes_json
