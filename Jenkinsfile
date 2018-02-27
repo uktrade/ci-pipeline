@@ -200,7 +200,7 @@ pipeline {
 
                     space_guid = sh(script: "cf space ${gds_app[1]}  --guid", returnStdout: true).trim()
                     app_guid = sh(script: "cf v3-app ${gds_app[2]} --guid | perl -lne 'print \$& if /(\\{{0,1}([0-9a-fA-F]){8}-([0-9a-fA-F]){4}-([0-9a-fA-F]){4}-([0-9a-fA-F]){4}-([0-9a-fA-F]){12}\\}{0,1})/'", returnStdout: true).trim()
-                    app_routes_json = sh(script: "cf curl '/v2/apps/${app_guid}/route_mappings' | jq -r '[.resources[].entity.route_guid]'", returnStdout: true).trim()
+                    app_routes_json = sh(script: "cf curl '/v2/apps/${app_guid}/route_mappings' | jq '[.resources[].entity.route_guid]'", returnStdout: true).trim()
                     app_routes = readJSON text: app_routes_json
                     app_svc_json = sh(script: "cf curl '/v2/service_instances' | jq '.resources[] | select(.entity.space_guid==\"${space_guid}\").metadata.guid' | xargs -I{} cf curl /v2/service_instances/{}/service_bindings | jq '.resources[].entity | select(.app_guid==\"${app_guid}\") | [.service_instance_guid]' | jq -s add", returnStdout: true).trim()
 
