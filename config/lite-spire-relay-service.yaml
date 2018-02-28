@@ -12,8 +12,7 @@ environments:
       - USE_NEXUS: true
       - PAAS_BUILDPACK: java_buildpack
     secrets: true
-    run:
-      - "true"
+    run: []
   - environment: uat
     type: gds
     app: dit-staging/uat-lite/lite-spire-relay-service-uat
@@ -23,8 +22,7 @@ environments:
       - USE_NEXUS: true
       - PAAS_BUILDPACK: java_buildpack
     secrets: true
-    run:
-      - "true"
+    run: []
   - environment: staging
     type: gds
     app: dit-staging/staging-lite/lite-spire-relay-service-staging
@@ -34,8 +32,7 @@ environments:
       - USE_NEXUS: true
       - PAAS_BUILDPACK: java_buildpack
     secrets: true
-    run:
-      - "true"
+    run: []
   - environment: prod
     type: gds
     app: dit-services/lite/lite-spire-relay-service
@@ -45,5 +42,4 @@ environments:
       - USE_NEXUS: true
       - PAAS_BUILDPACK: java_buildpack
     secrets: true
-    run:
-- "true"
+    run: []
