@@ -203,6 +203,8 @@ pipeline {
                     app_routes_json = sh(script: "cf curl '/v2/apps/${app_guid}/route_mappings' | jq '[.resources[].entity.route_guid]'", returnStdout: true).trim()
                     app_routes = readJSON text: app_routes_json
                     app_svc_json = sh(script: "cf curl '/v2/service_instances' | jq '.resources[] | select(.entity.space_guid==\"${space_guid}\").metadata.guid' | xargs -I{} cf curl /v2/service_instances/{}/service_bindings | jq '.resources[].entity | select(.app_guid==\"${app_guid}\") | [.service_instance_guid]' | jq -s add", returnStdout: true).trim()
+                    app_scale_json = sh(script: "cf curl '/v3/apps/${app_guid}/processes' | jq '.resources | del(.[].links)'", returnStdout: true).trim()
+                    app_scale = readJSON text: app_scale_json
 
                     new_app_name = gds_app[2] + "-" + env.Version
                     echo "\u001B[32mINFO: Creating new app ${new_app_name}\u001B[m"
@@ -266,20 +268,33 @@ pipeline {
                           break
                       }
                     }
+
+                    echo "\u001B[32mINFO: Scale app ${new_app_name}\u001B[m"
+                    app_scale.each {
+                      sh """
+                        cf curl '/v3/apps/${new_app_guid}/processes/${it.type}/actions/scale' -X POST -d '{"instances": ${it.instances}, "memory_in_mb": ${it.memory_in_mb}, "disk_in_mb": ${it.disk_in_mb}}' | jq -C 'del(.links)'
+                      """
+                    }
+
                     echo "\u001B[32mINFO: Start app ${new_app_name}\u001B[m"
                     sh "cf v3-start ${new_app_name}"
                     CHECKPOINT = "APP_START"
 
                     app_ready_wait = 0
+                    app_ready = false
                     while (app_ready_wait < 120) {
-                      app_ready = sh(script: "cf curl '/v3/apps/${new_app_guid}/processes/web/stats' | jq -r '.resources[] | select(.type=\"web\").state'", returnStdout: true).trim()
-                      if (app_ready == "RUNNING") {
-                        echo "\u001B[32mINFO: App ${new_app_name} is ready\u001B[m"
-                        app_ready_wait = 120
-                      } else {
-                        echo "\u001B[32mINFO: App ${new_app_name} not ready, wait for 10 seconds...\u001B[m"
-                        app_ready_wait = app_ready_wait + 10
-                        sleep 10
+                      app_state_json = sh(script: "cf curl '/v3/apps/${new_app_guid}/processes/web/stats' | jq -r '.resources[] | select(.type=\"web\") | [.state]' | jq -s add", returnStdout: true).trim()
+                      app_state = readJSON text: app_state_json
+                      app_state.each {
+                        if (it == "RUNNING") {
+                          echo "\u001B[32mINFO: App ${new_app_name} is ready\u001B[m"
+                          app_ready = true
+                          app_ready_wait = 120
+                        } else {
+                          echo "\u001B[32mINFO: App ${new_app_name} not ready, wait for 10 seconds...\u001B[m"
+                          app_ready_wait = app_ready_wait + 10
+                          sleep 10
+                        }
                       }
                     }
 
