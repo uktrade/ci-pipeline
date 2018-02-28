@@ -1,0 +1,49 @@
+---
+name: lite-spire-relay-service
+namespace: lite
+scm: git@github.com:uktrade/lite-spire-relay-service.git
+environments:
+  - environment: dev
+    type: gds
+    app: dit-staging/dev-lite/lite-spire-relay-service-dev
+    vars:
+      - JAVA_EXTENSION: jar
+      - NEXUS_PATH: lite-builds/uk/gov/bis/lite/lite-spire-relay-service
+      - USE_NEXUS: true
+      - PAAS_BUILDPACK: java_buildpack
+    secrets: true
+    run:
+      - "true"
+  - environment: uat
+    type: gds
+    app: dit-staging/uat-lite/lite-spire-relay-service-uat
+    vars:
+      - JAVA_EXTENSION: jar
+      - NEXUS_PATH: lite-builds/uk/gov/bis/lite/lite-spire-relay-service
+      - USE_NEXUS: true
+      - PAAS_BUILDPACK: java_buildpack
+    secrets: true
+    run:
+      - "true"
+  - environment: staging
+    type: gds
+    app: dit-staging/staging-lite/lite-spire-relay-service-staging
+    vars:
+      - JAVA_EXTENSION: jar
+      - NEXUS_PATH: lite-builds/uk/gov/bis/lite/lite-spire-relay-service
+      - USE_NEXUS: true
+      - PAAS_BUILDPACK: java_buildpack
+    secrets: true
+    run:
+      - "true"
+  - environment: prod
+    type: gds
+    app: dit-services/lite/lite-spire-relay-service
+    vars:
+      - JAVA_EXTENSION: jar
+      - NEXUS_PATH: lite-builds/uk/gov/bis/lite/lite-spire-relay-service
+      - USE_NEXUS: true
+      - PAAS_BUILDPACK: java_buildpack
+    secrets: true
+    run:
+- "true"
