@@ -418,6 +418,8 @@ pipeline {
                       cf target -o ${gds_app[0]} -s ${gds_app[1]}
                     """
                   }
+                  error_log = sh(script: "cf logs ${new_app_name} --recent", returnStdout: true)
+                  email_body = PROJECT_DEFAULT_CONTENT + error_log
                   switch(CHECKPOINT) {
                     case "APP_ROUTES":
                       app_routes.each {
@@ -430,7 +432,7 @@ pipeline {
                 break
               }
             }
-            emailext attachLog: true, body: "${PROJECT_DEFAULT_CONTENT}", recipientProviders: [[$class: 'CulpritsRecipientProvider'], [$class: 'DevelopersRecipientProvider'], [$class: 'RequesterRecipientProvider'], [$class: 'UpstreamComitterRecipientProvider']], subject: "${currentBuild.result}: ${env.Project} ${env.Environment}"
+            emailext attachLog: true, body: "${email_body}", recipientProviders: [[$class: 'CulpritsRecipientProvider'], [$class: 'DevelopersRecipientProvider'], [$class: 'RequesterRecipientProvider'], [$class: 'UpstreamComitterRecipientProvider']], subject: "${currentBuild.result}: ${env.Project} ${env.Environment}"
           }
         }
       }
