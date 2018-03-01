@@ -270,10 +270,24 @@ pipeline {
                     }
 
                     echo "\u001B[32mINFO: Scale app ${new_app_name}\u001B[m"
-                    app_scale.each {
-                      sh """
-                        cf curl '/v3/apps/${new_app_guid}/processes/${it.type}/actions/scale' -X POST -d '{"instances": ${it.instances}, "memory_in_mb": ${it.memory_in_mb}, "disk_in_mb": ${it.disk_in_mb}}' | jq -C 'del(.links)'
-                      """
+                    procfile_exist = fileExists "${env.WORKSPACE}/Procfile"
+                    if (procfile_exist) {
+                      procfile = readProperties file: "${env.WORKSPACE}/Procfile"
+                      procfile.each { proc, cmd ->
+                        app_scale.each {
+                          if (proc == it.type) {
+                            sh """
+                              cf curl '/v3/apps/${new_app_guid}/processes/${it.type}/actions/scale' -X POST -d '{"instances": ${it.instances}, "memory_in_mb": ${it.memory_in_mb}, "disk_in_mb": ${it.disk_in_mb}}' | jq -C 'del(.links)'
+                            """
+                          }
+                        }
+                      }
+                    } else {
+                      app_scale.each {
+                        sh """
+                          cf curl '/v3/apps/${new_app_guid}/processes/${it.type}/actions/scale' -X POST -d '{"instances": ${it.instances}, "memory_in_mb": ${it.memory_in_mb}, "disk_in_mb": ${it.disk_in_mb}}' | jq -C 'del(.links)'
+                        """
+                      }
                     }
 
                     echo "\u001B[32mINFO: Start app ${new_app_name}\u001B[m"
