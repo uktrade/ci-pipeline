@@ -432,7 +432,7 @@ pipeline {
                 break
               }
             }
-            emailext attachLog: true, body: "${email_body}", recipientProviders: [[$class: 'CulpritsRecipientProvider'], [$class: 'DevelopersRecipientProvider'], [$class: 'RequesterRecipientProvider'], [$class: 'UpstreamComitterRecipientProvider']], subject: "${currentBuild.result}: ${env.Project} ${env.Environment}"
+            emailext attachLog: true, body: "${email_body}", to: DEFAULT_RECIPIENTS, subject: "${currentBuild.result}: ${env.Project} ${env.Environment}"
           }
         }
       }
