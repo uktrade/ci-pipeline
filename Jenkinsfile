@@ -329,7 +329,7 @@ pipeline {
                       """
                     } else {
                       CHECKPOINT = "APP_FAIL"
-                      error "\u001B[31mERROR: App failed to start.\u001B[m"
+                      error "App failed to start."
                     }
                   break
 
@@ -391,7 +391,7 @@ pipeline {
                   break
 
                   default:
-                    error "\u001B[31mERROR: Not Supported.\u001B[m"
+                    error "Not Supported."
                   break
                 }
               }
@@ -418,21 +418,20 @@ pipeline {
                       cf target -o ${gds_app[0]} -s ${gds_app[1]}
                     """
                   }
-                  error_log = sh(script: "cf logs ${new_app_name} --recent", returnStdout: true)
-                  email_body = PROJECT_DEFAULT_CONTENT + error_log
+                  sh "cf logs ${new_app_name} --recent || true"
                   switch(CHECKPOINT) {
                     case "APP_ROUTES":
                       app_routes.each {
                         sh "cf curl '/v2/routes/${it}/apps/${app_guid}' -X PUT | jq -C '.' || true"
                       }
                     case String:
-                      sh "cf v3-delete -f ${new_app_name}"
+                      sh "cf v3-delete -f ${new_app_name} || true"
                     break
                   }
                 break
               }
+              emailext body: '${DEFAULT_CONTENT}', recipientProviders: [[$class: 'CulpritsRecipientProvider'], [$class: 'DevelopersRecipientProvider'], [$class: 'RequesterRecipientProvider'], [$class: 'UpstreamComitterRecipientProvider']], subject: "${currentBuild.result}: ${env.Project} ${env.Environment}", to: '${DEFAULT_RECIPIENTS}'
             }
-            emailext attachLog: true, body: "${email_body}", to: DEFAULT_RECIPIENTS, subject: "${currentBuild.result}: ${env.Project} ${env.Environment}"
           }
         }
       }
