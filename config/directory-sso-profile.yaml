@@ -6,24 +6,18 @@ environments:
   - environment: dev
     type: gds
     app: dit-staging/dev-directory/directory-sso-profile-dev
-    vars:
-      - DISABLE_COLLECTSTATIC: 1
+    vars: []
     secrets: true
-    run:
-      - "true"
+    run: []
   - environment: staging
     type: gds
-    app: dit-staging/staging-directory/directory-sso-profile-staging
-    vars:
-      - DISABLE_COLLECTSTATIC: 1
+    app: dit-staging/staging-directory/directory-sso-profile-stage
+    vars: []
     secrets: true
-    run:
-      - "true"
+    run: []
   - environment: prod
     type: gds
     app: dit-services/directory/directory-sso-profile
-    vars:
-      - DISABLE_COLLECTSTATIC: 1
+    vars: []
     secrets: true
-    run:
-      - "true"
+    run: []
