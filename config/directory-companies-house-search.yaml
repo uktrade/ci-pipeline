@@ -11,7 +11,7 @@ environments:
     run: []
   - environment: staging
     type: gds
-    app: dit-staging/staging-directory/directory-companies-house-search-stage
+    app: dit-staging/staging-directory/directory-companies-house-search-staging
     vars: []
     secrets: true
     run: []
