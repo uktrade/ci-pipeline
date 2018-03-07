@@ -1,0 +1,29 @@
+---
+name: directory-companies-house-search
+namespace: directory
+scm: git@github.com:uktrade/directory-companies-house-search.git
+environments:
+  - environment: dev
+    type: gds
+    app: dit-staging/dev-directory/directory-companies-house-search-dev
+    vars:
+      - DISABLE_COLLECTSTATIC: 0
+    secrets: true
+    run:
+      - "true"
+  - environment: staging
+    type: gds
+    app: dit-staging/staging-directory/directory-companies-house-search-stage
+    vars:
+      - DISABLE_COLLECTSTATIC: 0
+    secrets: true
+    run:
+      - "true"
+  - environment: prod
+    type: gds
+    app: dit-services/directory/directory-companies-house-search
+    vars:
+      - DISABLE_COLLECTSTATIC: 0
+    secrets: true
+    run:
+      - "true"
