@@ -1,0 +1,23 @@
+---
+name: directory-companies-house-search
+namespace: directory
+scm: git@github.com:uktrade/directory-companies-house-search.git
+environments:
+  - environment: dev
+    type: gds
+    app: dit-staging/dev-directory/directory-companies-house-search-dev
+    vars: []
+    secrets: true
+    run: []
+  - environment: staging
+    type: gds
+    app: dit-staging/staging-directory/directory-companies-house-search-staging
+    vars: []
+    secrets: true
+    run: []
+  - environment: prod
+    type: gds
+    app: dit-services/directory/directory-companies-house-search
+    vars: []
+    secrets: true
+    run: []
