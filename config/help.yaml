@@ -20,7 +20,7 @@ environments:
       - ZENDESK_TEST_URL: https://staging-uktrade.zendesk.com/api/v2/users.json
     secrets: true
     run:
-      - "npm install && npm run build && rm -rf node_modules"
+      - "pip3 install -r requirements.txt && npm install && npm run build && rm -rf node_modules"
   - environment: staging
     type: gds
     app: dit-staging/staging-enav/enav-help-staging
@@ -38,7 +38,7 @@ environments:
       - ZENDESK_TEST_URL: https://staging-uktrade.zendesk.com/api/v2/users.json
     secrets: true
     run:
-      - "npm install && npm run build && rm -rf node_modules"
+      - "pip3 install -r requirements.txt && npm install && npm run build && rm -rf node_modules"
   - environment: production
     type: gds
     app: dit-services/enav/enav-help
@@ -51,4 +51,4 @@ environments:
       - ZENDESK_URL: https://uktrade.zendesk.com/api/v2/tickets.json
     secrets: true
     run:
-      - "npm install && npm run build && rm -rf node_modules"
+      - "pip3 install -r requirements.txt && npm install && npm run build && rm -rf node_modules"
