@@ -337,7 +337,7 @@ pipeline {
                       }
                       echo "\u001B[32mINFO: Cleanup old app\u001B[m"
                       sh """
-                        cf delete -f ${gds_app[2]}
+                        cf v3-delete -f ${gds_app[2]}
                         cf rename ${new_app_name} ${gds_app[2]}
                       """
                     } else {
