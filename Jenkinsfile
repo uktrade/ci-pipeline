@@ -244,7 +244,7 @@ pipeline {
                       app_user_svc = readJSON text: app_user_svc_json
                       app_user_svc.each {
                         user_svc_name = sh(script: "cf curl '/v2/user_provided_service_instances/${it}' | jq -r '.entity.name'", returnStdout: true).trim()
-                        echo "\u001B[32mINFO: Migrating user provided service ${svc_name} to ${new_app_name}\u001B[m"
+                        echo "\u001B[32mINFO: Migrating user provided service ${user_svc_name} to ${new_app_name}\u001B[m"
                         sh """
                           cf curl /v2/service_bindings -X POST -d '{"service_instance_guid": "${it}", "app_guid": "${new_app_guid}"}' | jq -C 'del(.entity.credentials)'
                         """
