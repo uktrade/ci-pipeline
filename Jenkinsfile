@@ -203,6 +203,7 @@ pipeline {
                     app_routes_json = sh(script: "cf curl '/v2/apps/${app_guid}/route_mappings' | jq '[.resources[].entity.route_guid]' 2>/dev/null || echo '[]'", returnStdout: true).trim()
                     app_routes = readJSON text: app_routes_json
                     app_svc_json = sh(script: "cf curl '/v2/service_instances' | jq '.resources[] | select(.entity.space_guid==\"${space_guid}\").metadata.guid' | xargs -I{} cf curl /v2/service_instances/{}/service_bindings | jq '.resources[].entity | select(.app_guid==\"${app_guid}\") | [.service_instance_guid]' | jq -s add", returnStdout: true).trim()
+                    app_user_svc_json = sh(script: "cf curl '/v2/user_provided_service_instances' | jq '.resources[] | select(.entity.space_guid=\"${space_guid}\").metadata.guid' | xargs -I{} cf curl /v2/user_provided_service_instances/{}/service_bindings | jq '.resources[].entity | select(.app_guid==\"${app_guid}\") | [.service_instance_guid]' | jq -s add", returnStdout: true).trim()
                     app_scale_json = sh(script: "cf curl '/v3/apps/${app_guid}/processes' | jq '.resources | del(.[].links)'", returnStdout: true).trim()
                     app_scale = readJSON text: app_scale_json
 
@@ -237,6 +238,18 @@ pipeline {
                         """
                       }
                       CHECKPOINT = "APP_SERVICE_COMPLETE"
+                    }
+                    if (app_user_svc_json != 'null') {
+                      CHECKPOINT = "APP_USER_SERVICE"
+                      app_user_svc = readJSON text: app_user_svc_json
+                      app_user_svc.each {
+                        user_svc_name = sh(script: "cf curl '/v2/user_provided_service_instances/${it}' | jq -r '.entity.name'", returnStdout: true).trim()
+                        echo "\u001B[32mINFO: Migrating user provided service ${user_svc_name} to ${new_app_name}\u001B[m"
+                        sh """
+                          cf curl /v2/service_bindings -X POST -d '{"service_instance_guid": "${it}", "app_guid": "${new_app_guid}"}' | jq -C 'del(.entity.credentials)'
+                        """
+                      }
+                      CHECKPOINT = "APP_USER_SERVICE_COMPLETE"
                     }
 
                     if (env.USE_NEXUS) {
