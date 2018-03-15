@@ -221,6 +221,7 @@ pipeline {
                       """
                     }
 
+                    sh "cf v3-set-env ${new_app_name} GIT_COMMIT ${input.bash_escape(env.GIT_COMMIT)}"
                     envars.each { key, value ->
                       sh """
                         set +x
