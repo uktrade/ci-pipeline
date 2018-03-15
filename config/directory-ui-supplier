@@ -1,0 +1,22 @@
+name: directory-ui-supplier
+namespace: directory
+scm: git@github.com:uktrade/directory-ui-supplier.git
+environments:
+  - environment: dev
+    type: gds
+    app: dit-staging/dev-directory/directory-ui-supplier-dev
+    vars: []
+    secrets: true
+    run: []
+  - environment: staging
+    type: gds
+    app: dit-staging/staging-directory/directory-ui-supplier-staging
+    vars: []
+    secrets: true
+    run: []
+  - environment: prod
+    type: gds
+    app: dit-services/directory/directory-ui-supplier
+    vars: []
+    secrets: true
+    run: []
