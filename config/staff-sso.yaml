@@ -6,8 +6,6 @@ environments:
   - environment: prod
     type: gds
     app: dit-services/datahub/staff-sso
-    vars:
-      - HERE: 1
+    vars: []
     secrets: true
-    run:
-      - "true"
+    run: []

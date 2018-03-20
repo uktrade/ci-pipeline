@@ -6,7 +6,6 @@ environments:
   - environment: production
     type: s3
     app: sorry.trade.gov.uk
-    vars:
-      - AWS_DEFAULT_REGION: eu-west-2
+    vars: []
     secrets: true
     run: []

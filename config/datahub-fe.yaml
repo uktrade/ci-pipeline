@@ -6,60 +6,30 @@ environments:
   - environment: dev
     type: gds
     app: dit-staging/dev-datahub/datahub-dev
-    vars:
-      - LOG_LEVEL: info
-      - API_ROOT: https://datahub-api-dev.cloudapps.digital
-      - OAUTH2_TOKEN_FETCH_URL: https://sso.trade.uat.uktrade.io/o/token/
-      - OAUTH2_USER_PROFILE_URL: https://sso.trade.uat.uktrade.io/api/v1/user/me/
-      - OAUTH2_AUTH_URL: https://sso.trade.uat.uktrade.io/o/authorize/
-      - OAUTH2_REDIRECT_URL: https://www.datahub.dev.uktrade.io/oauth/callback
+    vars: []
     secrets: true
     run: []
   - environment: uat
     type: gds
     app: dit-staging/uat-datahub/datahub-uat
-    vars:
-      - LOG_LEVEL: info
-      - API_ROOT: https://datahub-api-uat.cloudapps.digital
-      - OAUTH2_TOKEN_FETCH_URL: https://sso.trade.gov.uk/o/token/
-      - OAUTH2_USER_PROFILE_URL: https://sso.trade.gov.uk/api/v1/user/me/
-      - OAUTH2_AUTH_URL: https://sso.trade.gov.uk/o/authorize/
-      - OAUTH2_REDIRECT_URL: https://www.datahub.uat.uktrade.io/oauth/callback
+    vars: []
     secrets: true
     run: []
   - environment: demo
     type: gds
     app: dit-staging/dev-datahub/datahub-demo
-    vars:
-      - LOG_LEVEL: info
-      - API_ROOT: https://datahub-api-demo.cloudapps.digital
-      - OAUTH2_TOKEN_FETCH_URL: https://sso.trade.gov.uk/o/token/
-      - OAUTH2_USER_PROFILE_URL: https://sso.trade.gov.uk/api/v1/user/me/
-      - OAUTH2_AUTH_URL: https://sso.trade.gov.uk/o/authorize/
-      - OAUTH2_REDIRECT_URL: https://www.datahub.demo.uktrade.io/oauth/callback
+    vars: []
     secrets: true
     run: []
   - environment: staging
     type: gds
     app: dit-staging/staging-datahub/datahub-staging
-    vars:
-      - LOG_LEVEL: info
-      - API_ROOT: https://datahub-api-staging.cloudapps.digital
-      - OAUTH2_TOKEN_FETCH_URL: https://sso.trade.gov.uk/o/token/
-      - OAUTH2_USER_PROFILE_URL: https://sso.trade.gov.uk/api/v1/user/me/
-      - OAUTH2_AUTH_URL: https://sso.trade.gov.uk/o/authorize/
-      - OAUTH2_REDIRECT_URL: https://www.datahub.staging.uktrade.io/oauth/callback
+    vars: []
     secrets: true
     run: []
   - environment: production
     type: gds
     app: dit-services/datahub/datahub
-    vars:
-      - LOG_LEVEL: info
-      - API_ROOT: https://datahub-api.cloudapps.digital
-      - OAUTH2_TOKEN_FETCH_URL: https://sso.trade.gov.uk/o/token/
-      - OAUTH2_USER_PROFILE_URL: https://sso.trade.gov.uk/api/v1/user/me/
-      - OAUTH2_AUTH_URL: https://sso.trade.gov.uk/o/authorize/
-      - OAUTH2_REDIRECT_URL: https://www.datahub.trade.gov.uk/oauth/callback
+    vars: []
     secrets: true
     run: []
