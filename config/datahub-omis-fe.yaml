@@ -6,35 +6,30 @@ environments:
   - environment: dev
     type: gds
     app: dit-staging/dev-datahub/datahub-omis-dev
-    vars:
-      - API_ROOT: https://datahub-api-dev.cloudapps.digital
+    vars: []
     secrets: true
     run: []
   - environment: uat
     type: gds
     app: dit-staging/uat-datahub/datahub-omis-uat
-    vars:
-      - API_ROOT: https://datahub-api-uat.cloudapps.digital
+    vars: []
     secrets: true
     run: []
   - environment: demo
     type: gds
     app: dit-staging/dev-datahub/datahub-omis-demo
-    vars:
-      - API_ROOT: https://datahub-api-demo.cloudapps.digital
+    vars: []
     secrets: true
     run: []
   - environment: staging
     type: gds
     app: dit-staging/staging-datahub/datahub-omis-staging
-    vars:
-      - API_ROOT: https://datahub-api-staging.cloudapps.digital
+    vars: []
     secrets: true
     run: []
   - environment: production
     type: gds
     app: dit-services/datahub/datahub-omis
-    vars:
-      - API_ROOT: https://datahub-api.cloudapps.digital
+    vars: []
     secrets: true
     run: []

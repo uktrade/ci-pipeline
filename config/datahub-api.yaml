@@ -6,55 +6,30 @@ environments:
   - environment: dev
     type: gds
     app: dit-staging/dev-datahub/datahub-api-dev
-    vars:
-      - DEBUG: 1
-      - DATAHUB_FRONTEND_BASE_URL: https://www.datahub.dev.uktrade.io
-      - OMIS_PUBLIC_BASE_URL: https://datahub-omis-dev.cloudapps.digital
-      - DJANGO_SETTINGS_MODULE: config.settings.dev
-      - DISABLE_COLLECTSTATIC: 1
+    vars: []
     secrets: true
     run: []
   - environment: uat
     type: gds
     app: dit-staging/uat-datahub/datahub-api-uat
-    vars:
-      - DEBUG: 0
-      - DATAHUB_FRONTEND_BASE_URL: https://www.datahub.uat.uktrade.io
-      - OMIS_PUBLIC_BASE_URL: https://datahub-omis-uat.cloudapps.digital
-      - DJANGO_SETTINGS_MODULE: config.settings.dev
-      - DISABLE_COLLECTSTATIC: 1
+    vars: []
     secrets: true
     run: []
   - environment: demo
     type: gds
     app: dit-staging/dev-datahub/datahub-api-demo
-    vars:
-      - DEBUG: 0
-      - DATAHUB_FRONTEND_BASE_URL: https://www.datahub.demo.uktrade.io
-      - OMIS_PUBLIC_BASE_URL: https://datahub-omis-demo.cloudapps.digital
-      - DJANGO_SETTINGS_MODULE: config.settings.dev
-      - DISABLE_COLLECTSTATIC: 1
+    vars: []
     secrets: true
     run: []
   - environment: staging
     type: gds
     app: dit-staging/staging-datahub/datahub-api-staging
-    vars:
-      - DEBUG: 0
-      - DATAHUB_FRONTEND_BASE_URL: https://www.datahub.staging.uktrade.io
-      - OMIS_PUBLIC_BASE_URL: https://datahub-omis-staging.cloudapps.digital
-      - DJANGO_SETTINGS_MODULE: config.settings.staging
-      - DISABLE_COLLECTSTATIC: 1
+    vars: []
     secrets: true
     run: []
   - environment: production
     type: gds
     app: dit-services/datahub/datahub-api
-    vars:
-      - DEBUG: 0
-      - DATAHUB_FRONTEND_BASE_URL: https://www.datahub.trade.gov.uk
-      - OMIS_PUBLIC_BASE_URL: https://omis.trade.gov.uk
-      - DJANGO_SETTINGS_MODULE: config.settings.production
-      - DISABLE_COLLECTSTATIC: 1
+    vars: []
     secrets: true
     run: []
