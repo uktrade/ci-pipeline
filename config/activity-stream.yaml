@@ -1,0 +1,28 @@
+---
+# Please note that all vars are stored in the vault (https://vault-ui.apps.ci.uktrade.io),
+# namely at the paths:
+# dit/activity-stream/activity-stream/dev
+# dit/activity-stream/activity-stream/staging
+# dit/activity-stream/activity-stream/production
+name: activity-stream
+namespace: activity-stream
+scm: git@github.com:uktrade/activity-stream.git
+environments:
+  - environment: dev
+    type: gds
+    app: dit-staging/dev-activity-stream/activity-stream-dev
+    vars: []
+    secrets: true
+    run: []
+  - environment: staging
+    type: gds
+    app: dit-staging/staging-activity-stream/activity-stream-staging
+    vars: []
+    secrets: true
+    run: []
+  - environment: production
+    type: gds
+    app: dit-services/activity-stream/activity-stream
+    vars: []
+    secrets: true
+    run: []
