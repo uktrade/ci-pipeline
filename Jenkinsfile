@@ -445,7 +445,18 @@ pipeline {
                 break
               }
               emailext body: '${DEFAULT_CONTENT}', recipientProviders: [[$class: 'CulpritsRecipientProvider'], [$class: 'DevelopersRecipientProvider'], [$class: 'RequesterRecipientProvider'], [$class: 'UpstreamComitterRecipientProvider']], subject: "${currentBuild.result}: ${env.Project} ${env.Environment}", to: '${DEFAULT_RECIPIENTS}'
+              slackSend message: "Failure: ${env.JOB_NAME} #${env.BUILD_NUMBER} - ${env.Project} ${env.Environment} (<${env.BUILD_URL}|Open>)", color: 'danger'
             }
+          }
+        }
+      }
+    }
+
+    success {
+      script {
+        timestamps {
+          ansiColor('xterm') {
+            slackSend message: "Success: ${env.JOB_NAME} #${env.BUILD_NUMBER} - ${env.Project} ${env.Environment} (<${env.BUILD_URL}|Open>)", color: 'good'
           }
         }
       }
@@ -455,7 +466,6 @@ pipeline {
       script {
         timestamps {
           deleteDir()
-          slackSend "${currentBuild.result} - ${env.Project} ${env.Environment} (<${env.BUILD_URL}|Open>)"
         }
       }
     }
