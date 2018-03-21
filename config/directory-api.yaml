@@ -1,0 +1,23 @@
+---
+name: directory-api
+namespace: directory
+scm: git@github.com:uktrade/directory-api.git
+environments:
+  - environment: dev
+    type: gds
+    app: dit-staging/dev-directory/directory-api-dev
+    vars: []
+    secrets: true
+    run: []
+  - environment: staging
+    type: gds
+    app: dit-staging/staging-directory/directory-api-staging
+    vars: []
+    secrets: true
+    run: []
+  - environment: prod
+    type: gds
+    app: dit-services/directory/directory-api
+    vars: []
+    secrets: true
+    run: []
