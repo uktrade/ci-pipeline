@@ -455,6 +455,7 @@ pipeline {
       script {
         timestamps {
           deleteDir()
+          slackSend "${currentBuild.result} - ${env.Project} ${env.Environment} (<${env.BUILD_URL}|Open>)"
         }
       }
     }
