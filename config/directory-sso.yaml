@@ -1,0 +1,23 @@
+---
+name: directory-sso
+namespace: directory
+scm: git@github.com:uktrade/directory-sso.git
+environments:
+  - environment: dev
+    type: gds
+    app: dit-staging/dev-directory/directory-sso-dev
+    vars: []
+    secrets: true
+    run: []
+  - environment: staging
+    type: gds
+    app: dit-staging/staging-directory/directory-sso-staging
+    vars: []
+    secrets: true
+    run: []
+  - environment: prod
+    type: gds
+    app: dit-services/directory/directory-sso
+    vars: []
+    secrets: true
+    run: []
