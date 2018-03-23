@@ -10,6 +10,13 @@ environments:
     secrets: true
     run:
       - "true"
+  - environment: test
+    type: gds
+    app: dit-staging/dev-traderemedies/trade-remedies-public-test
+    vars: []
+    secrets: true
+    run:
+      - "true"
   - environment: staging
     type: gds
     app: dit-staging/staging-traderemedies/trade-remedies-public-staging
