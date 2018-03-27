@@ -6,7 +6,6 @@ require 'json-schema'
 require 'rest-client'
 require 'deep_merge'
 require 'base64'
-require 'shellwords'
 
 CONFIG_DIR = "#{ENV['WORKSPACE']}/config"
 JSON_SCHEMA = "#{ENV['WORKSPACE']}/schema.json"
@@ -120,7 +119,6 @@ def main(args)
     data['vars'].each { |var| file_content.deep_merge!(var) } unless data['vars'].empty?
     if data['secrets']
       secrets = vault_get("#{team}/#{project}/#{env}")
-      # puts secrets
       file_content.deep_merge!(secrets) unless secrets.empty?
     end
 
