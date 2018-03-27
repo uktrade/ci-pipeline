@@ -116,11 +116,7 @@ def main(args)
       secrets = vault_get("#{team}/#{project}/#{env}")
       unless secrets.empty?
         file_content.deep_merge!(secrets)
-        file_content.each { |key, value|
-          unless value.kind_of? String
-            file_content.deep_merge!({key => value.to_s})
-          end
-        }
+        file_content.each { |key, value| file_content.deep_merge!({key => value.to_s}) unless value.kind_of? String }
       end
     end
 
