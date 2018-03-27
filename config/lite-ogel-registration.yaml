@@ -10,10 +10,8 @@ environments:
       - JAVA_EXTENSION: zip
       - NEXUS_PATH: lite-builds-raw/lite-ogel-registration/lite-ogel-registration
       - USE_NEXUS: true
-      - PAAS_BUILDPACK: java_buildpack
     secrets: true
-    run:
-      - "true"
+    run: []
   - environment: uat
     type: gds
     app: dit-staging/uat-lite/lite-ogel-registration-uat
@@ -21,10 +19,8 @@ environments:
       - JAVA_EXTENSION: zip
       - NEXUS_PATH: lite-builds-raw/lite-ogel-registration/lite-ogel-registration
       - USE_NEXUS: true
-      - PAAS_BUILDPACK: java_buildpack
     secrets: true
-    run:
-      - "true"
+    run: []
   - environment: staging
     type: gds
     app: dit-staging/staging-lite/lite-ogel-registration-staging
@@ -32,10 +28,8 @@ environments:
       - JAVA_EXTENSION: zip
       - NEXUS_PATH: lite-builds-raw/lite-ogel-registration/lite-ogel-registration
       - USE_NEXUS: true
-      - PAAS_BUILDPACK: java_buildpack
     secrets: true
-    run:
-      - "true"
+    run: []
   - environment: prod
     type: gds
     app: dit-services/lite/lite-ogel-registration
@@ -43,7 +37,5 @@ environments:
       - JAVA_EXTENSION: zip
       - NEXUS_PATH: lite-builds-raw/lite-ogel-registration/lite-ogel-registration
       - USE_NEXUS: true
-      - PAAS_BUILDPACK: java_buildpack
     secrets: true
-    run:
-      - "true"
+    run: []

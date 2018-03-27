@@ -10,10 +10,8 @@ environments:
       - JAVA_EXTENSION: jar
       - NEXUS_PATH: lite-builds/uk/gov/bis/lite/lite-country-service
       - USE_NEXUS: true
-      - PAAS_BUILDPACK: java_buildpack
     secrets: true
-    run:
-      - "true"
+    run: []
   - environment: uat
     type: gds
     app: dit-staging/uat-lite/lite-country-service-uat
@@ -21,10 +19,8 @@ environments:
       - JAVA_EXTENSION: jar
       - NEXUS_PATH: lite-builds/uk/gov/bis/lite/lite-country-service
       - USE_NEXUS: true
-      - PAAS_BUILDPACK: java_buildpack
     secrets: true
-    run:
-      - "true"
+    run: []
   - environment: staging
     type: gds
     app: dit-staging/staging-lite/lite-country-service-staging
@@ -32,10 +28,8 @@ environments:
       - JAVA_EXTENSION: jar
       - NEXUS_PATH: lite-builds/uk/gov/bis/lite/lite-country-service
       - USE_NEXUS: true
-      - PAAS_BUILDPACK: java_buildpack
     secrets: true
-    run:
-      - "true"
+    run: []
   - environment: prod
     type: gds
     app: dit-services/lite/lite-country-service
@@ -43,7 +37,5 @@ environments:
       - JAVA_EXTENSION: jar
       - NEXUS_PATH: lite-builds/uk/gov/bis/lite/lite-country-service
       - USE_NEXUS: true
-      - PAAS_BUILDPACK: java_buildpack
     secrets: true
-    run:
-      - "true"
+    run: []
