@@ -6,7 +6,6 @@ require 'json-schema'
 require 'rest-client'
 require 'deep_merge'
 require 'base64'
-require 'shellwords'
 
 CONFIG_DIR = "#{ENV['WORKSPACE']}/config"
 JSON_SCHEMA = "#{ENV['WORKSPACE']}/schema.json"
@@ -15,8 +14,9 @@ VAULT_API = ENV['VAULT_API']
 VAULT_PREFIX = ENV['VAULT_PREFIX']
 VAULT_ROLE_ID = ENV['VAULT_ROLE_ID']
 VAULT_SERECT_ID = ENV['VAULT_SERECT_ID']
-OPTION_FILE = "#{ENV['WORKSPACE']}/.option.json"
+OPTION_FILE = "#{ENV['WORKSPACE']}/.option"
 ENV_FILE = "#{ENV['WORKSPACE']}/.env"
+CONF_FILE = "#{ENV['WORKSPACE']}/.config"
 
 def validate(schema, data)
   return JSON::Validator.validate!(schema, data, {:validate_schema => true, :strict => true})
@@ -52,17 +52,8 @@ def vault_get(path)
   end
 end
 
-def save_option(data)
-  return File.write(OPTION_FILE, JSON.dump(data))
-end
-
-def save_env(file, data)
-  File.open(file, 'w') { |file| file.truncate(0) }
-  return data.each { |key, value|
-    File.open(file, 'a') { |file|
-      file.puts "#{key.to_s}=#{Shellwords.escape(value.to_s)}" unless key.to_s.empty? || value.to_s.empty?
-    }
-  }
+def save_json(file, data)
+  return File.write(file, JSON.dump(data))
 end
 
 def main(args)
@@ -74,7 +65,7 @@ def main(args)
     config_files = Array.new
     Dir.foreach(CONFIG_DIR) do |file|
       if MIME::Types.type_for(file).to_s =~ /(text|application)\/(x-)?yaml/
-        puts "\t+ #{CONFIG_DIR}/#{file}"
+        puts "+ config/#{file}"
         begin
           config_files += ["#{CONFIG_DIR}/#{file}"] if validate(JSON_SCHEMA, JSON.dump(YAML.load_file("#{CONFIG_DIR}/#{file}")))
         rescue Exception => e
@@ -108,7 +99,7 @@ def main(args)
       consul_add("#{file_data['namespace']}/#{file_data['name']}/_", JSON.dump(path_data))
       option_data.deep_merge!({ file_data['namespace'] => { file_data['name'] => env_data }})
     }
-    save_option(option_data)
+    save_json(OPTION_FILE, option_data)
 
   else
 
@@ -119,20 +110,26 @@ def main(args)
     data['run'].each_with_index { |cmd, index|
       (index + 1) < data['run'].length ? run += "#{cmd} && " : run += cmd
     } unless data['run'].empty?
-    file_content = {
+    file_content = Hash.new
+    data['vars'].each { |var| file_content.deep_merge!(var) } unless data['vars'].empty?
+    if data['secrets']
+      secrets = vault_get("#{team}/#{project}/#{env}")
+      unless secrets.empty?
+        file_content.deep_merge!(secrets)
+        file_content.each { |key, value| file_content.deep_merge!({key => value.to_s}) unless value.kind_of? String }
+      end
+    end
+
+    conf_content = {
       'SCM' => consul_get("#{team}/#{project}/_")['scm'],
       'PAAS_TYPE' => data['type'],
       'PAAS_APP' => data['app'],
       'PAAS_ENVIRONMENT' => data['environment'],
-      'PAAS_RUN' => run
+      'PAAS_RUN' => data['run'].empty? ? nil : run
     }
-    data['vars'].each { |var| file_content.deep_merge!(var) } unless data['vars'].empty?
-    if data['secrets']
-      secrets = vault_get("#{team}/#{project}/#{env}")
-      file_content.deep_merge!(secrets) unless secrets.empty?
-    end
 
-    save_env(ENV_FILE, file_content)
+    save_json(CONF_FILE, conf_content)
+    save_json(ENV_FILE, file_content)
   end
 
 end

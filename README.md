@@ -63,7 +63,7 @@ App can specify different buildpack other than PaaS natively installed buildpack
 
 ##### Multiple Buildpacks
 
-`manifest.yaml`:
+`manifest.yml`:
 ```
 ---
 applications:

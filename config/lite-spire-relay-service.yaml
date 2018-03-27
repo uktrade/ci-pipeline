@@ -10,7 +10,6 @@ environments:
       - JAVA_EXTENSION: jar
       - NEXUS_PATH: lite-builds/uk/gov/bis/lite/lite-spire-relay-service
       - USE_NEXUS: true
-      - PAAS_BUILDPACK: java_buildpack
     secrets: true
     run: []
   - environment: uat
@@ -20,7 +19,6 @@ environments:
       - JAVA_EXTENSION: jar
       - NEXUS_PATH: lite-builds/uk/gov/bis/lite/lite-spire-relay-service
       - USE_NEXUS: true
-      - PAAS_BUILDPACK: java_buildpack
     secrets: true
     run: []
   - environment: staging
@@ -30,7 +28,6 @@ environments:
       - JAVA_EXTENSION: jar
       - NEXUS_PATH: lite-builds/uk/gov/bis/lite/lite-spire-relay-service
       - USE_NEXUS: true
-      - PAAS_BUILDPACK: java_buildpack
     secrets: true
     run: []
   - environment: prod
@@ -40,6 +37,5 @@ environments:
       - JAVA_EXTENSION: jar
       - NEXUS_PATH: lite-builds/uk/gov/bis/lite/lite-spire-relay-service
       - USE_NEXUS: true
-      - PAAS_BUILDPACK: java_buildpack
     secrets: true
     run: []
