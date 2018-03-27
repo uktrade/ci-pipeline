@@ -108,7 +108,7 @@ pipeline {
                 env.VAULT_SERECT_ID = TOKEN
                 sh "${env.WORKSPACE}/bootstrap.rb ${env.Team} ${env.Project} ${env.Environment}"
               }
-              envars = readProperties file: "${env.WORKSPACE}/.env"
+              envars = readJSON file: "${env.WORKSPACE}/.env"
               stash name: "oc-pipeline", includes: "oc-pipeline.yml"
             }
           }

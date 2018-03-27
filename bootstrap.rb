@@ -52,17 +52,8 @@ def vault_get(path)
   end
 end
 
-def save_option(data)
-  return File.write(OPTION_FILE, JSON.dump(data))
-end
-
-def save_env(file, data)
-  File.open(file, 'w') { |file| file.truncate(0) }
-  return data.each { |key, value|
-    File.open(file, 'a') { |file|
-      file.puts "#{key.to_s}=#{Shellwords.escape(value.to_s)}" unless key.to_s.empty? || value.to_s.empty?
-    }
-  }
+def save_json(file, data)
+  return File.write(file, JSON.dump(data))
 end
 
 def main(args)
@@ -108,7 +99,7 @@ def main(args)
       consul_add("#{file_data['namespace']}/#{file_data['name']}/_", JSON.dump(path_data))
       option_data.deep_merge!({ file_data['namespace'] => { file_data['name'] => env_data }})
     }
-    save_option(option_data)
+    save_json(OPTION_FILE, option_data)
 
   else
 
@@ -129,10 +120,11 @@ def main(args)
     data['vars'].each { |var| file_content.deep_merge!(var) } unless data['vars'].empty?
     if data['secrets']
       secrets = vault_get("#{team}/#{project}/#{env}")
+      # puts secrets
       file_content.deep_merge!(secrets) unless secrets.empty?
     end
 
-    save_env(ENV_FILE, file_content)
+    save_json(ENV_FILE, file_content)
   end
 
 end
