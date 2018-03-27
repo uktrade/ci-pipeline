@@ -397,7 +397,7 @@ pipeline {
                     oc process -f oc-pipeline.yml \
                       --param APP_ID=${oc_app[2]} \
                       --param NAMESPACE=${oc_app[1]} \
-                      --param SCM=${env.SCM} \
+                      --param SCM=${config.SCM} \
                       --param DOMAIN=apps.${oc_app[0]} \
                       --param GIT_SSH_KEY=${SSH_KEY_ENCODED} \
                       | oc apply -f -
