@@ -14,8 +14,9 @@ VAULT_API = ENV['VAULT_API']
 VAULT_PREFIX = ENV['VAULT_PREFIX']
 VAULT_ROLE_ID = ENV['VAULT_ROLE_ID']
 VAULT_SERECT_ID = ENV['VAULT_SERECT_ID']
-OPTION_FILE = "#{ENV['WORKSPACE']}/.option.json"
+OPTION_FILE = "#{ENV['WORKSPACE']}/.option"
 ENV_FILE = "#{ENV['WORKSPACE']}/.env"
+CONF_FILE = "#{ENV['WORKSPACE']}/.config"
 
 def validate(schema, data)
   return JSON::Validator.validate!(schema, data, {:validate_schema => true, :strict => true})
@@ -109,19 +110,22 @@ def main(args)
     data['run'].each_with_index { |cmd, index|
       (index + 1) < data['run'].length ? run += "#{cmd} && " : run += cmd
     } unless data['run'].empty?
-    file_content = {
-      'SCM' => consul_get("#{team}/#{project}/_")['scm'],
-      'PAAS_TYPE' => data['type'],
-      'PAAS_APP' => data['app'],
-      'PAAS_ENVIRONMENT' => data['environment'],
-      'PAAS_RUN' => data['run'].empty? ? nil : run
-    }
+    file_content = Hash.new
     data['vars'].each { |var| file_content.deep_merge!(var) } unless data['vars'].empty?
     if data['secrets']
       secrets = vault_get("#{team}/#{project}/#{env}")
       file_content.deep_merge!(secrets) unless secrets.empty?
     end
 
+    conf_content = {
+      'SCM' => consul_get("#{team}/#{project}/_")['scm'],
+      'PAAS_TYPE' => data['type'],
+      'PAAS_APP' => data['app'],
+      'PAAS_ENVIRONMENT' => data['environment'],
+      'PAAS_RUN' => data['run'].empty? ? nil : run
+    }
+
+    save_json(CONF_FILE, conf_content)
     save_json(ENV_FILE, file_content)
   end
 
