@@ -209,7 +209,7 @@ pipeline {
 
                 sh "cf v3-set-env ${new_app_name} GIT_COMMIT ${env.GIT_COMMIT}"
                 sh """
-                  cf curl '/v3/apps/${new_app_guid}/environment_variables' -X PATCH -d '{"var": ${envars}} | jq -C 'del(.var)'
+                  cf curl '/v3/apps/${new_app_guid}/environment_variables' -X PATCH -d '{"var": ${envars}}' | jq -C 'del(.var)'
                 """
                 if (app_svc_json != 'null') {
                   CHECKPOINT = "APP_SERVICE"
