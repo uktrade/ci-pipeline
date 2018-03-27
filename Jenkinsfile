@@ -225,7 +225,7 @@ pipeline {
                     envars.each { key, value ->
                       sh """
                         set +x
-                        cf v3-set-env ${new_app_name} ${input.bash_escape(key)} ${input.bash_escape(value)}
+                        cf v3-set-env ${new_app_name} ${input.bash_escape(key)} '${input.bash_escape(value)}'
                       """
                     }
                     if (app_svc_json != 'null') {
