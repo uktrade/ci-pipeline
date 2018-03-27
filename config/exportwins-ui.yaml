@@ -1,0 +1,23 @@
+---
+name: exportwins-ui
+namespace: mi
+scm: git@github.com:uktrade/export-wins-ui.git
+environments:
+  - environment: dev
+    type: gds
+    app: dit-staging/dev-mi/exportwins-ui-dev
+    vars: []
+    secrets: true
+    run: []
+  - environment: staging
+    type: gds
+    app: dit-staging/dev-staging/exportwins-ui-staging
+    vars: []
+    secrets: true
+    run: []
+  - environment: prod
+    type: gds
+    app: dit-services/mi/exportwins-ui
+    vars: []
+    secrets: true
+    run: []
