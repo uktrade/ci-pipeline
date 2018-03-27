@@ -164,15 +164,15 @@ pipeline {
                   }
                   if (cf_manifest.applications[0].buildpack) {
                     echo "\u001B[32mINFO: Setting application ${gds_app[2]} buildpack to ${cf_manifest.applications[0].buildpack}\u001B[m"
-                    config.PAAS_BUILDPACK = cf_manifest.applications[0].buildpack
+                    env.PAAS_BUILDPACK = cf_manifest.applications[0].buildpack
                   }
                   if (cf_manifest.applications[0]."health-check-type") {
                     echo "\u001B[32mINFO: Setting application ${gds_app[2]} health-check-type to ${cf_manifest.applications[0].'health-check-type'}\u001B[m"
-                    config.PAAS_HEALTHCHECK_TYPE = cf_manifest.applications[0]."health-check-type"
+                    env.PAAS_HEALTHCHECK_TYPE = cf_manifest.applications[0]."health-check-type"
                   }
                   if (cf_manifest.applications[0]."health-check-http-endpoint") {
                     echo "\u001B[32mINFO: Setting application ${gds_app[2]} health-check-http-endpoint to ${cf_manifest.applications[0].'health-check-http-endpoint'}\u001B[m"
-                    config.PAAS_HEALTHCHECK_ENDPOINT = cf_manifest.applications[0]."health-check-http-endpoint"
+                    env.PAAS_HEALTHCHECK_ENDPOINT = cf_manifest.applications[0]."health-check-http-endpoint"
                   }
                 }
 
@@ -200,10 +200,10 @@ pipeline {
                 CHECKPOINT = "APP_CREATED"
 
                 echo "\u001B[32mINFO: Configuring new app ${new_app_name}\u001B[m"
-                if (config.PAAS_BUILDPACK) {
-                  echo "\u001B[32mINFO: Setting buildpack to ${config.PAAS_BUILDPACK}\u001B[m"
+                if (env.PAAS_BUILDPACK) {
+                  echo "\u001B[32mINFO: Setting buildpack to ${env.PAAS_BUILDPACK}\u001B[m"
                   sh """
-                    cf curl '/v3/apps/${new_app_guid}' -X PATCH -d '{"name": "${new_app_name}","lifecycle": {"type":"buildpack","data": {"buildpacks": ["${config.PAAS_BUILDPACK}"]}}}' | jq -C 'del(.links, .relationships)'
+                    cf curl '/v3/apps/${new_app_guid}' -X PATCH -d '{"name": "${new_app_name}","lifecycle": {"type":"buildpack","data": {"buildpacks": ["${env.PAAS_BUILDPACK}"]}}}' | jq -C 'del(.links, .relationships)'
                   """
                 }
 
@@ -241,13 +241,13 @@ pipeline {
                   echo "\u001B[32mINFO: Downloading artifact ${env.Project}-${env.Version}.${envars.JAVA_EXTENSION.toLowerCase()}\u001B[m"
                   withCredentials([usernamePassword(credentialsId: env.NEXUS_CREDENTIAL, passwordVariable: 'nexus_pass', usernameVariable: 'nexus_user')]) {
                     sh "curl -LOfs 'https://${nexus_user}:${nexus_pass}@${env.NEXUS_URL}/repository/${envars.NEXUS_PATH}/${env.Version}/${env.Project}-${env.Version}.${envars.JAVA_EXTENSION.toLowerCase()}'"
-                    config.APP_PATH = "${env.Project}-${env.Version}.${envars.JAVA_EXTENSION.toLowerCase()}"
+                    env.APP_PATH = "${env.Project}-${env.Version}.${envars.JAVA_EXTENSION.toLowerCase()}"
                   }
                 }
 
                 CHECKPOINT = "APP_STAGE"
-                if (config.APP_PATH) {
-                  package_guid = sh(script: "cf v3-create-package ${new_app_name} -p ${config.APP_PATH} | perl -lne 'print \$& if /(\\{{0,1}([0-9a-fA-F]){8}-([0-9a-fA-F]){4}-([0-9a-fA-F]){4}-([0-9a-fA-F]){4}-([0-9a-fA-F]){12}\\}{0,1})/'", returnStdout: true).trim()
+                if (env.APP_PATH) {
+                  package_guid = sh(script: "cf v3-create-package ${new_app_name} -p ${env.APP_PATH} | perl -lne 'print \$& if /(\\{{0,1}([0-9a-fA-F]){8}-([0-9a-fA-F]){4}-([0-9a-fA-F]){4}-([0-9a-fA-F]){4}-([0-9a-fA-F]){12}\\}{0,1})/'", returnStdout: true).trim()
                 } else {
                   package_guid = sh(script: "cf v3-create-package ${new_app_name} | perl -lne 'print \$& if /(\\{{0,1}([0-9a-fA-F]){8}-([0-9a-fA-F]){4}-([0-9a-fA-F]){4}-([0-9a-fA-F]){4}-([0-9a-fA-F]){12}\\}{0,1})/'", returnStdout: true).trim()
                 }
@@ -257,11 +257,11 @@ pipeline {
                 release_guid = sh(script: "cf curl '/v3/apps/${new_app_guid}/droplets' | jq -r '.resources[] | select(.links.package.href | test(\"${package_guid}\")==true) | .guid'", returnStdout: true).trim()
 
                 sh "cf v3-set-droplet ${new_app_name} --droplet-guid ${release_guid}"
-                if (config.PAAS_HEALTHCHECK_TYPE) {
-                  switch(config.PAAS_HEALTHCHECK_TYPE) {
+                if (env.PAAS_HEALTHCHECK_TYPE) {
+                  switch(env.PAAS_HEALTHCHECK_TYPE) {
                     case "http":
-                      if (config.PAAS_HEALTHCHECK_ENDPOINT) {
-                        sh "cf v3-set-health-check ${new_app_name} ${config.PAAS_HEALTHCHECK_TYPE} --endpoint ${config.PAAS_HEALTHCHECK_ENDPOINT}"
+                      if (env.PAAS_HEALTHCHECK_ENDPOINT) {
+                        sh "cf v3-set-health-check ${new_app_name} ${env.PAAS_HEALTHCHECK_TYPE} --endpoint ${env.PAAS_HEALTHCHECK_ENDPOINT}"
                       }
                       break
                   }
