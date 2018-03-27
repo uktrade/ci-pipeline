@@ -114,7 +114,14 @@ def main(args)
     data['vars'].each { |var| file_content.deep_merge!(var) } unless data['vars'].empty?
     if data['secrets']
       secrets = vault_get("#{team}/#{project}/#{env}")
-      file_content.deep_merge!(secrets) unless secrets.empty?
+      unless secrets.empty?
+        file_content.deep_merge!(secrets)
+        file_content.each { |key, value|
+          unless value.kind_of? String
+            file_content.deep_merge!({key => value.to_s})
+          end
+        }
+      end
     end
 
     conf_content = {
