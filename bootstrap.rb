@@ -114,7 +114,7 @@ def main(args)
       'PAAS_TYPE' => data['type'],
       'PAAS_APP' => data['app'],
       'PAAS_ENVIRONMENT' => data['environment'],
-      'PAAS_RUN' => run
+      'PAAS_RUN' => data['run'].empty? ? "''" : run
     }
     data['vars'].each { |var| file_content.deep_merge!(var) } unless data['vars'].empty?
     if data['secrets']
