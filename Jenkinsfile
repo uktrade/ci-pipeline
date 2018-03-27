@@ -155,7 +155,7 @@ pipeline {
                   sh "bash -l -c 'rvm install ${rb_ver}'"
                 }
 
-                if (env.PAAS_RUN != null) {
+                if (env.PAAS_RUN != 'null') {
                   sh "bash -l -c \"${env.PAAS_RUN}\""
                 }
 
