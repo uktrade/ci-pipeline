@@ -207,13 +207,10 @@ pipeline {
                   """
                 }
 
-                sh "cf v3-set-env ${new_app_name} GIT_COMMIT ${input.bash_escape(env.GIT_COMMIT)}"
-                envars.each { key, value ->
-                  sh """
-                    set +x
-                    cf v3-set-env ${new_app_name} ${input.bash_escape(key)} ${input.bash_escape(value)}
-                  """
-                }
+                sh "cf v3-set-env ${new_app_name} GIT_COMMIT ${env.GIT_COMMIT}"
+                sh """
+                  cf curl '/v3/apps/${new_app_guid}/environment_variables' -X PATCH -d '{"var": ${envars}} | jq -C 'del(.var)'
+                """
                 if (app_svc_json != 'null') {
                   CHECKPOINT = "APP_SERVICE"
                   app_svc = readJSON text: app_svc_json
@@ -349,18 +346,18 @@ pipeline {
           timestamps {
             ansiColor('xterm') {
               deployer.inside {
-                if (env.S3_WEBSITE_SRC == null) {
+                if (envars.S3_WEBSITE_SRC == null) {
                   s3_path = env.WORKSPACE
                 } else {
-                  s3_path = "${env.WORKSPACE}/${env.S3_WEBSITE_SRC}"
+                  s3_path = "${env.WORKSPACE}/${envars.S3_WEBSITE_SRC}"
                 }
                 sh """
                   export AWS_DEFAULT_REGION=${envars.AWS_DEFAULT_REGION}
                   export AWS_ACCESS_KEY_ID=${envars.AWS_ACCESS_KEY_ID}
                   export AWS_SECRET_ACCESS_KEY=${envars.AWS_SECRET_ACCESS_KEY}
                   aws s3 sync --sse --acl public-read --delete --exclude '.*' ${s3_path} s3://${config.PAAS_APP}
-                  if [ -f ${env.WORKSPACE}/${env.S3_WEBSITE_REDIRECT} ]; then
-                    aws s3api put-bucket-website --bucket ${config.PAAS_APP} --website-configuration file://${env.WORKSPACE}/${env.S3_WEBSITE_REDIRECT}
+                  if [ -f ${env.WORKSPACE}/${envars.S3_WEBSITE_REDIRECT} ]; then
+                    aws s3api put-bucket-website --bucket ${config.PAAS_APP} --website-configuration file://${env.WORKSPACE}/${envars.S3_WEBSITE_REDIRECT}
                   fi
                 """
               }
