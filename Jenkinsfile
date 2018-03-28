@@ -114,17 +114,17 @@ pipeline {
                 if (node_ver_exist) {
                   node_ver = readFile "${env.WORKSPACE}/.nvmrc"
                   echo "INFO: Detected Nodejs version ${node_ver}"
-                  sh "bash -l -c 'nvm install ${node_ver}'"
+                  sh "bash -l -c 'nvm install ${node_ver.trim()}'"
                 }
                 if (py_ver_exist) {
                   py_ver = readFile "${env.WORKSPACE}/.python-version"
                   echo "INFO: Detected Python version ${py_ver}"
-                  sh "bash -l -c 'pyenv install ${py_ver}'"
+                  sh "bash -l -c 'pyenv install ${py_ver.trim()}'"
                 }
                 if (rb_ver_exist) {
                   rb_ver = readFile "${env.WORKSPACE}/.ruby-version"
                   echo "INFO: Detected Ruby version ${rb_ver}"
-                  sh "bash -l -c 'rvm install ${rb_ver}'"
+                  sh "bash -l -c 'rvm install ${rb_ver.trim()}'"
                 }
 
                 if (config.PAAS_RUN != 'null') {

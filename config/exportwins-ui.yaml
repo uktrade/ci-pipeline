@@ -8,16 +8,19 @@ environments:
     app: dit-staging/dev-mi/exportwins-ui-dev
     vars: []
     secrets: true
-    run: []
+    run:
+      - "npm install && npm run build"
   - environment: staging
     type: gds
     app: dit-staging/dev-staging/exportwins-ui-staging
     vars: []
     secrets: true
-    run: []
+    run:
+      - "npm install && npm run build"
   - environment: prod
     type: gds
     app: dit-services/mi/exportwins-ui
     vars: []
     secrets: true
-    run: []
+    run:
+      - "npm install && npm run build"
