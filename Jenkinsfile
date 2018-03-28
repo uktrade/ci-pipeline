@@ -438,14 +438,14 @@ pipeline {
                       cf target -o ${gds_app[0]} -s ${gds_app[1]}
                     """
                   }
-                  sh "cf logs ${new_app_name} --recent || true"
+                  sh "cf logs ${new_app_name} --recent || exit 0"
                   switch(CHECKPOINT) {
                     case "APP_ROUTES":
                       app_routes.each {
-                        sh "cf curl '/v2/routes/${it}/apps/${app_guid}' -X PUT | jq -C '.' || true"
+                        sh "cf curl '/v2/routes/${it}/apps/${app_guid}' -X PUT | jq -C '.' || exit 0"
                       }
                     case String:
-                      sh "cf v3-delete -f ${new_app_name} || true"
+                      sh "cf v3-delete -f ${new_app_name} || exit 0"
                     break
                   }
                 break
