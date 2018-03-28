@@ -395,7 +395,7 @@ pipeline {
                   SSH_KEY_ENCODED = sh(script: "set +x && echo '${SSH_KEY}' | base64 -w 0", returnStdout: true).trim()
                   sh """
                     set +x
-                    oc process -f .ci/oc-pipeline.yml \
+                    oc process -f ${env.WORKSPACE}/.ci/oc-pipeline.yml \
                       --param APP_ID=${oc_app[2]} \
                       --param NAMESPACE=${oc_app[1]} \
                       --param SCM=${config.SCM} \
