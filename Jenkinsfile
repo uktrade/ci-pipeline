@@ -24,9 +24,10 @@ pipeline {
             deployer.pull()
             deployer.inside {
               checkout([$class: 'GitSCM', branches: [[name: env.GIT_BRANCH]], doGenerateSubmoduleConfigurations: false, extensions: [[$class: 'SubmoduleOption', disableSubmodules: false, parentCredentials: true, recursiveSubmodules: true, reference: '', trackingSubmodules: false]], submoduleCfg: [], userRemoteConfigs: [[credentialsId: env.SCM_CREDENTIAL, url: env.GIT_URL]]])
-              sh 'bundle check || bundle install'
+              sh "mkdir -p ${env.WORKSPACE}/.ci"
+              sh "bundle check || bundle install"
               sh "${env.WORKSPACE}/bootstrap.rb"
-              options_json = readJSON file: "${env.WORKSPACE}/.option"
+              options_json = readJSON file: "${env.WORKSPACE}/.ci/option.json"
             }
           }
         }
@@ -85,14 +86,14 @@ pipeline {
         script {
           timestamps {
             deployer.inside {
-              sh 'bundle check || bundle install'
+              sh "bundle check || bundle install"
               withCredentials([string(credentialsId: env.VAULT_TOKEN_ID, variable: 'TOKEN')]) {
                 env.VAULT_SERECT_ID = TOKEN
                 sh "${env.WORKSPACE}/bootstrap.rb ${env.Team} ${env.Project} ${env.Environment}"
               }
-              envars = readJSON file: "${env.WORKSPACE}/.env"
-              config = readJSON file: "${env.WORKSPACE}/.config"
-              stash name: "oc-pipeline", includes: "oc-pipeline.yml"
+              envars = readJSON file: "${env.WORKSPACE}/.ci/env.json"
+              config = readJSON file: "${env.WORKSPACE}/.ci/config.json"
+              sh "mv oc-pipeline.yml ${env.WORKSPACE}/.ci/"
             }
           }
         }
@@ -208,8 +209,8 @@ pipeline {
                 }
 
                 sh "cf v3-set-env ${new_app_name} GIT_COMMIT ${env.GIT_COMMIT}"
-                sh "jq '{\"var\": .}' .env > .cf_envar"
-                updated_vars = sh(script: "cf curl '/v3/apps/${new_app_guid}/environment_variables' -X PATCH -d @.cf_envar | jq -r '.var | keys'", returnStdout: true).trim()
+                sh "jq '{\"var\": .}' ${env.WORKSPACE}/.ci/env.json > ${env.WORKSPACE}/.ci/cf_envar.json"
+                updated_vars = sh(script: "cf curl '/v3/apps/${new_app_guid}/environment_variables' -X PATCH -d @${env.WORKSPACE}/.ci/cf_envar.json | jq -r '.var | keys'", returnStdout: true).trim()
                 echo "\u001B[32mINFO: Application environment variables updated: ${updated_vars} \u001B[m"
 
                 if (app_svc_json != 'null') {
@@ -394,7 +395,7 @@ pipeline {
                   SSH_KEY_ENCODED = sh(script: "set +x && echo '${SSH_KEY}' | base64 -w 0", returnStdout: true).trim()
                   sh """
                     set +x
-                    oc process -f oc-pipeline.yml \
+                    oc process -f ${env.WORKSPACE}/.ci/oc-pipeline.yml \
                       --param APP_ID=${oc_app[2]} \
                       --param NAMESPACE=${oc_app[1]} \
                       --param SCM=${config.SCM} \
