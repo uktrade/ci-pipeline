@@ -209,8 +209,8 @@ pipeline {
                 }
 
                 sh "cf v3-set-env ${new_app_name} GIT_COMMIT ${env.GIT_COMMIT}"
-                sh "jq '{\"var\": .}' .ci/env.json > ./ci/cf_envar.json"
-                updated_vars = sh(script: "cf curl '/v3/apps/${new_app_guid}/environment_variables' -X PATCH -d @./ci/cf_envar.json | jq -r '.var | keys'", returnStdout: true).trim()
+                sh "jq '{\"var\": .}' ${env.WORKSPACE}/.ci/env.json > ${env.WORKSPACE}/.ci/cf_envar.json"
+                updated_vars = sh(script: "cf curl '/v3/apps/${new_app_guid}/environment_variables' -X PATCH -d @${env.WORKSPACE}/.ci/cf_envar.json | jq -r '.var | keys'", returnStdout: true).trim()
                 echo "\u001B[32mINFO: Application environment variables updated: ${updated_vars} \u001B[m"
 
                 if (app_svc_json != 'null') {
