@@ -1,0 +1,23 @@
+---
+name: directory-cms
+namespace: directory
+scm: git@github.com:uktrade/directory-cms.git
+environments:
+  - environment: dev
+    type: gds
+    app: dit-staging/dev-directory/directory-cms-dev
+    vars: []
+    secrets: true
+    run: []
+  - environment: staging
+    type: gds
+    app: dit-staging/staging-directory/directory-cms-staging
+    vars: []
+    secrets: true
+    run: []
+  - environment: prod
+    type: gds
+    app: dit-services/directory/directory-cms
+    vars: []
+    secrets: true
+    run: []
