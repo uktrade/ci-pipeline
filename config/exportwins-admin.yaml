@@ -12,7 +12,7 @@ environments:
       - "npm install && npm run build"
   - environment: staging
     type: gds
-    app: dit-staging/dev-staging/exportwins-admin-staging
+    app: dit-staging/staging-mi/exportwins-admin-staging
     vars: []
     secrets: true
     run:

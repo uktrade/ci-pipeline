@@ -11,7 +11,7 @@ environments:
     run: []
   - environment: staging
     type: gds
-    app: dit-staging/dev-staging/datahub-mi-staging
+    app: dit-staging/staging-mi/datahub-mi-staging
     vars: []
     secrets: true
     run: []
