@@ -24,3 +24,10 @@ environments:
     secrets: true
     run:
       - "true"
+  - environment: uat
+    type: gds
+    app: dit-staging/uat-traderemedies/trade-remedies-caseworker-uat
+    vars: []
+    secrets: true
+    run:
+      - "true"
