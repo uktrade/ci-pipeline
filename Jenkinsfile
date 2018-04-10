@@ -378,7 +378,6 @@ pipeline {
                     SSH_KEY = readFile GIT_SSH_KEY
                   }
 
-                  unstash "oc-pipeline"
                   SSH_KEY_ENCODED = sh(script: "set +x && echo '${SSH_KEY}' | base64 -w 0", returnStdout: true).trim()
                   sh """
                     set +x
