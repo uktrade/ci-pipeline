@@ -39,42 +39,42 @@ pipeline {
         script {
           timestamps {
             input = load "${env.WORKSPACE}/input.groovy"
-            if (!env.Team) {
+            if (!params.Team) {
               team = input(
                 id: 'team', message: 'Please choose your team: ', parameters: [
                 [$class: 'ChoiceParameterDefinition', name: 'Team', description: 'Team', choices: input.get_team(options_json)]
               ])
-              env.Team = team
-            } else if (!input.validate_team(options_json, env.Team)) {
+              params.Team = team
+            } else if (!input.validate_team(options_json, params.Team)) {
               error 'Invalid Team!'
             }
 
-            if (!env.Project) {
+            if (!params.Project) {
               project = input(
                 id: 'project', message: 'Please choose your project: ', parameters: [
                 [$class: 'ChoiceParameterDefinition', name: 'Project', description: 'Project', choices: input.get_project(options_json,team)]
               ])
-              env.Project = project
-            } else if (!input.validate_project(options_json, env.Team, env.Project)) {
+              params.Project = project
+            } else if (!input.validate_project(options_json, params.Team, params.Project)) {
               error 'Invalid Project!'
             }
 
-            if (!env.Environment) {
+            if (!params.Environment) {
               environment = input(
                 id: 'environment', message: 'Please choose your environment: ', parameters: [
                 [$class: 'ChoiceParameterDefinition', name: 'Environment', description: 'Environment', choices: input.get_env(options_json, team, project)]
               ])
-              env.Environment = environment
-            } else if (!input.validate_env(options_json, env.Team, env.Project, env.Environment)) {
+              params.Environment = environment
+            } else if (!input.validate_env(options_json, params.Team, params.Project, params.Environment)) {
               error 'Invalid Environment!'
             }
 
-            if (!env.Version) {
+            if (!params.Version) {
               git_commit = input(
                 id: 'git_commit', message: 'Please enter your git branch/tag/commit: ', parameters: [
                 [$class: 'StringParameterDefinition', name: 'Git Commit', description: 'GitCommit']
               ])
-              env.Version = git_commit
+              params.Version = git_commit
             }
           }
         }
@@ -89,7 +89,7 @@ pipeline {
               sh "bundle check || bundle install"
               withCredentials([string(credentialsId: env.VAULT_TOKEN_ID, variable: 'TOKEN')]) {
                 env.VAULT_SERECT_ID = TOKEN
-                sh "${env.WORKSPACE}/bootstrap.rb ${env.Team} ${env.Project} ${env.Environment}"
+                sh "${env.WORKSPACE}/bootstrap.rb ${params.Team} ${params.Project} ${params.Environment}"
               }
               envars = readJSON file: "${env.WORKSPACE}/.ci/env.json"
               config = readJSON file: "${env.WORKSPACE}/.ci/config.json"
@@ -106,7 +106,7 @@ pipeline {
           timestamps {
             ansiColor('xterm') {
               deployer.inside {
-                checkout([$class: 'GitSCM', branches: [[name: env.Version]], doGenerateSubmoduleConfigurations: false, extensions: [[$class: 'SubmoduleOption', disableSubmodules: false, parentCredentials: true, recursiveSubmodules: true, reference: '', trackingSubmodules: false]], submoduleCfg: [], userRemoteConfigs: [[credentialsId: env.SCM_CREDENTIAL, url: config.SCM]]])
+                checkout([$class: 'GitSCM', branches: [[name: params.Version]], doGenerateSubmoduleConfigurations: false, extensions: [[$class: 'SubmoduleOption', disableSubmodules: false, parentCredentials: true, recursiveSubmodules: true, reference: '', trackingSubmodules: false]], submoduleCfg: [], userRemoteConfigs: [[credentialsId: env.SCM_CREDENTIAL, url: config.SCM]]])
 
                 node_ver_exist = fileExists "${env.WORKSPACE}/.nvmrc"
                 py_ver_exist = fileExists "${env.WORKSPACE}/.python-version"
@@ -193,7 +193,7 @@ pipeline {
                 app_scale_json = sh(script: "cf curl '/v3/apps/${app_guid}/processes' | jq '.resources | del(.[].links)'", returnStdout: true).trim()
                 app_scale = readJSON text: app_scale_json
 
-                new_app_name = gds_app[2] + "-" + env.Version
+                new_app_name = gds_app[2] + "-" + params.Version
                 echo "\u001B[32mINFO: Creating new app ${new_app_name}\u001B[m"
                 sh "cf v3-create-app ${new_app_name}"
                 new_app_guid = sh(script: "cf v3-app ${new_app_name} --guid | perl -lne 'print \$& if /(\\{{0,1}([0-9a-fA-F]){8}-([0-9a-fA-F]){4}-([0-9a-fA-F]){4}-([0-9a-fA-F]){4}-([0-9a-fA-F]){12}\\}{0,1})/'", returnStdout: true).trim()
@@ -226,10 +226,10 @@ pipeline {
                 }
 
                 if (envars.USE_NEXUS) {
-                  echo "\u001B[32mINFO: Downloading artifact ${env.Project}-${env.Version}.${envars.JAVA_EXTENSION.toLowerCase()}\u001B[m"
+                  echo "\u001B[32mINFO: Downloading artifact ${params.Project}-${params.Version}.${envars.JAVA_EXTENSION.toLowerCase()}\u001B[m"
                   withCredentials([usernamePassword(credentialsId: env.NEXUS_CREDENTIAL, passwordVariable: 'nexus_pass', usernameVariable: 'nexus_user')]) {
-                    sh "curl -LOfs 'https://${nexus_user}:${nexus_pass}@${env.NEXUS_URL}/repository/${envars.NEXUS_PATH}/${env.Version}/${env.Project}-${env.Version}.${envars.JAVA_EXTENSION.toLowerCase()}'"
-                    env.APP_PATH = "${env.Project}-${env.Version}.${envars.JAVA_EXTENSION.toLowerCase()}"
+                    sh "curl -LOfs 'https://${nexus_user}:${nexus_pass}@${env.NEXUS_URL}/repository/${envars.NEXUS_PATH}/${params.Version}/${params.Project}-${params.Version}.${envars.JAVA_EXTENSION.toLowerCase()}'"
+                    env.APP_PATH = "${params.Project}-${params.Version}.${envars.JAVA_EXTENSION.toLowerCase()}"
                   }
                 }
 
@@ -398,7 +398,7 @@ pipeline {
                     """
                   }
 
-                  sh "oc start-build ${oc_app[2]} --commit=${env.Version} --follow"
+                  sh "oc start-build ${oc_app[2]} --commit=${params.Version} --follow"
                 }
               }
             }
@@ -436,8 +436,8 @@ pipeline {
                   }
                 break
               }
-              emailext body: '${DEFAULT_CONTENT}', recipientProviders: [[$class: 'CulpritsRecipientProvider'], [$class: 'DevelopersRecipientProvider'], [$class: 'RequesterRecipientProvider'], [$class: 'UpstreamComitterRecipientProvider']], subject: "${currentBuild.result}: ${env.Project} ${env.Environment}", to: '${DEFAULT_RECIPIENTS}'
-              slackSend message: "Failure: ${env.JOB_NAME} #${env.BUILD_NUMBER} - ${env.Project} ${env.Environment} (<${env.BUILD_URL}|Open>)", color: 'danger'
+              emailext body: '${DEFAULT_CONTENT}', recipientProviders: [[$class: 'CulpritsRecipientProvider'], [$class: 'DevelopersRecipientProvider'], [$class: 'RequesterRecipientProvider'], [$class: 'UpstreamComitterRecipientProvider']], subject: "${currentBuild.result}: ${params.Project} ${params.Environment}", to: '${DEFAULT_RECIPIENTS}'
+              slackSend message: "Failure: ${env.JOB_NAME} #${env.BUILD_NUMBER} - ${params.Project} ${params.Environment} (<${env.BUILD_URL}|Open>)", color: 'danger'
             }
           }
         }
@@ -448,7 +448,7 @@ pipeline {
       script {
         timestamps {
           ansiColor('xterm') {
-            slackSend message: "Success: ${env.JOB_NAME} #${env.BUILD_NUMBER} - ${env.Project} ${env.Environment} (<${env.BUILD_URL}|Open>)", color: 'good'
+            slackSend message: "Success: ${env.JOB_NAME} #${env.BUILD_NUMBER} - ${params.Project} ${params.Environment} (<${env.BUILD_URL}|Open>)", color: 'good'
           }
         }
       }
