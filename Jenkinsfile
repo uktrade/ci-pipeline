@@ -143,6 +143,7 @@ pipeline {
           config.PAAS_TYPE == 'gds'
         }
       }
+
       steps {
         script {
           timestamps {
@@ -322,6 +323,37 @@ pipeline {
           }
         }
       }
+
+      post {
+        failure {
+          script {
+            timestamps {
+              ansiColor('xterm') {
+                deployer.inside {
+                  echo "\u001B[31mWARNING: Rollback app\u001B[m"
+                  withCredentials([usernamePassword(credentialsId: env.GDS_PAAS_CREDENTIAL, passwordVariable: 'gds_pass', usernameVariable: 'gds_user')]) {
+                    sh """
+                      cf login -a ${env.GDS_PAAS} -u ${gds_user} -p ${gds_pass} -o ${gds_app[0]} -s ${gds_app[1]}
+                      cf target -o ${gds_app[0]} -s ${gds_app[1]}
+                    """
+                  }
+                  sh "cf logs ${new_app_name} --recent || exit 0"
+                  switch(CHECKPOINT) {
+                    case "APP_ROUTES":
+                      app_routes.each {
+                        sh "cf curl '/v2/routes/${it}/apps/${app_guid}' -X PUT | jq -C '.' || exit 0"
+                      }
+                    case String:
+                      sh "cf v3-delete -f ${new_app_name} || exit 0"
+                    break
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+
     }
 
     stage('Deploy S3') {
@@ -414,31 +446,8 @@ pipeline {
       script {
         timestamps {
           ansiColor('xterm') {
-            deployer.inside {
-              switch(config.PAAS_TYPE) {
-                case "gds":
-                  echo "\u001B[31mWARNING: Rollback app\u001B[m"
-                  withCredentials([usernamePassword(credentialsId: env.GDS_PAAS_CREDENTIAL, passwordVariable: 'gds_pass', usernameVariable: 'gds_user')]) {
-                    sh """
-                      cf login -a ${env.GDS_PAAS} -u ${gds_user} -p ${gds_pass} -o ${gds_app[0]} -s ${gds_app[1]}
-                      cf target -o ${gds_app[0]} -s ${gds_app[1]}
-                    """
-                  }
-                  sh "cf logs ${new_app_name} --recent || exit 0"
-                  switch(CHECKPOINT) {
-                    case "APP_ROUTES":
-                      app_routes.each {
-                        sh "cf curl '/v2/routes/${it}/apps/${app_guid}' -X PUT | jq -C '.' || exit 0"
-                      }
-                    case String:
-                      sh "cf v3-delete -f ${new_app_name} || exit 0"
-                    break
-                  }
-                break
-              }
-              emailext body: '${DEFAULT_CONTENT}', recipientProviders: [[$class: 'CulpritsRecipientProvider'], [$class: 'DevelopersRecipientProvider'], [$class: 'RequesterRecipientProvider'], [$class: 'UpstreamComitterRecipientProvider']], subject: "${currentBuild.result}: ${env.Project} ${env.Environment}", to: '${DEFAULT_RECIPIENTS}'
-              slackSend message: "Failure: ${env.JOB_NAME} #${env.BUILD_NUMBER} - ${env.Project} ${env.Environment} (<${env.BUILD_URL}|Open>)", color: 'danger'
-            }
+            emailext body: '${DEFAULT_CONTENT}', recipientProviders: [[$class: 'CulpritsRecipientProvider'], [$class: 'DevelopersRecipientProvider'], [$class: 'RequesterRecipientProvider'], [$class: 'UpstreamComitterRecipientProvider']], subject: "${currentBuild.result}: ${env.Project} ${env.Environment}", to: '${DEFAULT_RECIPIENTS}'
+            slackSend message: "Failure: ${env.JOB_NAME} #${env.BUILD_NUMBER} - ${env.Project} ${env.Environment} (<${env.BUILD_URL}|Open>)", color: 'danger'
           }
         }
       }
