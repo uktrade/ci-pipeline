@@ -271,35 +271,25 @@ pipeline {
                 echo "\u001B[32mINFO: Start app ${new_app_name}\u001B[m"
                 sh "cf v3-start ${new_app_name}"
 
-                app_ready_wait = 0
-                app_ready = false
-                while (app_ready_wait < 120) {
-                  app_state_json = sh(script: "cf curl '/v3/apps/${new_app_guid}/processes/web/stats' | jq -r '.resources[] | select(.type=\"web\") | [.state]' | jq -s add", returnStdout: true).trim()
-                  app_state = readJSON text: app_state_json
-                  app_state.each {
-                    if (it == "RUNNING") {
-                      echo "\u001B[32mINFO: App ${new_app_name} is ready\u001B[m"
-                      app_ready = true
-                      app_ready_wait = 120
-                    } else {
-                      echo "\u001B[32mINFO: App ${new_app_name} not ready, wait for 10 seconds...\u001B[m"
-                      app_ready_wait = app_ready_wait + 10
-                      sleep 10
-                    }
+                app_wait_timeout = 180
+                timeout(time: app_wait_timeout, unit: 'SECONDS') {
+                  app_ready = false
+                  while (app_ready != 'true') {
+                    app_ready = sh(script: "cf curl '/v3/apps/${new_app_guid}/processes/web/stats' | jq -r '.resources[] | select(.type=\"web\") | [inside({\"state\": \"RUNNING\"})]' | jq -sr 'add | all'", returnStdout: true).trim()
+                    echo "\u001B[32mINFO: App ${new_app_name} not ready, wait for 10 seconds...\u001B[m"
+                    sleep 10
                   }
+                  echo "\u001B[32mINFO: App ${new_app_name} is ready\u001B[m"
                 }
 
-                if (app_ready) {
-                  echo "\u001B[32mINFO: Switching app routes\u001B[m"
-                  app_routes.each {
-                    sh """
-                      cf curl '/v2/routes/${it}/apps/${new_app_guid}' -X PUT | jq -C '.'
-                      cf curl '/v2/routes/${it}/apps/${app_guid}' -X DELETE
-                    """
-                  }
-                } else {
-                  error "App failed to start."
+                echo "\u001B[32mINFO: Switching app routes\u001B[m"
+                app_routes.each {
+                  sh """
+                    cf curl '/v2/routes/${it}/apps/${new_app_guid}' -X PUT | jq -C '.'
+                    cf curl '/v2/routes/${it}/apps/${app_guid}' -X DELETE
+                  """
                 }
+
               }
             }
           }
