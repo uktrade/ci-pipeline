@@ -301,19 +301,11 @@ pipeline {
 
                 if (app_ready) {
                   echo "\u001B[32mINFO: Switching app routes\u001B[m"
+                  CHECKPOINT = "APP_ROUTES"
                   app_routes.each {
-                    CHECKPOINT = "APP_ROUTES"
-                    sh """
-                      cf curl '/v2/routes/${it}/apps/${new_app_guid}' -X PUT | jq -C '.'
-                      cf curl '/v2/routes/${it}/apps/${app_guid}' -X DELETE
-                    """
-                    CHECKPOINT = "APP_ROUTES_COMPLETE"
+                    sh "cf curl '/v2/routes/${it}/apps/${new_app_guid}' -X PUT | jq -C '.'"
                   }
-                  echo "\u001B[32mINFO: Cleanup old app\u001B[m"
-                  sh """
-                    cf v3-delete -f ${gds_app[2]}
-                    cf rename ${new_app_name} ${gds_app[2]}
-                  """
+                  CHECKPOINT = "APP_ROUTES_COMPLETE"
                 } else {
                   CHECKPOINT = "APP_FAIL"
                   error "App failed to start."
@@ -325,18 +317,31 @@ pipeline {
       }
 
       post {
+        success {
+          script {
+            timestamps {
+              ansiColor('xterm') {
+                deployer.inside {
+                  echo "\u001B[32mINFO: Cleanup old app\u001B[m"
+                  app_routes.each {
+                    sh "cf curl '/v2/routes/${it}/apps/${app_guid}' -X DELETE"
+                  }
+                  sh """
+                    cf v3-delete -f ${gds_app[2]}
+                    cf rename ${new_app_name} ${gds_app[2]}
+                  """
+                }
+              }
+            }
+          }
+        }
+
         failure {
           script {
             timestamps {
               ansiColor('xterm') {
                 deployer.inside {
                   echo "\u001B[31mWARNING: Rollback app\u001B[m"
-                  withCredentials([usernamePassword(credentialsId: env.GDS_PAAS_CREDENTIAL, passwordVariable: 'gds_pass', usernameVariable: 'gds_user')]) {
-                    sh """
-                      cf login -a ${env.GDS_PAAS} -u ${gds_user} -p ${gds_pass} -o ${gds_app[0]} -s ${gds_app[1]}
-                      cf target -o ${gds_app[0]} -s ${gds_app[1]}
-                    """
-                  }
                   sh "cf logs ${new_app_name} --recent || exit 0"
                   switch(CHECKPOINT) {
                     case "APP_ROUTES":
