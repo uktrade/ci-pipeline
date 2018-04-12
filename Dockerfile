@@ -1,7 +1,7 @@
 FROM ubuntu:16.04
 
 ENV NVM_VER v0.33.8
-ENV CF_CLI_VER 6.36.1
+ENV CF_CLI_VER 6.36.0
 ENV OC_REL v3.7.0
 ENV OC_BUILD 7ed6862
 
@@ -21,7 +21,7 @@ RUN curl -Lfs "https://github.com/openshift/origin/releases/download/$OC_REL/ope
     pip3 install --upgrade awscli virtualenv && \
     wget -qO- https://cli-assets.heroku.com/install-ubuntu.sh | sh && \
     wget -q -O - https://packages.cloudfoundry.org/debian/cli.cloudfoundry.org.key | apt-key add - && \
-    echo "deb http://packages.cloudfoundry.org/debian stable main" | tee /etc/apt/sources.list.d/cloudfoundry-cli.list && \
+    echo "deb https://packages.cloudfoundry.org/debian stable main" | tee /etc/apt/sources.list.d/cloudfoundry-cli.list && \
     apt-get update && \
     apt-get install -y --allow-unauthenticated cf-cli=$CF_CLI_VER && \
     rm -rf /var/lib/apt/lists/*
