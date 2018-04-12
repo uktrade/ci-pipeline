@@ -297,11 +297,6 @@ pipeline {
                       cf curl '/v2/routes/${it}/apps/${app_guid}' -X DELETE
                     """
                   }
-                  echo "\u001B[32mINFO: Cleanup old app\u001B[m"
-                  sh """
-                    cf rename ${gds_app[2]} ${new_app_name}-old
-                    cf rename ${new_app_name} ${gds_app[2]}
-                  """
                 } else {
                   error "App failed to start."
                 }
@@ -320,8 +315,12 @@ pipeline {
                   withCredentials([usernamePassword(credentialsId: env.GDS_PAAS_CREDENTIAL, passwordVariable: 'gds_pass', usernameVariable: 'gds_user')]) {
                     sh "cf login -a ${env.GDS_PAAS} -u ${gds_user} -p ${gds_pass} -o ${gds_app[0]} -s ${gds_app[1]}"
                   }
-                  echo "\u001B[32mINFO: Remove old app\u001B[m"
-                  sh "cf v3-delete -f ${new_app_name}-old"
+                  echo "\u001B[32mINFO: Cleanup old app\u001B[m"
+                  sh """
+                    cf rename ${gds_app[2]} ${new_app_name}-old
+                    cf rename ${new_app_name} ${gds_app[2]}
+                    cf curl '/v3/apps/${app_guid}' -X DELETE
+                  """
                 }
               }
             }
@@ -339,7 +338,7 @@ pipeline {
                   echo "\u001B[31mWARNING: Rollback app\u001B[m"
                   sh """
                     cf logs ${new_app_name} --recent || exit 0
-                    cf v3-delete -f ${new_app_name} || exit 0
+                    cf curl '/v3/apps/${new_app_guid}' -X DELETE || exit 0
                   """
                 }
               }
