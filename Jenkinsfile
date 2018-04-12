@@ -271,7 +271,7 @@ pipeline {
                 echo "\u001B[32mINFO: Start app ${new_app_name}\u001B[m"
                 sh "cf v3-start ${new_app_name}"
 
-                catchError {
+                try {
                   app_wait_timeout = 180
                   timeout(time: app_wait_timeout, unit: 'SECONDS') {
                     app_ready = 'false'
@@ -282,18 +282,16 @@ pipeline {
                     }
                     echo "\u001B[32mINFO: App ${new_app_name} is ready\u001B[m"
                   }
+                } catch (err) {
+                  error "App failed to start."
                 }
 
-                if (app_ready == 'true') {
-                  echo "\u001B[32mINFO: Switching app routes\u001B[m"
-                  app_routes.each {
-                    sh """
-                      cf curl '/v2/routes/${it}/apps/${new_app_guid}' -X PUT | jq -C '.'
-                      cf curl '/v2/routes/${it}/apps/${app_guid}' -X DELETE
-                    """
-                  }
-                } else {
-                  error "App failed to start."
+                echo "\u001B[32mINFO: Switching app routes\u001B[m"
+                app_routes.each {
+                  sh """
+                    cf curl '/v2/routes/${it}/apps/${new_app_guid}' -X PUT | jq -C '.'
+                    cf curl '/v2/routes/${it}/apps/${app_guid}' -X DELETE
+                  """
                 }
 
               }
