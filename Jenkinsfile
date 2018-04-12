@@ -143,6 +143,7 @@ pipeline {
           config.PAAS_TYPE == 'gds'
         }
       }
+
       steps {
         script {
           timestamps {
@@ -150,10 +151,7 @@ pipeline {
               deployer.inside {
                 gds_app = config.PAAS_APP.split("/")
                 withCredentials([usernamePassword(credentialsId: env.GDS_PAAS_CREDENTIAL, passwordVariable: 'gds_pass', usernameVariable: 'gds_user')]) {
-                  sh """
-                    cf login -a ${env.GDS_PAAS} -u ${gds_user} -p ${gds_pass} -o ${gds_app[0]} -s ${gds_app[1]}
-                    cf target -o ${gds_app[0]} -s ${gds_app[1]}
-                  """
+                  sh "cf login -a ${env.GDS_PAAS} -u ${gds_user} -p ${gds_pass} -o ${gds_app[0]} -s ${gds_app[1]}"
                 }
 
                 cf_manifest_exist = fileExists "${env.WORKSPACE}/manifest.yml"
@@ -182,9 +180,7 @@ pipeline {
                   sh "ln -snf ${env.WORKSPACE}/.gitignore ${env.WORKSPACE}/.cfignore"
                 }
 
-                CHECKPOINT = "INIT"
                 sh "cf v3-create-app ${gds_app[2]}"
-
                 space_guid = sh(script: "cf space ${gds_app[1]}  --guid", returnStdout: true).trim()
                 app_guid = sh(script: "cf v3-app ${gds_app[2]} --guid | perl -lne 'print \$& if /(\\{{0,1}([0-9a-fA-F]){8}-([0-9a-fA-F]){4}-([0-9a-fA-F]){4}-([0-9a-fA-F]){4}-([0-9a-fA-F]){12}\\}{0,1})/'", returnStdout: true).trim()
                 app_routes_json = sh(script: "cf curl '/v2/apps/${app_guid}/route_mappings' | jq '[.resources[].entity.route_guid]' 2>/dev/null || echo '[]'", returnStdout: true).trim()
@@ -197,7 +193,6 @@ pipeline {
                 echo "\u001B[32mINFO: Creating new app ${new_app_name}\u001B[m"
                 sh "cf v3-create-app ${new_app_name}"
                 new_app_guid = sh(script: "cf v3-app ${new_app_name} --guid | perl -lne 'print \$& if /(\\{{0,1}([0-9a-fA-F]){8}-([0-9a-fA-F]){4}-([0-9a-fA-F]){4}-([0-9a-fA-F]){4}-([0-9a-fA-F]){12}\\}{0,1})/'", returnStdout: true).trim()
-                CHECKPOINT = "APP_CREATED"
 
                 echo "\u001B[32mINFO: Configuring new app ${new_app_name}\u001B[m"
                 if (env.PAAS_BUILDPACK) {
@@ -213,7 +208,6 @@ pipeline {
                 echo "\u001B[32mINFO: Application environment variables updated: ${updated_vars} \u001B[m"
 
                 if (app_svc_json != 'null') {
-                  CHECKPOINT = "APP_SERVICE"
                   app_svc = readJSON text: app_svc_json
                   app_svc.each {
                     svc_name = sh(script: "cf curl '/v2/service_instances/${it}' | jq -r '.entity.name'", returnStdout: true).trim()
@@ -222,7 +216,6 @@ pipeline {
                       cf curl /v2/service_bindings -X POST -d '{"service_instance_guid": "${it}", "app_guid": "${new_app_guid}"}' | jq -C 'del(.entity.credentials)'
                     """
                   }
-                  CHECKPOINT = "APP_SERVICE_COMPLETE"
                 }
 
                 if (envars.USE_NEXUS) {
@@ -233,7 +226,6 @@ pipeline {
                   }
                 }
 
-                CHECKPOINT = "APP_STAGE"
                 if (env.APP_PATH) {
                   package_guid = sh(script: "cf v3-create-package ${new_app_name} -p ${env.APP_PATH} | perl -lne 'print \$& if /(\\{{0,1}([0-9a-fA-F]){8}-([0-9a-fA-F]){4}-([0-9a-fA-F]){4}-([0-9a-fA-F]){4}-([0-9a-fA-F]){12}\\}{0,1})/'", returnStdout: true).trim()
                 } else {
@@ -278,50 +270,77 @@ pipeline {
 
                 echo "\u001B[32mINFO: Start app ${new_app_name}\u001B[m"
                 sh "cf v3-start ${new_app_name}"
-                CHECKPOINT = "APP_START"
 
-                app_ready_wait = 0
-                app_ready = false
-                while (app_ready_wait < 120) {
-                  app_state_json = sh(script: "cf curl '/v3/apps/${new_app_guid}/processes/web/stats' | jq -r '.resources[] | select(.type=\"web\") | [.state]' | jq -s add", returnStdout: true).trim()
-                  app_state = readJSON text: app_state_json
-                  app_state.each {
-                    if (it == "RUNNING") {
-                      echo "\u001B[32mINFO: App ${new_app_name} is ready\u001B[m"
-                      app_ready = true
-                      app_ready_wait = 120
-                    } else {
+                try {
+                  app_wait_timeout = 180
+                  timeout(time: app_wait_timeout, unit: 'SECONDS') {
+                    app_ready = 'false'
+                    while (app_ready == 'false') {
+                      app_ready = sh(script: "cf curl '/v3/apps/${new_app_guid}/processes/web/stats' | jq -r '.resources[] | select(.type=\"web\") | [contains({\"state\": \"RUNNING\"})]' | jq -sr 'add | all'", returnStdout: true).trim()
                       echo "\u001B[32mINFO: App ${new_app_name} not ready, wait for 10 seconds...\u001B[m"
-                      app_ready_wait = app_ready_wait + 10
                       sleep 10
                     }
+                    echo "\u001B[32mINFO: App ${new_app_name} is ready\u001B[m"
                   }
+                } catch (err) {
+                  error "App failed to start."
                 }
 
-                if (app_ready) {
-                  echo "\u001B[32mINFO: Switching app routes\u001B[m"
-                  app_routes.each {
-                    CHECKPOINT = "APP_ROUTES"
-                    sh """
-                      cf curl '/v2/routes/${it}/apps/${new_app_guid}' -X PUT | jq -C '.'
-                      cf curl '/v2/routes/${it}/apps/${app_guid}' -X DELETE
-                    """
-                    CHECKPOINT = "APP_ROUTES_COMPLETE"
+                echo "\u001B[32mINFO: Switching app routes\u001B[m"
+                app_routes.each {
+                  sh """
+                    cf curl '/v2/routes/${it}/apps/${new_app_guid}' -X PUT | jq -C '.'
+                    cf curl '/v2/routes/${it}/apps/${app_guid}' -X DELETE
+                  """
+                }
+
+              }
+            }
+          }
+        }
+      }
+
+      post {
+        success {
+          script {
+            timestamps {
+              ansiColor('xterm') {
+                deployer.inside {
+                  withCredentials([usernamePassword(credentialsId: env.GDS_PAAS_CREDENTIAL, passwordVariable: 'gds_pass', usernameVariable: 'gds_user')]) {
+                    sh "cf login -a ${env.GDS_PAAS} -u ${gds_user} -p ${gds_pass} -o ${gds_app[0]} -s ${gds_app[1]}"
                   }
                   echo "\u001B[32mINFO: Cleanup old app\u001B[m"
                   sh """
-                    cf v3-delete -f ${gds_app[2]}
+                    cf rename ${gds_app[2]} ${gds_app[2]}-delete
                     cf rename ${new_app_name} ${gds_app[2]}
+                    cf curl '/v3/apps/${app_guid}' -X DELETE
                   """
-                } else {
-                  CHECKPOINT = "APP_FAIL"
-                  error "App failed to start."
+                }
+              }
+            }
+          }
+        }
+
+        failure {
+          script {
+            timestamps {
+              ansiColor('xterm') {
+                deployer.inside {
+                  withCredentials([usernamePassword(credentialsId: env.GDS_PAAS_CREDENTIAL, passwordVariable: 'gds_pass', usernameVariable: 'gds_user')]) {
+                    sh "cf login -a ${env.GDS_PAAS} -u ${gds_user} -p ${gds_pass} -o ${gds_app[0]} -s ${gds_app[1]}"
+                  }
+                  echo "\u001B[31mWARNING: Rollback app\u001B[m"
+                  sh """
+                    cf logs ${new_app_name} --recent || exit 0
+                    cf curl '/v3/apps/${new_app_guid}' -X DELETE || exit 0
+                  """
                 }
               }
             }
           }
         }
       }
+
     }
 
     stage('Deploy S3') {
@@ -414,31 +433,8 @@ pipeline {
       script {
         timestamps {
           ansiColor('xterm') {
-            deployer.inside {
-              switch(config.PAAS_TYPE) {
-                case "gds":
-                  echo "\u001B[31mWARNING: Rollback app\u001B[m"
-                  withCredentials([usernamePassword(credentialsId: env.GDS_PAAS_CREDENTIAL, passwordVariable: 'gds_pass', usernameVariable: 'gds_user')]) {
-                    sh """
-                      cf login -a ${env.GDS_PAAS} -u ${gds_user} -p ${gds_pass} -o ${gds_app[0]} -s ${gds_app[1]}
-                      cf target -o ${gds_app[0]} -s ${gds_app[1]}
-                    """
-                  }
-                  sh "cf logs ${new_app_name} --recent || exit 0"
-                  switch(CHECKPOINT) {
-                    case "APP_ROUTES":
-                      app_routes.each {
-                        sh "cf curl '/v2/routes/${it}/apps/${app_guid}' -X PUT | jq -C '.' || exit 0"
-                      }
-                    case String:
-                      sh "cf v3-delete -f ${new_app_name} || exit 0"
-                    break
-                  }
-                break
-              }
-              emailext body: '${DEFAULT_CONTENT}', recipientProviders: [[$class: 'CulpritsRecipientProvider'], [$class: 'DevelopersRecipientProvider'], [$class: 'RequesterRecipientProvider'], [$class: 'UpstreamComitterRecipientProvider']], subject: "${currentBuild.result}: ${env.Project} ${env.Environment}", to: '${DEFAULT_RECIPIENTS}'
-              slackSend message: "Failure: ${env.JOB_NAME} #${env.BUILD_NUMBER} - ${env.Project} ${env.Environment} (<${env.BUILD_URL}|Open>)", color: 'danger'
-            }
+            emailext body: '${DEFAULT_CONTENT}', recipientProviders: [[$class: 'CulpritsRecipientProvider'], [$class: 'DevelopersRecipientProvider'], [$class: 'RequesterRecipientProvider'], [$class: 'UpstreamComitterRecipientProvider']], subject: "${currentBuild.result}: ${env.Project} ${env.Environment}", to: '${DEFAULT_RECIPIENTS}'
+            slackSend message: "Failure: ${env.JOB_NAME} #${env.BUILD_NUMBER} - ${env.Project} ${env.Environment} (<${env.BUILD_URL}|Open>)", color: 'danger'
           }
         }
       }
