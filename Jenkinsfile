@@ -151,10 +151,7 @@ pipeline {
               deployer.inside {
                 gds_app = config.PAAS_APP.split("/")
                 withCredentials([usernamePassword(credentialsId: env.GDS_PAAS_CREDENTIAL, passwordVariable: 'gds_pass', usernameVariable: 'gds_user')]) {
-                  sh """
-                    cf login -a ${env.GDS_PAAS} -u ${gds_user} -p ${gds_pass} -o ${gds_app[0]} -s ${gds_app[1]}
-                    cf target -o ${gds_app[0]} -s ${gds_app[1]}
-                  """
+                  sh "cf login -a ${env.GDS_PAAS} -u ${gds_user} -p ${gds_pass} -o ${gds_app[0]} -s ${gds_app[1]}"
                 }
 
                 cf_manifest_exist = fileExists "${env.WORKSPACE}/manifest.yml"
@@ -295,8 +292,16 @@ pipeline {
                 if (app_ready) {
                   echo "\u001B[32mINFO: Switching app routes\u001B[m"
                   app_routes.each {
-                    sh "cf curl '/v2/routes/${it}/apps/${new_app_guid}' -X PUT | jq -C '.'"
+                    sh """
+                      cf curl '/v2/routes/${it}/apps/${new_app_guid}' -X PUT | jq -C '.'
+                      cf curl '/v2/routes/${it}/apps/${app_guid}' -X DELETE
+                    """
                   }
+                  echo "\u001B[32mINFO: Cleanup old app\u001B[m"
+                  sh """
+                    cf rename ${gds_app[2]} ${new_app_name}-old
+                    cf rename ${new_app_name} ${gds_app[2]}
+                  """
                 } else {
                   error "App failed to start."
                 }
@@ -313,19 +318,10 @@ pipeline {
               ansiColor('xterm') {
                 deployer.inside {
                   withCredentials([usernamePassword(credentialsId: env.GDS_PAAS_CREDENTIAL, passwordVariable: 'gds_pass', usernameVariable: 'gds_user')]) {
-                    sh """
-                      cf login -a ${env.GDS_PAAS} -u ${gds_user} -p ${gds_pass} -o ${gds_app[0]} -s ${gds_app[1]}
-                      cf target -o ${gds_app[0]} -s ${gds_app[1]}
-                    """
+                    sh "cf login -a ${env.GDS_PAAS} -u ${gds_user} -p ${gds_pass} -o ${gds_app[0]} -s ${gds_app[1]}"
                   }
-                  echo "\u001B[32mINFO: Cleanup old app\u001B[m"
-                  app_routes.each {
-                    sh "cf curl '/v2/routes/${it}/apps/${app_guid}' -X DELETE"
-                  }
-                  sh """
-                    cf v3-delete -f ${gds_app[2]}
-                    cf rename ${new_app_name} ${gds_app[2]}
-                  """
+                  echo "\u001B[32mINFO: Remove old app\u001B[m"
+                  sh "cf v3-delete -f ${new_app_name}-old"
                 }
               }
             }
@@ -338,10 +334,7 @@ pipeline {
               ansiColor('xterm') {
                 deployer.inside {
                   withCredentials([usernamePassword(credentialsId: env.GDS_PAAS_CREDENTIAL, passwordVariable: 'gds_pass', usernameVariable: 'gds_user')]) {
-                    sh """
-                      cf login -a ${env.GDS_PAAS} -u ${gds_user} -p ${gds_pass} -o ${gds_app[0]} -s ${gds_app[1]}
-                      cf target -o ${gds_app[0]} -s ${gds_app[1]}
-                    """
+                    sh "cf login -a ${env.GDS_PAAS} -u ${gds_user} -p ${gds_pass} -o ${gds_app[0]} -s ${gds_app[1]}"
                   }
                   echo "\u001B[31mWARNING: Rollback app\u001B[m"
                   sh """
