@@ -344,10 +344,6 @@ pipeline {
                   echo "\u001B[31mWARNING: Rollback app\u001B[m"
                   sh "cf logs ${new_app_name} --recent || exit 0"
                   switch(CHECKPOINT) {
-                    case "APP_ROUTES":
-                      app_routes.each {
-                        sh "cf curl '/v2/routes/${it}/apps/${app_guid}' -X PUT | jq -C '.' || exit 0"
-                      }
                     case String:
                       sh "cf v3-delete -f ${new_app_name} || exit 0"
                     break
