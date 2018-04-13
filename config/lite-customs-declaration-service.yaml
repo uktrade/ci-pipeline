@@ -1,0 +1,41 @@
+---
+name: lite-customs-declaration-service
+namespace: lite
+scm: git@github.com:uktrade/lite-customs-declaration-service.git
+environments:
+  - environment: dev
+    type: gds
+    app: dit-staging/dev-lite/lite-customs-declaration-service-dev
+    vars:
+      - JAVA_EXTENSION: jar
+      - NEXUS_PATH: lite-builds/uk/gov/bis/lite/lite-customs-declaration-service
+      - USE_NEXUS: true
+    secrets: true
+    run: []
+  - environment: uat
+    type: gds
+    app: dit-staging/uat-lite/lite-customs-declaration-service-uat
+    vars:
+      - JAVA_EXTENSION: jar
+      - NEXUS_PATH: lite-builds/uk/gov/bis/lite/lite-customs-declaration-service
+      - USE_NEXUS: true
+    secrets: true
+    run: []
+  - environment: staging
+    type: gds
+    app: dit-staging/staging-lite/lite-customs-declaration-service-staging
+    vars:
+      - JAVA_EXTENSION: jar
+      - NEXUS_PATH: lite-builds/uk/gov/bis/lite/lite-customs-declaration-service
+      - USE_NEXUS: true
+    secrets: true
+    run: []
+  - environment: prod
+    type: gds
+    app: dit-services/lite/lite-customs-declaration-service
+    vars:
+      - JAVA_EXTENSION: jar
+      - NEXUS_PATH: lite-builds/uk/gov/bis/lite/lite-customs-declaration-service
+      - USE_NEXUS: true
+    secrets: true
+    run: []
