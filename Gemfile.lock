@@ -28,11 +28,11 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
-  bundler (~> 1.13.6)
+  bundler
   deep_merge
   json
   json-schema
   rest-client
 
 BUNDLED WITH
-   1.13.6
+   1.16.1

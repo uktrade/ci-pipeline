@@ -2,7 +2,7 @@ pipeline {
 
   agent {
     node {
-      label 'docker.ci.uktrade.io'
+      label env.CI_SLAVE
     }
   }
 
