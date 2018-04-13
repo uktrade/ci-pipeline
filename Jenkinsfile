@@ -84,7 +84,6 @@ pipeline {
         script {
           timestamps {
             deployer.inside {
-              sh "bundle check || bundle install"
               withCredentials([string(credentialsId: env.VAULT_TOKEN_ID, variable: 'TOKEN')]) {
                 env.VAULT_SERECT_ID = TOKEN
                 sh "${env.WORKSPACE}/bootstrap.rb ${env.Team} ${env.Project} ${env.Environment}"
