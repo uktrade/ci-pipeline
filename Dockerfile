@@ -27,7 +27,7 @@ RUN curl -Lfs "https://github.com/openshift/origin/releases/download/$OC_REL/ope
     rm -rf /var/lib/apt/lists/*
 
 COPY Gemfile* /tmp/
-RUN bundle install --gemfile=/tmp/Gemfile
+RUN bundle check || bundle install --gemfile=/tmp/Gemfile
 
 USER ubuntu:ubuntu
 ENV HOME /home/ubuntu

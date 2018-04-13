@@ -28,6 +28,7 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
+  bundler (~> 1.13.6)
   deep_merge
   json
   json-schema

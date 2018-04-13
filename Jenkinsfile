@@ -24,8 +24,6 @@ pipeline {
             deployer.pull()
             deployer.inside {
               checkout([$class: 'GitSCM', branches: [[name: env.GIT_BRANCH]], doGenerateSubmoduleConfigurations: false, extensions: [[$class: 'SubmoduleOption', disableSubmodules: false, parentCredentials: true, recursiveSubmodules: true, reference: '', trackingSubmodules: false]], submoduleCfg: [], userRemoteConfigs: [[credentialsId: env.SCM_CREDENTIAL, url: env.GIT_URL]]])
-              sh "mkdir -p ${env.WORKSPACE}/.ci"
-              sh "bundle check || bundle install"
               sh "${env.WORKSPACE}/bootstrap.rb"
               options_json = readJSON file: "${env.WORKSPACE}/.ci/option.json"
             }
