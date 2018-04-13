@@ -2,7 +2,7 @@ pipeline {
 
   agent {
     node {
-      label env.DOCKER_HOST
+      label env.CI_SLAVE
     }
   }
 
