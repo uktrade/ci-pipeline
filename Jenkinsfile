@@ -328,8 +328,8 @@ pipeline {
                   }
                   echo "\u001B[31mWARNING: Rollback app\u001B[m"
                   sh """
-                    cf logs ${new_app_name} --recent || exit 0
-                    cf curl '/v3/apps/${new_app_guid}' -X DELETE || exit 0
+                    cf logs ${new_app_name} --recent || true
+                    cf curl '/v3/apps/${new_app_guid}' -X DELETE || true
                   """
                 }
               }
