@@ -308,8 +308,8 @@ pipeline {
                   }
                   echo "\u001B[32mINFO: Cleanup old app\u001B[m"
                   sh """
-                    cf curl '/v3/apps/${app_guid}' -X PATCH -d '{"name": "${gds_app[2]}-delete"}' | jq '.resources | del(.[].links)'
-                    cf curl '/v3/apps/${new_app_guid}' -X PATCH -d '{"name": "${gds_app[2]}"}' | jq '.resources | del(.[].links)'
+                    cf curl '/v3/apps/${app_guid}' -X PATCH -d '{"name": "${gds_app[2]}-delete"}' | jq 'del(.links, .relationships)'
+                    cf curl '/v3/apps/${new_app_guid}' -X PATCH -d '{"name": "${gds_app[2]}"}' | jq 'del(.links, .relationships)'
                     cf curl '/v3/apps/${app_guid}' -X DELETE
                   """
                 }
