@@ -417,22 +417,20 @@ pipeline {
       script {
         ansiColor('xterm') {
           emailext body: '${DEFAULT_CONTENT}', recipientProviders: [[$class: 'CulpritsRecipientProvider'], [$class: 'DevelopersRecipientProvider'], [$class: 'RequesterRecipientProvider'], [$class: 'UpstreamComitterRecipientProvider']], subject: "${currentBuild.result}: ${env.Project} ${env.Environment}", to: '${DEFAULT_RECIPIENTS}'
-          slackSend message: "Failure: ${env.JOB_NAME} #${env.BUILD_NUMBER} - ${env.Project} ${env.Environment} (<${env.BUILD_URL}|Open>)", color: 'danger'
-        }
-      }
-    }
-
-    success {
-      script {
-        ansiColor('xterm') {
-          slackSend message: "Success: ${env.JOB_NAME} #${env.BUILD_NUMBER} - ${env.Project} ${env.Environment} (<${env.BUILD_URL}|Open>)", color: 'good'
         }
       }
     }
 
     always {
       script {
-        deleteDir()
+        ansiColor('xterm') {
+          message_colour_map = readJSON text: '{"SUCCESS": "#36a64f", "FAILURE": "#FF0000", "UNSTABLE": "#FFCC00"}'
+          message_colour = message_colour_map."${currentBuild.currentResult}".toString()
+          message_body = "[{\"fallback\":\"${currentBuild.currentResult}: ${env.JOB_NAME} #${env.BUILD_NUMBER} - ${env.Project} ${env.Environment} (<${env.BUILD_URL}|Open>)\",\"color\":\"${message_colour}\",\"author_name\":\"${env.JOB_NAME}\",\"author_link\":\"${env.JOB_URL}\",\"title\":\"${currentBuild.currentResult}: Build #${env.BUILD_NUMBER}\",\"title_link\":\"${env.JENKINS_URL}\",\"fields\":[{\"title\":\"Team\",\"value\":\"${env.Team}\",\"short\":true},{\"title\":\"Project\",\"value\":\"${env.Project}\",\"short\":true},{\"title\":\"Environment\",\"value\":\"${env.Environment}\",\"short\":true}],\"footer\":\"<${JENKINS_URL}|Jenkins>\",\"footer_icon\":\"https://raw.githubusercontent.com/jenkinsci/jenkins/master/war/src/main/webapp/images/jenkins.png\",\"ts\":\"${currentBuild.timeInMillis/1000}\"}]"
+          slackSend botUser: true, attachments: message_body
+
+          deleteDir()
+        }
       }
     }
   }
