@@ -42,6 +42,14 @@ environments:
 ```
 Config files are validated using a [json schema](schema.json).
 
+### Build Environment
+
+The pipeline allows users to run commands to before deploying, for some project specific commands to work it has to provide language specific runtime and libraries, following languages are supported with tools,
+
+* Python: using `pyenv` with `.python-version` in your project.
+* Nodejs: using `nvm` with `.nvmrc` in your project.
+* Ruby: using `rvm` with `.ruby-version` in your project.
+
 
 ## Supported PaaS
 
