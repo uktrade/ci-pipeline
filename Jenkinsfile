@@ -452,7 +452,7 @@ pipeline {
               "ts": "${currentBuild.timeInMillis/1000}"
             }]
           """
-          slackSend botUser: true, attachments: message_body
+          slackSend botUser: true, attachments: message_body.toString().trim()
           deleteDir()
         }
       }
