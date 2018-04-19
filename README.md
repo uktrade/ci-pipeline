@@ -12,6 +12,8 @@ The pipeline is designed to deploy apps to multiple PaaS platforms using a unifi
 
 ## Config Syntax
 
+Pipeline config for projects are stored in another Git repository: https://github.com/uktrade/ci-pipeline-config
+
 ```
 ---
 name: sandbox
@@ -84,7 +86,7 @@ CloudFoundry supports multiple types of health checks,
 * process
 * http
 
-For apps would like to use CF API V3 no downtime deployments require to use `http` health check and provide a URL. CF will wait for new deployment to become healthy before switching routing from old version of app to it.
+For apps would like to use blue/green deployments require to use `http` health check and provide a URL. CF will wait for new deployment to become healthy before switching routing from old version of app to it.
 
 ```
 ---
