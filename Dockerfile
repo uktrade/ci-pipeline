@@ -23,6 +23,8 @@ RUN curl -Lfs "https://github.com/openshift/origin/releases/download/$OC_REL/ope
     apt-get install -y --allow-unauthenticated cf-cli=$CF_CLI_VER && \
     rm -rf /var/lib/apt/lists/*
 
+RUN cf install-plugin -f conduit
+
 COPY Gemfile* /tmp/
 RUN gem install bundler && \
     bundle check || bundle install --gemfile=/tmp/Gemfile
