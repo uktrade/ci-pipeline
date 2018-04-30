@@ -10,7 +10,7 @@ RUN groupadd -g 1000 ubuntu && \
 
 RUN echo "force-unsafe-io" > /etc/dpkg/dpkg.cfg.d/02apt-speedup && \
     apt-get update && \
-    apt-get install -y curl wget git apt-transport-https ca-certificates software-properties-common build-essential libpq-dev libssl-dev zlib1g-dev libbz2-dev libreadline-dev libsqlite3-dev llvm libncurses5-dev libncursesw5-dev xz-utils tk-dev && \
+    apt-get install -y curl wget git apt-transport-https ca-certificates software-properties-common build-essential libpq-dev libssl-dev zlib1g-dev libbz2-dev libreadline-dev libsqlite3-dev llvm libncurses5-dev libncursesw5-dev xz-utils tk-dev postgresql-client && \
     rm -rf /var/lib/apt/lists/*
 
 RUN apt-get update && \
