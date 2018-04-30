@@ -347,6 +347,7 @@ pipeline {
                 s3_path = "${env.WORKSPACE}/${envars.S3_WEBSITE_SRC}"
               }
               sh """
+                set +x
                 export AWS_DEFAULT_REGION=${envars.AWS_DEFAULT_REGION}
                 export AWS_ACCESS_KEY_ID=${envars.AWS_ACCESS_KEY_ID}
                 export AWS_SECRET_ACCESS_KEY=${envars.AWS_SECRET_ACCESS_KEY}
