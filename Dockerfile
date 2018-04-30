@@ -10,9 +10,12 @@ RUN groupadd -g 1000 ubuntu && \
 
 RUN echo "force-unsafe-io" > /etc/dpkg/dpkg.cfg.d/02apt-speedup && \
     apt-get update && \
-    apt-get install -y curl wget git apt-transport-https ca-certificates software-properties-common build-essential libpq-dev libssl-dev zlib1g-dev libbz2-dev libreadline-dev libsqlite3-dev llvm libncurses5-dev libncursesw5-dev xz-utils tk-dev
+    apt-get install -y curl wget git apt-transport-https ca-certificates software-properties-common build-essential libpq-dev libssl-dev zlib1g-dev libbz2-dev libreadline-dev libsqlite3-dev llvm libncurses5-dev libncursesw5-dev xz-utils tk-dev && \
+    rm -rf /var/lib/apt/lists/*
 
-RUN apt-get install -y python3 python3-pip ruby-full rubygems bundler gettext jq
+RUN apt-get update && \
+    apt-get install -y python3 python3-pip ruby-full rubygems bundler gettext jq && \
+    rm -rf /var/lib/apt/lists/*
 
 RUN curl -Lfs "https://github.com/openshift/origin/releases/download/$OC_REL/openshift-origin-client-tools-$OC_REL-$OC_BUILD-linux-64bit.tar.gz" | tar -xzf - -C /usr/local/bin --strip 1 --wildcards */oc && \
     pip3 install --upgrade awscli virtualenv && \
@@ -22,8 +25,6 @@ RUN curl -Lfs "https://github.com/openshift/origin/releases/download/$OC_REL/ope
     apt-get update && \
     apt-get install -y --allow-unauthenticated cf-cli=$CF_CLI_VER && \
     rm -rf /var/lib/apt/lists/*
-
-RUN cf install-plugin -f conduit
 
 COPY Gemfile* /tmp/
 RUN gem install bundler && \
@@ -39,6 +40,7 @@ RUN curl -Lfs https://raw.githubusercontent.com/pyenv/pyenv-installer/master/bin
     bash -c "source ~/.rvm/scripts/rvm && rvm autolibs disable" && \
     echo 'export PATH="$HOME/.pyenv/bin:$PATH"' >> ~/.profile && \
     echo 'eval "$(pyenv init -)"\neval "$(pyenv virtualenv-init -)"' >> ~/.profile && \
-    echo 'export NVM_DIR="$HOME/.nvm"\n[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"' >> ~/.profile
+    echo 'export NVM_DIR="$HOME/.nvm"\n[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"' >> ~/.profile && \
+    cf install-plugin -f conduit
 
 ENTRYPOINT ["bash", "-c"]
