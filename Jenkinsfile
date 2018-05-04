@@ -268,7 +268,8 @@ pipeline {
                 app_wait_timeout = 180
                 timeout(time: app_wait_timeout, unit: 'SECONDS') {
                   app_ready = 'false'
-                  while (app_ready == 'false') {
+                  app_stopped = sh(script: "cf curl '/v3/apps/${new_app_guid}/processes/web' | jq -r 'contains({\"instances\": 0})'", returnStdout: true).trim()
+                  while (app_ready == 'false' && app_stopped == 'false') {
                     app_ready = sh(script: "cf curl '/v3/apps/${new_app_guid}/processes/web/stats' | jq -r '.resources[] | select(.type=\"web\") | [contains({\"state\": \"RUNNING\"})]' | jq -sr 'add | all'", returnStdout: true).trim()
                     echo "\u001B[32mINFO: App ${new_app_name} not ready, wait for 10 seconds...\u001B[m"
                     sleep 10
