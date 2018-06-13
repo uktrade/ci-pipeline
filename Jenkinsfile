@@ -106,6 +106,7 @@ pipeline {
               node_ver_exist = fileExists "${env.WORKSPACE}/.nvmrc"
               py_ver_exist = fileExists "${env.WORKSPACE}/.python-version"
               rb_ver_exist = fileExists "${env.WORKSPACE}/.ruby-version"
+              java_ver_exist = fileExists "${env.WORKSPACE}/.java-version"
               if (node_ver_exist) {
                 node_ver = readFile "${env.WORKSPACE}/.nvmrc"
                 echo "INFO: Detected Nodejs version ${node_ver}"
@@ -120,6 +121,11 @@ pipeline {
                 rb_ver = readFile "${env.WORKSPACE}/.ruby-version"
                 echo "INFO: Detected Ruby version ${rb_ver}"
                 sh "bash -l -c 'rvm install ${rb_ver.trim()}'"
+              }
+              if (java_ver_exist) {
+                java_ver = readFile "${env.WORKSPACE}/.java-version"
+                echo "INFO: Detected Java version ${java_ver}"
+                sh "bash -l -c 'jabba install ${java_ver.trim()}'"
               }
 
               if (config.PAAS_RUN != 'null') {
