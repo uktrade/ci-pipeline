@@ -1,9 +1,10 @@
 FROM ubuntu:16.04
 
-ENV NVM_VER v0.33.8
-ENV CF_CLI_VER 6.36.0
-ENV OC_REL v3.7.0
-ENV OC_BUILD 7ed6862
+ENV CF_CLI_VER 6.37.0
+ENV NVM_VER=v0.33.11 \
+    JABBA_VER=0.10.1 \
+    OC_REL=v3.7.0 \
+    OC_BUILD=7ed6862
 
 RUN groupadd -g 1000 ubuntu && \
     useradd -u 1000 -g 1000 -m -s /bin/bash ubuntu
@@ -33,9 +34,9 @@ RUN gem install bundler && \
 USER ubuntu:ubuntu
 ENV HOME /home/ubuntu
 
-RUN curl -Lfs https://github.com/shyiko/jabba/raw/master/install.sh | bash && \
-    curl -Lfs https://raw.githubusercontent.com/pyenv/pyenv-installer/master/bin/pyenv-installer | bash && \
-    curl -Lfs https://raw.githubusercontent.com/creationix/nvm/$NVM_VER/install.sh | bash && \
+RUN curl -Lfs https://github.com/shyiko/jabba/raw/$JABBA_VER/install.sh | bash && \
+    curl -Lfs https://github.com/pyenv/pyenv-installer/raw/master/bin/pyenv-installer | bash && \
+    curl -Lfs https://github.com/creationix/nvm/raw/$NVM_VER/install.sh | bash && \
     gpg --keyserver hkp://keys.gnupg.net --recv-keys 409B6B1796C275462A1703113804BB82D39DC0E3 7D2BAF1CF37B13E2069D6956105BD0E739499BDB && \
     curl -Lfs https://get.rvm.io | bash && \
     bash -c "source ~/.rvm/scripts/rvm && rvm autolibs disable" && \
