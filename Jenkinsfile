@@ -106,6 +106,7 @@ pipeline {
               node_ver_exist = fileExists "${env.WORKSPACE}/.nvmrc"
               py_ver_exist = fileExists "${env.WORKSPACE}/.python-version"
               rb_ver_exist = fileExists "${env.WORKSPACE}/.ruby-version"
+              java_ver_exist = fileExists "${env.WORKSPACE}/.java-version"
               if (node_ver_exist) {
                 node_ver = readFile "${env.WORKSPACE}/.nvmrc"
                 echo "INFO: Detected Nodejs version ${node_ver}"
@@ -121,8 +122,13 @@ pipeline {
                 echo "INFO: Detected Ruby version ${rb_ver}"
                 sh "bash -l -c 'rvm install ${rb_ver.trim()}'"
               }
+              if (java_ver_exist) {
+                java_ver = readFile "${env.WORKSPACE}/.java-version"
+                echo "INFO: Detected Java version ${java_ver}"
+                sh "bash -l -c 'jabba install ${java_ver.trim()}'"
+              }
 
-              if (config.PAAS_RUN != 'null') {
+              if (config.PAAS_RUN) {
                 sh "bash -l -c \"${config.PAAS_RUN}\""
               }
             }
@@ -214,16 +220,16 @@ pipeline {
                 }
               }
 
-              if (envars.USE_NEXUS) {
-                echo "\u001B[32mINFO: Downloading artifact ${env.Project}-${env.Version}.${envars.JAVA_EXTENSION.toLowerCase()}\u001B[m"
+              if (config.USE_NEXUS) {
+                echo "\u001B[32mINFO: Downloading artifact ${env.Project}-${env.Version}.${config.JAVA_EXTENSION.toLowerCase()}\u001B[m"
                 withCredentials([usernamePassword(credentialsId: env.NEXUS_CREDENTIAL, passwordVariable: 'nexus_pass', usernameVariable: 'nexus_user')]) {
-                  sh "curl -LOfs 'https://${nexus_user}:${nexus_pass}@${env.NEXUS_URL}/repository/${envars.NEXUS_PATH}/${env.Version}/${env.Project}-${env.Version}.${envars.JAVA_EXTENSION.toLowerCase()}'"
-                  env.APP_PATH = "${env.Project}-${env.Version}.${envars.JAVA_EXTENSION.toLowerCase()}"
+                  sh "curl -LOfs 'https://${nexus_user}:${nexus_pass}@${config.NEXUS_URL}/repository/${config.NEXUS_PATH}/${env.Version}/${env.Project}-${env.Version}.${config.JAVA_EXTENSION.toLowerCase()}'"
+                  config.APP_PATH = "${env.Project}-${env.Version}.${config.JAVA_EXTENSION.toLowerCase()}"
                 }
               }
 
-              if (env.APP_PATH) {
-                package_guid = sh(script: "cf v3-create-package ${new_app_name} -p ${env.APP_PATH} | perl -lne 'print \$& if /(\\{{0,1}([0-9a-fA-F]){8}-([0-9a-fA-F]){4}-([0-9a-fA-F]){4}-([0-9a-fA-F]){4}-([0-9a-fA-F]){12}\\}{0,1})/'", returnStdout: true).trim()
+              if (config.APP_PATH) {
+                package_guid = sh(script: "cf v3-create-package ${new_app_name} -p ${config.APP_PATH} | perl -lne 'print \$& if /(\\{{0,1}([0-9a-fA-F]){8}-([0-9a-fA-F]){4}-([0-9a-fA-F]){4}-([0-9a-fA-F]){4}-([0-9a-fA-F]){12}\\}{0,1})/'", returnStdout: true).trim()
               } else {
                 package_guid = sh(script: "cf v3-create-package ${new_app_name} | perl -lne 'print \$& if /(\\{{0,1}([0-9a-fA-F]){8}-([0-9a-fA-F]){4}-([0-9a-fA-F]){4}-([0-9a-fA-F]){4}-([0-9a-fA-F]){12}\\}{0,1})/'", returnStdout: true).trim()
               }
