@@ -109,22 +109,22 @@ pipeline {
               java_ver_exist = fileExists "${env.WORKSPACE}/.java-version"
               if (node_ver_exist) {
                 node_ver = readFile "${env.WORKSPACE}/.nvmrc"
-                echo "INFO: Detected Nodejs version ${node_ver}"
+                echo "\u001B[32mINFO: Detected Nodejs version ${node_ver}\u001B[m"
                 sh "bash -l -c 'nvm install ${node_ver.trim()}'"
               }
               if (py_ver_exist) {
                 py_ver = readFile "${env.WORKSPACE}/.python-version"
-                echo "INFO: Detected Python version ${py_ver}"
+                echo "\u001B[32mINFO: Detected Python version ${py_ver}\u001B[m"
                 sh "bash -l -c 'pyenv install ${py_ver.trim()}'"
               }
               if (rb_ver_exist) {
                 rb_ver = readFile "${env.WORKSPACE}/.ruby-version"
-                echo "INFO: Detected Ruby version ${rb_ver}"
+                echo "\u001B[32mINFO: Detected Ruby version ${rb_ver}\u001B[m"
                 sh "bash -l -c 'rvm install ${rb_ver.trim()}'"
               }
               if (java_ver_exist) {
                 java_ver = readFile "${env.WORKSPACE}/.java-version"
-                echo "INFO: Detected Java version ${java_ver}"
+                echo "\u001B[32mINFO: Detected Java version ${java_ver}\u001B[m"
                 sh "bash -l -c 'jabba install ${java_ver.trim()}'"
               }
 
