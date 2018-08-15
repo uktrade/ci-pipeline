@@ -172,6 +172,10 @@ pipeline {
                   echo "\u001B[32mINFO: Setting application ${gds_app[2]} health-check-http-endpoint to ${cf_manifest.applications[0].'health-check-http-endpoint'}\u001B[m"
                   env.PAAS_HEALTHCHECK_ENDPOINT = cf_manifest.applications[0]."health-check-http-endpoint"
                 }
+                if (cf_manifest.applications[0]."timeout") {
+                  echo "\u001B[32mINFO: Setting application ${gds_app[2]} timeout to ${cf_manifest.applications[0].'timeout'}\u001B[m"
+                  env.PAAS_TIMEOUT = cf_manifest.applications[0]."timeout"
+                }
               }
 
               cfignore_exist = fileExists "${env.WORKSPACE}/.cfignore"
@@ -274,7 +278,10 @@ pipeline {
               sh "cf v3-start ${new_app_name}"
 
               try {
-                app_wait_timeout = 180
+                if (!env.PAAS_TIMEOUT) {
+                  env.PAAS_TIMEOUT = 60
+                }
+                app_wait_timeout = env.PAAS_TIMEOUT * 3
                 timeout(time: app_wait_timeout, unit: 'SECONDS') {
                   app_ready = 'false'
                   app_stopped = sh(script: "cf curl '/v3/apps/${new_app_guid}/processes/web' | jq -r 'contains({\"instances\": 0})'", returnStdout: true).trim()
