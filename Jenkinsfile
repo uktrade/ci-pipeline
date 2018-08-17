@@ -172,6 +172,10 @@ pipeline {
                   echo "\u001B[32mINFO: Setting application ${gds_app[2]} health-check-http-endpoint to ${cf_manifest.applications[0].'health-check-http-endpoint'}\u001B[m"
                   env.PAAS_HEALTHCHECK_ENDPOINT = cf_manifest.applications[0]."health-check-http-endpoint"
                 }
+                if (cf_manifest.applications[0]."timeout") {
+                  echo "\u001B[32mINFO: Setting application ${gds_app[2]} timeout to ${cf_manifest.applications[0].'timeout'}\u001B[m"
+                  env.PAAS_TIMEOUT = cf_manifest.applications[0]."timeout"
+                }
               }
 
               cfignore_exist = fileExists "${env.WORKSPACE}/.cfignore"
@@ -237,16 +241,35 @@ pipeline {
               echo "\u001B[32mINFO: Creating app ${new_app_name} release\u001B[m"
               sh "cf v3-stage ${new_app_name} --package-guid ${package_guid}"
               release_guid = sh(script: "cf curl '/v3/apps/${new_app_guid}/droplets' | jq -r '.resources[] | select(.links.package.href | test(\"${package_guid}\")==true) | .guid'", returnStdout: true).trim()
-
               sh "cf v3-set-droplet ${new_app_name} --droplet-guid ${release_guid}"
-              if (env.PAAS_HEALTHCHECK_TYPE) {
-                switch(env.PAAS_HEALTHCHECK_TYPE) {
-                  case "http":
-                    if (env.PAAS_HEALTHCHECK_ENDPOINT) {
-                      sh "cf v3-set-health-check ${new_app_name} ${env.PAAS_HEALTHCHECK_TYPE} --endpoint ${env.PAAS_HEALTHCHECK_ENDPOINT}"
-                    }
-                    break
-                }
+
+              echo "\u001B[32mINFO: Configuring health check for app ${new_app_name}\u001B[m"
+              if (!env.PAAS_TIMEOUT) {
+                env.PAAS_TIMEOUT = 60
+              }
+              if (!env.PAAS_HEALTHCHECK_TYPE) {
+                env.PAAS_HEALTHCHECK_TYPE = "port"
+              }
+              switch(env.PAAS_HEALTHCHECK_TYPE) {
+                case "port":
+                  sh """
+                    cf curl '/v3/processes/${new_app_guid}' -X PATCH -d '{"health_check": {"type": "port", "data": {"timeout": ${env.PAAS_TIMEOUT}}}}' | jq -C 'del(.links)'
+                  """
+                  break
+                case "process":
+                  sh """
+                    cf curl '/v3/processes/${new_app_guid}' -X PATCH -d '{"health_check": {"type": "process", "data": {"timeout": ${env.PAAS_TIMEOUT}}}}' | jq -C 'del(.links)'
+                  """
+                  break
+                case "http":
+                  if (env.PAAS_HEALTHCHECK_ENDPOINT) {
+                    sh """
+                      cf curl '/v3/processes/${new_app_guid}' -X PATCH -d '{"health_check": {"type": "http", "data": {"timeout": ${env.PAAS_TIMEOUT}, "endpoint": "${env.PAAS_HEALTHCHECK_ENDPOINT}"}}}' | jq -C 'del(.links)'
+                    """
+                  } else {
+                    echo "\u001B[31mWARNING: 'health-check-http-endpoint' not configured for 'http' health check.\u001B[m"
+                  }
+                  break
               }
 
               echo "\u001B[32mINFO: Scale app ${new_app_name}\u001B[m"
@@ -274,8 +297,8 @@ pipeline {
               sh "cf v3-start ${new_app_name}"
 
               try {
-                app_wait_timeout = 180
-                timeout(time: app_wait_timeout, unit: 'SECONDS') {
+                app_wait_timeout = sh(script: "expr ${env.PAAS_TIMEOUT} \\* 3", returnStdout: true).trim()
+                timeout(time: app_wait_timeout.toInteger(), unit: 'SECONDS') {
                   app_ready = 'false'
                   app_stopped = sh(script: "cf curl '/v3/apps/${new_app_guid}/processes/web' | jq -r 'contains({\"instances\": 0})'", returnStdout: true).trim()
                   while (app_ready == 'false' && app_stopped == 'false') {
