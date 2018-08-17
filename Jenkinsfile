@@ -243,14 +243,32 @@ pipeline {
               release_guid = sh(script: "cf curl '/v3/apps/${new_app_guid}/droplets' | jq -r '.resources[] | select(.links.package.href | test(\"${package_guid}\")==true) | .guid'", returnStdout: true).trim()
 
               sh "cf v3-set-droplet ${new_app_name} --droplet-guid ${release_guid}"
-              if (env.PAAS_HEALTHCHECK_TYPE) {
-                switch(env.PAAS_HEALTHCHECK_TYPE) {
-                  case "http":
-                    if (env.PAAS_HEALTHCHECK_ENDPOINT) {
-                      sh "cf v3-set-health-check ${new_app_name} ${env.PAAS_HEALTHCHECK_TYPE} --endpoint ${env.PAAS_HEALTHCHECK_ENDPOINT}"
-                    }
-                    break
-                }
+              if (!env.PAAS_TIMEOUT) {
+                env.PAAS_TIMEOUT = 60
+              }
+              if (!env.PAAS_HEALTHCHECK_TYPE) {
+                env.PAAS_HEALTHCHECK_TYPE = "port"
+              }
+              switch(env.PAAS_HEALTHCHECK_TYPE) {
+                case "port":
+                  sh """
+                    cf curl '/v3/processes/${new_app_guid}' -X PATCH -d '{"health_check": {"type": "port", "data": {"timeout": ${env.PAAS_TIMEOUT}}}}' | jq -C 'del(.links)'
+                  """
+                  break
+                case "process":
+                  sh """
+                    cf curl '/v3/processes/${new_app_guid}' -X PATCH -d '{"health_check": {"type": "process", "data": {"timeout": ${env.PAAS_TIMEOUT}}}}' | jq -C 'del(.links)'
+                  """
+                  break
+                case "http":
+                  if (env.PAAS_HEALTHCHECK_ENDPOINT) {
+                    sh """
+                      cf curl '/v3/processes/${new_app_guid}' -X PATCH -d '{"health_check": {"type": "http", "data": {"timeout": ${env.PAAS_TIMEOUT}, "endpoint": "${env.PAAS_HEALTHCHECK_ENDPOINT}"}}}' | jq -C 'del(.links)'
+                    """
+                  } else {
+                    echo "\u001B[31mWARNING: Application 'health-check-http-endpoint' is not configured.\u001B[m"
+                  }
+                  break
               }
 
               echo "\u001B[32mINFO: Scale app ${new_app_name}\u001B[m"
@@ -278,9 +296,6 @@ pipeline {
               sh "cf v3-start ${new_app_name}"
 
               try {
-                if (!env.PAAS_TIMEOUT) {
-                  env.PAAS_TIMEOUT = 60
-                }
                 app_wait_timeout = env.PAAS_TIMEOUT * 3
                 timeout(time: app_wait_timeout, unit: 'SECONDS') {
                   app_ready = 'false'
