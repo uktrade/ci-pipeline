@@ -298,7 +298,7 @@ pipeline {
 
               try {
                 app_wait_timeout = sh(script: "expr ${env.PAAS_TIMEOUT} \\* 3", returnStdout: true).trim()
-                timeout(time: app_wait_timeout, unit: 'SECONDS') {
+                timeout(time: app_wait_timeout.toInteger(), unit: 'SECONDS') {
                   app_ready = 'false'
                   app_stopped = sh(script: "cf curl '/v3/apps/${new_app_guid}/processes/web' | jq -r 'contains({\"instances\": 0})'", returnStdout: true).trim()
                   while (app_ready == 'false' && app_stopped == 'false') {
