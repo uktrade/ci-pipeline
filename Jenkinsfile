@@ -267,7 +267,7 @@ pipeline {
                       cf curl '/v3/processes/${new_app_guid}' -X PATCH -d '{"health_check": {"type": "http", "data": {"timeout": ${env.PAAS_TIMEOUT}, "endpoint": "${env.PAAS_HEALTHCHECK_ENDPOINT}"}}}' | jq -C 'del(.links)'
                     """
                   } else {
-                    echo "\u001B[31mWARNING: Application 'health-check-http-endpoint' is not configured.\u001B[m"
+                    echo "\u001B[31mWARNING: 'health-check-http-endpoint' not configured for 'http' health check.\u001B[m"
                   }
                   break
               }
