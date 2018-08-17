@@ -241,8 +241,9 @@ pipeline {
               echo "\u001B[32mINFO: Creating app ${new_app_name} release\u001B[m"
               sh "cf v3-stage ${new_app_name} --package-guid ${package_guid}"
               release_guid = sh(script: "cf curl '/v3/apps/${new_app_guid}/droplets' | jq -r '.resources[] | select(.links.package.href | test(\"${package_guid}\")==true) | .guid'", returnStdout: true).trim()
-
               sh "cf v3-set-droplet ${new_app_name} --droplet-guid ${release_guid}"
+
+              echo "\u001B[32mINFO: Configuring health check for app ${new_app_name}\u001B[m"
               if (!env.PAAS_TIMEOUT) {
                 env.PAAS_TIMEOUT = 60
               }
