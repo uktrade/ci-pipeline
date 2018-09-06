@@ -103,6 +103,7 @@ pipeline {
             deployer.inside {
               checkout([$class: 'GitSCM', branches: [[name: env.Version]], doGenerateSubmoduleConfigurations: false, extensions: [[$class: 'SubmoduleOption', disableSubmodules: false, parentCredentials: true, recursiveSubmodules: true, reference: '', trackingSubmodules: false]], submoduleCfg: [], userRemoteConfigs: [[credentialsId: env.SCM_CREDENTIAL, url: config.SCM]]])
 
+              app_git_commit = sh(script: "git rev-parse HEAD", returnStdout: true).trim()
               node_ver_exist = fileExists "${env.WORKSPACE}/.nvmrc"
               py_ver_exist = fileExists "${env.WORKSPACE}/.python-version"
               rb_ver_exist = fileExists "${env.WORKSPACE}/.ruby-version"
@@ -205,7 +206,7 @@ pipeline {
                 """
               }
 
-              sh "cf v3-set-env ${new_app_name} GIT_COMMIT ${env.GIT_COMMIT}"
+              sh "cf v3-set-env ${new_app_name} GIT_COMMIT ${app_git_commit}"
               vars_check = readFile file: "${env.WORKSPACE}/.ci/env.json"
               if (vars_check.trim() != '{}') {
                 sh "jq '{\"var\": .}' ${env.WORKSPACE}/.ci/env.json > ${env.WORKSPACE}/.ci/cf_envar.json"
