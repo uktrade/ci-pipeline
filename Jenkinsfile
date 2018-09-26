@@ -158,12 +158,10 @@ pipeline {
                 env.PAAS_REGION = paas_config.regions."${config.PAAS_REGION}"
               }
 
-              gds_app = config.PAAS_APP.split("/")
               withCredentials([usernamePassword(credentialsId: env.PAAS_REGION.credential, passwordVariable: 'gds_pass', usernameVariable: 'gds_user')]) {
                 sh """
                   cf api ${env.PAAS_REGION.api}
                   cf auth ${gds_user} ${gds_pass}
-                  cf target -o ${gds_app[0]} -s ${gds_app[1]}
                 """
               }
 
@@ -196,6 +194,9 @@ pipeline {
               if (!cfignore_exist) {
                 sh "ln -snf ${env.WORKSPACE}/.gitignore ${env.WORKSPACE}/.cfignore"
               }
+
+              gds_app = config.PAAS_APP.split("/")
+              sh "cf target -o ${gds_app[0]} -s ${gds_app[1]}"
 
               sh "cf v3-create-app ${gds_app[2]}"
               space_guid = sh(script: "cf space ${gds_app[1]}  --guid", returnStdout: true).trim()
@@ -348,11 +349,11 @@ pipeline {
                   sh """
                     cf api ${env.PAAS_REGION.api}
                     cf auth ${gds_user} ${gds_pass}
-                    cf target -o ${gds_app[0]} -s ${gds_app[1]}
                   """
                 }
                 echo "\u001B[32mINFO: Cleanup old app\u001B[m"
                 sh """
+                  cf target -o ${gds_app[0]} -s ${gds_app[1]}
                   cf curl '/v3/apps/${app_guid}' -X PATCH -d '{"name": "${gds_app[2]}-delete"}' | jq -C 'del(.links, .relationships)'
                   cf curl '/v3/apps/${new_app_guid}' -X PATCH -d '{"name": "${gds_app[2]}"}' | jq -C 'del(.links, .relationships)'
                   cf curl '/v3/apps/${app_guid}' -X DELETE
@@ -370,11 +371,11 @@ pipeline {
                   sh """
                     cf api ${env.PAAS_REGION.api}
                     cf auth ${gds_user} ${gds_pass}
-                    cf target -o ${gds_app[0]} -s ${gds_app[1]}
                   """
                 }
                 echo "\u001B[31mWARNING: Rollback app\u001B[m"
                 sh """
+                  cf target -o ${gds_app[0]} -s ${gds_app[1]}
                   cf logs ${new_app_name} --recent || true
                   cf curl '/v3/apps/${new_app_guid}' -X DELETE || true
                 """
