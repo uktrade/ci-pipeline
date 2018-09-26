@@ -165,6 +165,8 @@ pipeline {
                 """
               }
 
+              gds_app = config.PAAS_APP.split("/")
+              sh "cf target -o ${gds_app[0]} -s ${gds_app[1]}"
               cf_manifest_exist = fileExists "${env.WORKSPACE}/manifest.yml"
               if (cf_manifest_exist) {
                 echo "INFO: Detected CF V2 manifest.yml"
@@ -194,9 +196,6 @@ pipeline {
               if (!cfignore_exist) {
                 sh "ln -snf ${env.WORKSPACE}/.gitignore ${env.WORKSPACE}/.cfignore"
               }
-
-              gds_app = config.PAAS_APP.split("/")
-              sh "cf target -o ${gds_app[0]} -s ${gds_app[1]}"
 
               sh "cf v3-create-app ${gds_app[2]}"
               space_guid = sh(script: "cf space ${gds_app[1]}  --guid", returnStdout: true).trim()
