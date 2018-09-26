@@ -19,7 +19,7 @@ ENV_FILE = "#{ENV['WORKSPACE']}/.ci/env.json"
 CONF_FILE = "#{ENV['WORKSPACE']}/.ci/config.json"
 
 def validate(schema, data)
-  return JSON::Validator.validate!(schema, data, {:validate_schema => true, :strict => true})
+  return JSON::Validator.validate!(schema, data, {:validate_schema => true, :strict => false})
 end
 
 def consul_add(path, data = nil)

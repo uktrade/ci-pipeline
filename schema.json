@@ -26,7 +26,7 @@
         "type": "object",
         "minProperties": 1,
         "additionalProperties": false,
-        "required": ["environment", "type", "app", "secrets", "run"],
+        "required": ["environment", "type", "app", "secrets", "vars", "run"],
         "properties": {
           "environment": {
             "description": "Target environment",
