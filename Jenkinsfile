@@ -149,9 +149,22 @@ pipeline {
         script {
           ansiColor('xterm') {
             deployer.inside {
+              withCredentials([string(credentialsId: env.GDS_PAAS_CONFIG, variable: 'paas_config_raw')]) {
+                paas_config = readJSON text: paas_config_raw
+              }
+              if (!config.PAAS_REGION) {
+                env.PAAS_REGION = paas_config.regions."${paas_config.default}"
+              } else {
+                env.PAAS_REGION = paas_config.regions."${config.PAAS_REGION}"
+              }
+
               gds_app = config.PAAS_APP.split("/")
-              withCredentials([usernamePassword(credentialsId: env.GDS_PAAS_CREDENTIAL, passwordVariable: 'gds_pass', usernameVariable: 'gds_user')]) {
-                sh "cf login -a ${env.GDS_PAAS} -u ${gds_user} -p ${gds_pass} -o ${gds_app[0]} -s ${gds_app[1]}"
+              withCredentials([usernamePassword(credentialsId: env.PAAS_REGION.credential, passwordVariable: 'gds_pass', usernameVariable: 'gds_user')]) {
+                sh """
+                  cf api ${env.PAAS_REGION.api}
+                  cf auth ${gds_user} ${gds_pass}
+                  cf target -o ${gds_app[0]} -s ${gds_app[1]}
+                """
               }
 
               cf_manifest_exist = fileExists "${env.WORKSPACE}/manifest.yml"
@@ -331,8 +344,12 @@ pipeline {
           script {
             ansiColor('xterm') {
               deployer.inside {
-                withCredentials([usernamePassword(credentialsId: env.GDS_PAAS_CREDENTIAL, passwordVariable: 'gds_pass', usernameVariable: 'gds_user')]) {
-                  sh "cf login -a ${env.GDS_PAAS} -u ${gds_user} -p ${gds_pass} -o ${gds_app[0]} -s ${gds_app[1]}"
+                withCredentials([usernamePassword(credentialsId: env.PAAS_REGION.credential, passwordVariable: 'gds_pass', usernameVariable: 'gds_user')]) {
+                  sh """
+                    cf api ${env.PAAS_REGION.api}
+                    cf auth ${gds_user} ${gds_pass}
+                    cf target -o ${gds_app[0]} -s ${gds_app[1]}
+                  """
                 }
                 echo "\u001B[32mINFO: Cleanup old app\u001B[m"
                 sh """
@@ -349,8 +366,12 @@ pipeline {
           script {
             ansiColor('xterm') {
               deployer.inside {
-                withCredentials([usernamePassword(credentialsId: env.GDS_PAAS_CREDENTIAL, passwordVariable: 'gds_pass', usernameVariable: 'gds_user')]) {
-                  sh "cf login -a ${env.GDS_PAAS} -u ${gds_user} -p ${gds_pass} -o ${gds_app[0]} -s ${gds_app[1]}"
+                withCredentials([usernamePassword(credentialsId: env.PAAS_REGION.credential, passwordVariable: 'gds_pass', usernameVariable: 'gds_user')]) {
+                  sh """
+                    cf api ${env.PAAS_REGION.api}
+                    cf auth ${gds_user} ${gds_pass}
+                    cf target -o ${gds_app[0]} -s ${gds_app[1]}
+                  """
                 }
                 echo "\u001B[31mWARNING: Rollback app\u001B[m"
                 sh """

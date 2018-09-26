@@ -41,6 +41,14 @@
             "description": "Destination app name",
             "type": "string"
           },
+          "region": {
+            "description": "PaaS region",
+            "type": "string",
+            "enum": ["eu-west-1", "eu-west-2"]
+          },
+          "private": {
+            "type": "boolean"
+          },
           "vars": {
             "type": "array",
             "items": {

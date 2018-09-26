@@ -126,6 +126,8 @@ def main(args)
       'PAAS_APP' => data['app'],
       'PAAS_ENVIRONMENT' => data['environment']
     }
+    conf_content.deep_merge!({'PAAS_REGION' => data['region']}) unless data['region'].empty?
+    conf_content.deep_merge!({'PAAS_PRIVATE' => data['private']}) unless data['private'].empty?
     conf_content.deep_merge!({'PAAS_RUN' => run}) unless data['run'].empty?
     conf_content.deep_merge!({'USE_NEXUS' => file_content['USE_NEXUS']}) if file_content.key?('USE_NEXUS')
     conf_content.deep_merge!({'NEXUS_PATH' => file_content['NEXUS_PATH']}) if file_content.key?('NEXUS_PATH')
