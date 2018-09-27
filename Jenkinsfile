@@ -205,6 +205,8 @@ pipeline {
               app_svc_json = sh(script: "cf curl '/v2/apps/${app_guid}/service_bindings' | jq '.resources[] | [.entity.service_instance_guid]' | jq -s add", returnStdout: true).trim()
               app_scale_json = sh(script: "cf curl '/v3/apps/${app_guid}/processes' | jq '.resources | del(.[].links)'", returnStdout: true).trim()
               app_scale = readJSON text: app_scale_json
+              app_network_policy_json = sh(script: "cf curl /networking/v1/external/policies | jq '.policies | select(.[].source.id==\"${app_guid}\") // select(.[].destination.id==\"${app_guid}\")'")
+              app_network_policy = readJSON text: app_network_policy_json
 
               new_app_name = gds_app[2] + "-" + env.Version
               echo "\u001B[32mINFO: Creating new app ${new_app_name}\u001B[m"
@@ -306,6 +308,13 @@ pipeline {
                   """
                 }
               }
+
+              echo "\u001B[32mINFO: Update network policy for app ${new_app_name}\u001B[m"
+              new_app_network_policy_json = sh(script: "echo ${app_network_policy_json} | sed -e 's/${app_guid}/${new_app_guid}/g'")
+              sh """
+                cf curl '/networking/v1/external/policies' -X POST -d '{"policies": ${new_app_network_policy_json}}'
+              """
+
 
               echo "\u001B[32mINFO: Start app ${new_app_name}\u001B[m"
               sh "cf v3-start ${new_app_name}"
