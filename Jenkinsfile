@@ -153,7 +153,7 @@ pipeline {
                 paas_config = readJSON text: paas_config_raw
               }
               if (!config.PAAS_REGION) {
-                config.PAAS_REGION = paas_config.regions."${paas_config.default}"
+                config.PAAS_REGION = paas_config.default
               }
               paas_region = paas_config.regions."${config.PAAS_REGION}"
               echo "\u001B[32mINFO: Setting PaaS region to ${paas_region.name}.\u001B[m"
