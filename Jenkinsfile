@@ -207,7 +207,6 @@ pipeline {
               app_scale = readJSON text: app_scale_json
               app_network_policy_json = sh(script: "cf curl /networking/v1/external/policies | jq -rc '.policies | select(.[].source.id==\"${app_guid}\") // select(.[].destination.id==\"${app_guid}\")'")
               app_network_policy = readJSON text: app_network_policy_json
-              writeFile file: "${env.WORKSPACE}/.ci/network_policy.json", text: app_network_policy_json
 
               new_app_name = gds_app[2] + "-" + env.Version
               echo "\u001B[32mINFO: Creating new app ${new_app_name}\u001B[m"
@@ -310,12 +309,15 @@ pipeline {
                 }
               }
 
-              echo "\u001B[32mINFO: Update network policy for app ${new_app_name}\u001B[m"
-              sh "sed -ie 's/${app_guid}/${new_app_guid}/g' ${env.WORKSPACE}/.ci/network_policy.json"
-              new_app_network_policy_json = readFile file: "${env.WORKSPACE}/.ci/network_policy.json"
-              sh """
-                cf curl '/networking/v1/external/policies' -X POST -d '{"policies": ${new_app_network_policy_json}}'
-              """
+              if (app_network_policy != 'null') {
+                echo "\u001B[32mINFO: Update network policy for app ${new_app_name}\u001B[m"
+                writeFile file: "${env.WORKSPACE}/.ci/network_policy.json", text: app_network_policy_json
+                sh "sed -ie 's/${app_guid}/${new_app_guid}/g' ${env.WORKSPACE}/.ci/network_policy.json"
+                new_app_network_policy_json = readFile file: "${env.WORKSPACE}/.ci/network_policy.json"
+                sh """
+                  cf curl '/networking/v1/external/policies' -X POST -d '{"policies": ${new_app_network_policy_json}}'
+                """
+              }
 
 
               echo "\u001B[32mINFO: Start app ${new_app_name}\u001B[m"
@@ -355,9 +357,9 @@ pipeline {
           script {
             ansiColor('xterm') {
               deployer.inside {
-                withCredentials([usernamePassword(credentialsId: env.PAAS_REGION.credential, passwordVariable: 'gds_pass', usernameVariable: 'gds_user')]) {
+                withCredentials([usernamePassword(credentialsId: paas_region.credential, passwordVariable: 'gds_pass', usernameVariable: 'gds_user')]) {
                   sh """
-                    cf api ${env.PAAS_REGION.api}
+                    cf api ${paas_region.api}
                     cf auth ${gds_user} ${gds_pass}
                   """
                 }
@@ -377,9 +379,9 @@ pipeline {
           script {
             ansiColor('xterm') {
               deployer.inside {
-                withCredentials([usernamePassword(credentialsId: env.PAAS_REGION.credential, passwordVariable: 'gds_pass', usernameVariable: 'gds_user')]) {
+                withCredentials([usernamePassword(credentialsId: paas_region.credential, passwordVariable: 'gds_pass', usernameVariable: 'gds_user')]) {
                   sh """
-                    cf api ${env.PAAS_REGION.api}
+                    cf api ${paas_region.api}
                     cf auth ${gds_user} ${gds_pass}
                   """
                 }
