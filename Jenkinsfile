@@ -153,14 +153,14 @@ pipeline {
                 paas_config = readJSON text: paas_config_raw
               }
               if (!config.PAAS_REGION) {
-                env.PAAS_REGION = paas_config.regions."${paas_config.default}"
-              } else {
-                env.PAAS_REGION = paas_config.regions."${config.PAAS_REGION}"
+                config.PAAS_REGION = paas_config.regions."${paas_config.default}"
               }
+              paas_region = paas_config.regions."${config.PAAS_REGION}"
+              echo "\u001B[32mINFO: Setting PaaS region to ${paas_region.name}.\u001B[m"
 
-              withCredentials([usernamePassword(credentialsId: env.PAAS_REGION.credential, passwordVariable: 'gds_pass', usernameVariable: 'gds_user')]) {
+              withCredentials([usernamePassword(credentialsId: paas_region.credential, passwordVariable: 'gds_pass', usernameVariable: 'gds_user')]) {
                 sh """
-                  cf api ${env.PAAS_REGION.api}
+                  cf api ${paas_region.api}
                   cf auth ${gds_user} ${gds_pass}
                 """
               }
