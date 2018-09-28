@@ -308,7 +308,7 @@ pipeline {
                 }
               }
 
-              if (app_network_policy_json != 'null') {
+              if (app_network_policy_json != null) {
                 echo "\u001B[32mINFO: Update network policy for app ${new_app_name}\u001B[m"
                 writeFile file: "${env.WORKSPACE}/.ci/network_policy.json", text: app_network_policy_json
                 sh "sed -ie 's/${app_guid}/${new_app_guid}/g' ${env.WORKSPACE}/.ci/network_policy.json"
