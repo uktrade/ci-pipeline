@@ -1,0 +1,15 @@
+{
+  "regions": {
+    "eu-west-1": {
+      "name": "Ireland",
+      "api": "https://api.eu-west-1",
+      "credential": "UUID"
+    },
+    "eu-west-2": {
+      "name": "London",
+      "api": "https://api.eu-west-2",
+      "credential": "UUID"
+    }
+  },
+  "default": "eu-west-1"
+}
