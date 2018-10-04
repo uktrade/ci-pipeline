@@ -19,7 +19,7 @@ ENV_FILE = "#{ENV['WORKSPACE']}/.ci/env.json"
 CONF_FILE = "#{ENV['WORKSPACE']}/.ci/config.json"
 
 def validate(schema, data)
-  return JSON::Validator.validate!(schema, data, {:validate_schema => true, :strict => true})
+  return JSON::Validator.validate!(schema, data, {:validate_schema => true, :strict => false})
 end
 
 def consul_add(path, data = nil)
@@ -126,12 +126,12 @@ def main(args)
       'PAAS_APP' => data['app'],
       'PAAS_ENVIRONMENT' => data['environment']
     }
+    conf_content.deep_merge!({'PAAS_REGION' => data['region']}) if data.key?('region')
     conf_content.deep_merge!({'PAAS_RUN' => run}) unless data['run'].empty?
     conf_content.deep_merge!({'USE_NEXUS' => file_content['USE_NEXUS']}) if file_content.key?('USE_NEXUS')
     conf_content.deep_merge!({'NEXUS_PATH' => file_content['NEXUS_PATH']}) if file_content.key?('NEXUS_PATH')
     conf_content.deep_merge!({'APP_PATH' => file_content['APP_PATH']}) if file_content.key?('APP_PATH')
     conf_content.deep_merge!({'JAVA_EXTENSION' => file_content['JAVA_EXTENSION']}) if file_content.key?('JAVA_EXTENSION')
-
 
     save_json(CONF_FILE, conf_content)
     save_json(ENV_FILE, file_content)

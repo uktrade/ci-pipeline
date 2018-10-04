@@ -1,5 +1,5 @@
 {
-  "$schema": "http://json-schema.org/draft-04/schema#",
+  "$schema": "http://json-schema.org/draft-06/schema#",
   "title": "Project",
   "description": "A DIT project pipeline definition",
   "type": "object",
@@ -26,7 +26,7 @@
         "type": "object",
         "minProperties": 1,
         "additionalProperties": false,
-        "required": ["environment", "type", "app", "secrets", "run"],
+        "required": ["environment", "type", "app", "secrets"],
         "properties": {
           "environment": {
             "description": "Target environment",
@@ -40,6 +40,11 @@
           "app": {
             "description": "Destination app name",
             "type": "string"
+          },
+          "region": {
+            "description": "PaaS region",
+            "type": "string",
+            "enum": ["eu-west-1", "eu-west-2"]
           },
           "vars": {
             "type": "array",

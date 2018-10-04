@@ -23,7 +23,7 @@ pipeline {
       steps {
         script {
           validateDeclarativePipeline("${env.WORKSPACE}/Jenkinsfile")
-          deployer = docker.image("ukti/deployer:${env.GIT_BRANCH.split("/")[1]}")
+          deployer = docker.image("quay.io/uktrade/deployer:${env.GIT_BRANCH.split("/")[1]}")
           deployer.pull()
           deployer.inside {
             checkout([$class: 'GitSCM', branches: [[name: env.GIT_BRANCH]], doGenerateSubmoduleConfigurations: false, extensions: [[$class: 'SubmoduleOption', disableSubmodules: false, parentCredentials: true, recursiveSubmodules: true, reference: '', trackingSubmodules: false]], submoduleCfg: [], userRemoteConfigs: [[credentialsId: env.SCM_CREDENTIAL, url: env.PIPELINE_SCM]]])
@@ -149,11 +149,24 @@ pipeline {
         script {
           ansiColor('xterm') {
             deployer.inside {
-              gds_app = config.PAAS_APP.split("/")
-              withCredentials([usernamePassword(credentialsId: env.GDS_PAAS_CREDENTIAL, passwordVariable: 'gds_pass', usernameVariable: 'gds_user')]) {
-                sh "cf login -a ${env.GDS_PAAS} -u ${gds_user} -p ${gds_pass} -o ${gds_app[0]} -s ${gds_app[1]}"
+              withCredentials([string(credentialsId: env.GDS_PAAS_CONFIG, variable: 'paas_config_raw')]) {
+                paas_config = readJSON text: paas_config_raw
+              }
+              if (!config.PAAS_REGION) {
+                config.PAAS_REGION = paas_config.default
+              }
+              paas_region = paas_config.regions."${config.PAAS_REGION}"
+              echo "\u001B[32mINFO: Setting PaaS region to ${paas_region.name}.\u001B[m"
+
+              withCredentials([usernamePassword(credentialsId: paas_region.credential, passwordVariable: 'gds_pass', usernameVariable: 'gds_user')]) {
+                sh """
+                  cf api ${paas_region.api}
+                  cf auth ${gds_user} ${gds_pass}
+                """
               }
 
+              gds_app = config.PAAS_APP.split("/")
+              sh "cf target -o ${gds_app[0]} -s ${gds_app[1]}"
               cf_manifest_exist = fileExists "${env.WORKSPACE}/manifest.yml"
               if (cf_manifest_exist) {
                 echo "INFO: Detected CF V2 manifest.yml"
@@ -192,6 +205,7 @@ pipeline {
               app_svc_json = sh(script: "cf curl '/v2/apps/${app_guid}/service_bindings' | jq '.resources[] | [.entity.service_instance_guid]' | jq -s add", returnStdout: true).trim()
               app_scale_json = sh(script: "cf curl '/v3/apps/${app_guid}/processes' | jq '.resources | del(.[].links)'", returnStdout: true).trim()
               app_scale = readJSON text: app_scale_json
+              app_network_policy_json = sh(script: "cf curl /networking/v1/external/policies | jq '.policies | select(.[].source.id==\"${app_guid}\") // select(.[].destination.id==\"${app_guid}\")'", returnStdout: true).trim()
 
               new_app_name = gds_app[2] + "-" + env.Version
               echo "\u001B[32mINFO: Creating new app ${new_app_name}\u001B[m"
@@ -294,6 +308,17 @@ pipeline {
                 }
               }
 
+              if (app_network_policy_json != '') {
+                echo "\u001B[32mINFO: Update network policy for app ${new_app_name}\u001B[m"
+                writeFile file: "${env.WORKSPACE}/.ci/network_policy.json", text: app_network_policy_json
+                sh "sed -ie 's/${app_guid}/${new_app_guid}/g' ${env.WORKSPACE}/.ci/network_policy.json"
+                new_app_network_policy_json = readFile file: "${env.WORKSPACE}/.ci/network_policy.json"
+                sh """
+                  cf curl '/networking/v1/external/policies' -X POST -d '{"policies": ${new_app_network_policy_json}}'
+                """
+              }
+
+
               echo "\u001B[32mINFO: Start app ${new_app_name}\u001B[m"
               sh "cf v3-start ${new_app_name}"
 
@@ -331,11 +356,15 @@ pipeline {
           script {
             ansiColor('xterm') {
               deployer.inside {
-                withCredentials([usernamePassword(credentialsId: env.GDS_PAAS_CREDENTIAL, passwordVariable: 'gds_pass', usernameVariable: 'gds_user')]) {
-                  sh "cf login -a ${env.GDS_PAAS} -u ${gds_user} -p ${gds_pass} -o ${gds_app[0]} -s ${gds_app[1]}"
+                withCredentials([usernamePassword(credentialsId: paas_region.credential, passwordVariable: 'gds_pass', usernameVariable: 'gds_user')]) {
+                  sh """
+                    cf api ${paas_region.api}
+                    cf auth ${gds_user} ${gds_pass}
+                  """
                 }
                 echo "\u001B[32mINFO: Cleanup old app\u001B[m"
                 sh """
+                  cf target -o ${gds_app[0]} -s ${gds_app[1]}
                   cf curl '/v3/apps/${app_guid}' -X PATCH -d '{"name": "${gds_app[2]}-delete"}' | jq -C 'del(.links, .relationships)'
                   cf curl '/v3/apps/${new_app_guid}' -X PATCH -d '{"name": "${gds_app[2]}"}' | jq -C 'del(.links, .relationships)'
                   cf curl '/v3/apps/${app_guid}' -X DELETE
@@ -349,11 +378,15 @@ pipeline {
           script {
             ansiColor('xterm') {
               deployer.inside {
-                withCredentials([usernamePassword(credentialsId: env.GDS_PAAS_CREDENTIAL, passwordVariable: 'gds_pass', usernameVariable: 'gds_user')]) {
-                  sh "cf login -a ${env.GDS_PAAS} -u ${gds_user} -p ${gds_pass} -o ${gds_app[0]} -s ${gds_app[1]}"
+                withCredentials([usernamePassword(credentialsId: paas_region.credential, passwordVariable: 'gds_pass', usernameVariable: 'gds_user')]) {
+                  sh """
+                    cf api ${paas_region.api}
+                    cf auth ${gds_user} ${gds_pass}
+                  """
                 }
                 echo "\u001B[31mWARNING: Rollback app\u001B[m"
                 sh """
+                  cf target -o ${gds_app[0]} -s ${gds_app[1]}
                   cf logs ${new_app_name} --recent || true
                   cf curl '/v3/apps/${new_app_guid}' -X DELETE || true
                 """
