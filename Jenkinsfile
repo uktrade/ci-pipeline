@@ -222,10 +222,10 @@ pipeline {
               new_app_guid = sh(script: "cf app ${new_app_name} --guid | perl -lne 'print \$& if /(\\{{0,1}([0-9a-fA-F]){8}-([0-9a-fA-F]){4}-([0-9a-fA-F]){4}-([0-9a-fA-F]){4}-([0-9a-fA-F]){12}\\}{0,1})/'", returnStdout: true).trim()
 
               echo "\u001B[32mINFO: Configuring new app ${new_app_name}\u001B[m"
-              if (env.PAAS_BUILDPACK) {
-                echo "\u001B[32mINFO: Setting buildpack to ${env.PAAS_BUILDPACK}\u001B[m"
+              if (buildpack_json.buildpacks.size() > 0) {
+                echo "\u001B[32mINFO: Setting buildpack to ${buildpack_json.buildpacks}\u001B[m"
                 sh """
-                  cf curl '/v3/apps/${new_app_guid}' -X PATCH -d '{"name": "${new_app_name}","lifecycle": {"type":"buildpack","data": ${env.PAAS_BUILDPACK.buildpacks}}}' | jq -C 'del(.links, .relationships)'
+                  cf curl '/v3/apps/${new_app_guid}' -X PATCH -d '{"name": "${new_app_name}","lifecycle": {"type":"buildpack","data": ${env.PAAS_BUILDPACK}}}' | jq -C 'del(.links, .relationships)'
                 """
               }
 
