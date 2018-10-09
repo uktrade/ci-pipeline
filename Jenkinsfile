@@ -179,7 +179,10 @@ pipeline {
                   if (cf_manifest.applications[0].buildpack[0].size() == 1) {
                     env.PAAS_BUILDPACK = readJSON text: """{"buildpacks": ["${cf_manifest.applications[0].buildpack}"]}"""
                   } else {
-                    env.PAAS_BUILDPACK = readJSON text:  """{"buildpacks": "${cf_manifest.applications[0].buildpack}"}"""
+                    env.PAAS_BUILDPACK = readJSON text:  """{"buildpacks": []}"""
+                    cf_manifest.applications[0].buildpack.eachWithIndex { build, index ->
+                      env.PAAS_BUILDPACK.buildpacks[index] = build
+                    }
                   }
                 }
                 if (cf_manifest.applications[0]."health-check-type") {
