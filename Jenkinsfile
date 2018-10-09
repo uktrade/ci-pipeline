@@ -177,13 +177,15 @@ pipeline {
                 if (cf_manifest.applications[0].buildpack) {
                   echo "\u001B[32mINFO: Setting application ${gds_app[2]} buildpack to ${cf_manifest.applications[0].buildpack}\u001B[m"
                   if (cf_manifest.applications[0].buildpack[0].size() == 1) {
-                    env.PAAS_BUILDPACK = readJSON text: """{"buildpacks": ["${cf_manifest.applications[0].buildpack}"]}"""
+                    buildpack_json = readJSON text: """{"buildpacks": ["${cf_manifest.applications[0].buildpack}"]}"""
                   } else {
-                    env.PAAS_BUILDPACK = readJSON text:  """{"buildpacks": []}"""
+                    buildpack_json = readJSON text:  """{"buildpacks": []}"""
                     cf_manifest.applications[0].buildpack.eachWithIndex { build, index ->
-                      env.PAAS_BUILDPACK.buildpacks[index] = build
+                      buildpack_json.buildpacks[index] = build
                     }
                   }
+                  writeJSON file: "${env.WORKSPACE}/.ci/buildpacks.json", json:buildpack_json
+                  env.PAAS_BUILDPACK = readFile file: "${env.WORKSPACE}/.ci/buildpacks.json"
                 }
                 if (cf_manifest.applications[0]."health-check-type") {
                   echo "\u001B[32mINFO: Setting application ${gds_app[2]} health-check-type to ${cf_manifest.applications[0].'health-check-type'}\u001B[m"
@@ -223,7 +225,7 @@ pipeline {
               if (env.PAAS_BUILDPACK) {
                 echo "\u001B[32mINFO: Setting buildpack to ${env.PAAS_BUILDPACK}\u001B[m"
                 sh """
-                  cf curl '/v3/apps/${new_app_guid}' -X PATCH -d '{"name": "${new_app_name}","lifecycle": {"type":"buildpack","data": {"buildpacks": ${env.PAAS_BUILDPACK.buildpacks}}}}' | jq -C 'del(.links, .relationships)'
+                  cf curl '/v3/apps/${new_app_guid}' -X PATCH -d '{"name": "${new_app_name}","lifecycle": {"type":"buildpack","data": ${env.PAAS_BUILDPACK.buildpacks}}}' | jq -C 'del(.links, .relationships)'
                 """
               }
 
