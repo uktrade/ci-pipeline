@@ -178,7 +178,7 @@ pipeline {
                 if (cf_manifest.applications[0].buildpack) {
                   echo "\u001B[32mINFO: Setting application ${gds_app[2]} buildpack to ${cf_manifest.applications[0].buildpack}\u001B[m"
                   if (cf_manifest.applications[0].buildpack[0].size() == 1) {
-                    buildpack_json = readJSON text: """{"buildpacks": ["${cf_manifest.applications[0].buildpack}"]}"""
+                    buildpack_json.buildpacks[0] = cf_manifest.applications[0].buildpack
                   } else {
                     cf_manifest.applications[0].buildpack.eachWithIndex { build, index ->
                       buildpack_json.buildpacks[index] = build
@@ -204,6 +204,7 @@ pipeline {
               if (!cfignore_exist) {
                 sh "ln -snf ${env.WORKSPACE}/.gitignore ${env.WORKSPACE}/.cfignore"
               }
+              sh "echo .ci/ >> ${env.WORKSPACE}/.cfignore"
 
               sh "cf v3-create-app ${gds_app[2]}"
               space_guid = sh(script: "cf space ${gds_app[1]}  --guid", returnStdout: true).trim()
@@ -222,8 +223,8 @@ pipeline {
 
               echo "\u001B[32mINFO: Configuring new app ${new_app_name}\u001B[m"
               if (buildpack_json.buildpacks.size() > 0) {
-                env.PAAS_BUILDPACK = readFile file: "${env.WORKSPACE}/.ci/buildpacks.json"
                 echo "\u001B[32mINFO: Setting buildpack to ${buildpack_json.buildpacks}\u001B[m"
+                env.PAAS_BUILDPACK = readFile file: "${env.WORKSPACE}/.ci/buildpacks.json"
                 sh """
                   cf curl '/v3/apps/${new_app_guid}' -X PATCH -d '{"name": "${new_app_name}","lifecycle": {"type":"buildpack","data": ${env.PAAS_BUILDPACK}}}' | jq -C 'del(.links, .relationships)'
                 """
