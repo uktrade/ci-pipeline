@@ -168,6 +168,7 @@ pipeline {
               gds_app = config.PAAS_APP.split("/")
               sh "cf target -o ${gds_app[0]} -s ${gds_app[1]}"
               cf_manifest_exist = fileExists "${env.WORKSPACE}/manifest.yml"
+              buildpack_json = readJSON text:  """{"buildpacks": []}"""
               if (cf_manifest_exist) {
                 echo "INFO: Detected CF V2 manifest.yml"
                 cf_manifest = readYaml file: "${env.WORKSPACE}/manifest.yml"
@@ -179,13 +180,11 @@ pipeline {
                   if (cf_manifest.applications[0].buildpack[0].size() == 1) {
                     buildpack_json = readJSON text: """{"buildpacks": ["${cf_manifest.applications[0].buildpack}"]}"""
                   } else {
-                    buildpack_json = readJSON text:  """{"buildpacks": []}"""
                     cf_manifest.applications[0].buildpack.eachWithIndex { build, index ->
                       buildpack_json.buildpacks[index] = build
                     }
                   }
                   writeJSON file: "${env.WORKSPACE}/.ci/buildpacks.json", json:buildpack_json
-                  env.PAAS_BUILDPACK = readFile file: "${env.WORKSPACE}/.ci/buildpacks.json"
                 }
                 if (cf_manifest.applications[0]."health-check-type") {
                   echo "\u001B[32mINFO: Setting application ${gds_app[2]} health-check-type to ${cf_manifest.applications[0].'health-check-type'}\u001B[m"
@@ -223,6 +222,7 @@ pipeline {
 
               echo "\u001B[32mINFO: Configuring new app ${new_app_name}\u001B[m"
               if (buildpack_json.buildpacks.size() > 0) {
+                env.PAAS_BUILDPACK = readFile file: "${env.WORKSPACE}/.ci/buildpacks.json"
                 echo "\u001B[32mINFO: Setting buildpack to ${buildpack_json.buildpacks}\u001B[m"
                 sh """
                   cf curl '/v3/apps/${new_app_guid}' -X PATCH -d '{"name": "${new_app_name}","lifecycle": {"type":"buildpack","data": ${env.PAAS_BUILDPACK}}}' | jq -C 'del(.links, .relationships)'
