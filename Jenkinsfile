@@ -171,12 +171,16 @@ pipeline {
               if (cf_manifest_exist) {
                 echo "INFO: Detected CF V2 manifest.yml"
                 cf_manifest = readYaml file: "${env.WORKSPACE}/manifest.yml"
-                if (cf_manifest.applications.size() != 1 || cf_manifest.applications[0].size() > 3) {
+                if (cf_manifest.applications.size() != 1 || cf_manifest.applications[0].size() > 4) {
                   echo "\u001B[31mWARNING: Only 'buildpack', 'health-check-type' and 'health-check-http-endpoint' attributes are supported in CF V2 manifest.yml.\u001B[m"
                 }
                 if (cf_manifest.applications[0].buildpack) {
                   echo "\u001B[32mINFO: Setting application ${gds_app[2]} buildpack to ${cf_manifest.applications[0].buildpack}\u001B[m"
-                  env.PAAS_BUILDPACK = cf_manifest.applications[0].buildpack
+                  if (cf_manifest.applications[0].buildpack[0].size() == 1) {
+                    env.PAAS_BUILDPACK = readJSON text: """{"buildpacks": ["${cf_manifest.applications[0].buildpack}"]}"""
+                  } else {
+                    env.PAAS_BUILDPACK = readJSON text:  """{"buildpacks": "${cf_manifest.applications[0].buildpack}"}"""
+                  }
                 }
                 if (cf_manifest.applications[0]."health-check-type") {
                   echo "\u001B[32mINFO: Setting application ${gds_app[2]} health-check-type to ${cf_manifest.applications[0].'health-check-type'}\u001B[m"
@@ -216,7 +220,7 @@ pipeline {
               if (env.PAAS_BUILDPACK) {
                 echo "\u001B[32mINFO: Setting buildpack to ${env.PAAS_BUILDPACK}\u001B[m"
                 sh """
-                  cf curl '/v3/apps/${new_app_guid}' -X PATCH -d '{"name": "${new_app_name}","lifecycle": {"type":"buildpack","data": {"buildpacks": ["${env.PAAS_BUILDPACK}"]}}}' | jq -C 'del(.links, .relationships)'
+                  cf curl '/v3/apps/${new_app_guid}' -X PATCH -d '{"name": "${new_app_name}","lifecycle": {"type":"buildpack","data": {"buildpacks": ${env.PAAS_BUILDPACK.buildpacks}}}}' | jq -C 'del(.links, .relationships)'
                 """
               }
 
