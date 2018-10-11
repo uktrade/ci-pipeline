@@ -91,7 +91,7 @@ pipeline {
             envars = readJSON file: "${env.WORKSPACE}/.ci/env.json"
             config = readJSON file: "${env.WORKSPACE}/.ci/config.json"
             sh "mv oc-pipeline.yml ${env.WORKSPACE}/.ci/"
-            sh "rm -rf config config\@*"
+            sh "rm -rf config config@*"
           }
         }
       }
