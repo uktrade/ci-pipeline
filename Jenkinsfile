@@ -204,7 +204,11 @@ pipeline {
               if (!cfignore_exist) {
                 sh "ln -snf ${env.WORKSPACE}/.gitignore ${env.WORKSPACE}/.cfignore"
               }
-              sh "echo .ci/ >> ${env.WORKSPACE}/.cfignore"
+              sh """
+                echo .ci/ >> ${env.WORKSPACE}/.cfignore
+                echo .config/ >> ${env.WORKSPACE}/.cfignore
+                echo .config@* >> ${env.WORKSPACE}/.cfignore
+              """
 
               sh "cf v3-create-app ${gds_app[2]}"
               space_guid = sh(script: "cf space ${gds_app[1]}  --guid", returnStdout: true).trim()
