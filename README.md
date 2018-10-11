@@ -70,7 +70,7 @@ Since CloudFoundry API V3 has removed support for `manifest.yml`, however the pi
 
 #### Regions
 
-GOV.UK PaaS now offers both Ireland (eu-west-1) and London (eu-west-2) regions, to specify your region,
+GOV.UK PaaS now offers both Ireland (`eu-west-1`) and London (`eu-west-2`) regions, to specify your region,
 
 `manifest.yml`:
 ```
@@ -88,7 +88,7 @@ environments:
     secrets: true # True to pull secrets stored in Vault
     run: []
 ```
-__Note__: The default region is eu-west-1 if `region` is not specified.
+__Note__: The default region is `eu-west-1` if `region` is not specified.
 
 #### Buildpack
 
