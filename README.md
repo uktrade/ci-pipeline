@@ -49,6 +49,7 @@ The pipeline allows users to run commands to before deploying, for some project 
 * __Python__: using `pyenv` with `.python-version` in your project.
 * __Nodejs__: using `nvm` with `.nvmrc` in your project.
 * __Ruby__: using `rvm` with `.ruby-version` in your project.
+* __JAVA__: using `jabba` with `.jabbarc` in your project.
 
 
 ## Supported PaaS
@@ -67,6 +68,28 @@ GOV.UK PaaS is CloudFoundry based PaaS.
 Since CloudFoundry API V3 has removed support for `manifest.yml`, however the pipeline has inherited some functionalities.
 
 
+#### Regions
+
+GOV.UK PaaS now offers both Ireland (eu-west-1) and London (eu-west-2) regions, to specify your region,
+
+`manifest.yml`:
+```
+---
+name: sandbox
+namespace: shared
+scm: git@github.com:uktrade/cf-sample-app-nodejs.git
+environments:
+  - environment: dev
+    type: gds
+    # PaaS specific path where app deployed to
+    app: dit-staging/sandbox/cf-nodejs
+    region: eu-west-2
+    vars: []
+    secrets: true # True to pull secrets stored in Vault
+    run: []
+```
+__Note__: The default region is eu-west-1 if `region` is not specified.
+
 #### Buildpack
 
 App can specify different buildpack other than PaaS natively installed buildpacks.
@@ -75,16 +98,10 @@ App can specify different buildpack other than PaaS natively installed buildpack
 
 `manifest.yml`:
 ```
----
 applications:
-  - buildpack: https://github.com/cloudfoundry/multi-buildpack.git#v1.0.2
-```
-
-In your application root, `multi-buildpack.yml`:
-```
-buildpacks:
-- https://github.com/cloudfoundry/apt-buildpack.git
-- https://github.com/cloudfoundry/python-buildpack.git
+  - buildpack:
+    - https://github.com/cloudfoundry/apt-buildpack.git
+    - https://github.com/cloudfoundry/python-buildpack.git
 ```
 
 #### Health Check
