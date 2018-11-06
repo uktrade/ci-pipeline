@@ -1,8 +1,8 @@
 FROM ubuntu:16.04
 
-ENV CF_CLI_VER 6.40.0
+ENV CF_CLI_VER 6.40.1
 ENV NVM_VER=v0.33.11 \
-    JABBA_VER=0.10.1 \
+    JABBA_VER=0.11.0 \
     OC_REL=v3.7.0 \
     OC_BUILD=7ed6862
 
