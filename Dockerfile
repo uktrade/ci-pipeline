@@ -1,4 +1,4 @@
-FROM ubuntu:16.04
+FROM ubuntu:18.04
 
 ENV CF_CLI_VER 6.40.1
 ENV NVM_VER=v0.33.11 \
