@@ -9,6 +9,9 @@ ENV NVM_VER=v0.33.11 \
 RUN groupadd -g 1000 ubuntu && \
     useradd -u 1000 -g 1000 -m -s /bin/bash ubuntu
 
+RUN wget -q https://www.postgresql.org/media/keys/ACCC4CF8.asc -O- | sudo apt-key add - && \
+    echo "deb http://apt.postgresql.org/pub/repos/apt/ bionic-pgdg main" | sudo tee /etc/apt/sources.list.d/postgresql.list
+
 RUN echo "force-unsafe-io" > /etc/dpkg/dpkg.cfg.d/02apt-speedup && \
     apt-get update && \
     DEBIAN_FRONTEND=noninteractive apt-get install -y curl wget git apt-transport-https ca-certificates software-properties-common build-essential libpq-dev libssl-dev zlib1g-dev libbz2-dev libreadline-dev libsqlite3-dev llvm libncurses5-dev libncursesw5-dev xz-utils tk-dev postgresql-client && \
