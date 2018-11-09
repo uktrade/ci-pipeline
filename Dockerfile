@@ -1,4 +1,4 @@
-FROM ubuntu:16.04
+FROM ubuntu:18.04
 
 ENV CF_CLI_VER 6.40.1
 ENV NVM_VER=v0.33.11 \
@@ -11,7 +11,7 @@ RUN groupadd -g 1000 ubuntu && \
 
 RUN echo "force-unsafe-io" > /etc/dpkg/dpkg.cfg.d/02apt-speedup && \
     apt-get update && \
-    apt-get install -y curl wget git apt-transport-https ca-certificates software-properties-common build-essential libpq-dev libssl-dev zlib1g-dev libbz2-dev libreadline-dev libsqlite3-dev llvm libncurses5-dev libncursesw5-dev xz-utils tk-dev postgresql-client && \
+    DEBIAN_FRONTEND=noninteractive apt-get install -y curl wget git apt-transport-https ca-certificates gnupg2 software-properties-common build-essential libpq-dev libssl-dev zlib1g-dev libbz2-dev libreadline-dev libsqlite3-dev llvm libncurses5-dev libncursesw5-dev xz-utils tk-dev postgresql-client && \
     rm -rf /var/lib/apt/lists/*
 
 RUN apt-get update && \
@@ -37,7 +37,7 @@ ENV HOME /home/ubuntu
 RUN curl -Lfs https://github.com/shyiko/jabba/raw/$JABBA_VER/install.sh | bash && \
     curl -Lfs https://github.com/pyenv/pyenv-installer/raw/master/bin/pyenv-installer | bash && \
     curl -Lfs https://github.com/creationix/nvm/raw/$NVM_VER/install.sh | bash && \
-    gpg --keyserver hkp://keys.gnupg.net --recv-keys 409B6B1796C275462A1703113804BB82D39DC0E3 7D2BAF1CF37B13E2069D6956105BD0E739499BDB && \
+    gpg2 --keyserver hkp://keys.gnupg.net --recv-keys 409B6B1796C275462A1703113804BB82D39DC0E3 7D2BAF1CF37B13E2069D6956105BD0E739499BDB && \
     curl -Lfs https://get.rvm.io | bash && \
     bash -c "source ~/.rvm/scripts/rvm && rvm autolibs disable" && \
     echo 'export PATH="$HOME/.pyenv/bin:$PATH"' >> ~/.profile && \
