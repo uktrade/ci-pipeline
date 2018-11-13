@@ -325,7 +325,7 @@ pipeline {
                 sh "sed -ie 's/${app_guid}/${new_app_guid}/g' ${env.WORKSPACE}/.ci/network_policy.json"
                 new_app_network_policy_json = readFile file: "${env.WORKSPACE}/.ci/network_policy.json"
                 sh """
-                  cf curl '/networking/v1/external/policies' -X POST -d '{"policies": ${new_app_network_policy_json}}'
+                  cf curl '/networking/v1/external/policies' -X POST -d '${new_app_network_policy_json}'
                 """
               }
 
