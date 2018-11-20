@@ -90,7 +90,6 @@ pipeline {
             }
             envars = readJSON file: "${env.WORKSPACE}/.ci/env.json"
             config = readJSON file: "${env.WORKSPACE}/.ci/config.json"
-            sh "mv oc-pipeline.yml ${env.WORKSPACE}/.ci/"
             sh "rm -rf config config@*"
           }
         }
@@ -435,55 +434,6 @@ pipeline {
                   aws s3api put-bucket-website --bucket ${config.PAAS_APP} --website-configuration file://${env.WORKSPACE}/${envars.S3_WEBSITE_REDIRECT}
                 fi
               """
-            }
-          }
-        }
-      }
-    }
-
-    stage('Deploy OpenShift') {
-      when {
-        expression {
-          config.PAAS_TYPE == 'openshift'
-        }
-      }
-      steps {
-        script {
-          ansiColor('xterm') {
-            deployer.inside {
-              withCredentials([string(credentialsId: env.OC_TOKEN_ID, variable: 'OC_TOKEN')]) {
-                oc_app = config.PAAS_APP.split("/")
-                sh """
-                  oc login https://dashboard.${oc_app[0]} --insecure-skip-tls-verify=true --token=${OC_TOKEN}
-                  oc project ${oc_app[1]}
-                """
-
-                withCredentials([sshUserPrivateKey(credentialsId: env.SCM_CREDENTIAL, keyFileVariable: 'GIT_SSH_KEY', passphraseVariable: '', usernameVariable: '')]) {
-                  SSH_KEY = readFile GIT_SSH_KEY
-                }
-
-                SSH_KEY_ENCODED = sh(script: "set +x && echo '${SSH_KEY}' | base64 -w 0", returnStdout: true).trim()
-                sh """
-                  set +x
-                  oc process -f ${env.WORKSPACE}/.ci/oc-pipeline.yml \
-                    --param APP_ID=${oc_app[2]} \
-                    --param NAMESPACE=${oc_app[1]} \
-                    --param SCM=${config.SCM} \
-                    --param DOMAIN=apps.${oc_app[0]} \
-                    --param GIT_SSH_KEY=${SSH_KEY_ENCODED} \
-                    | oc apply -f -
-                """
-                sh "oc secrets add serviceaccount/builder secrets/${oc_app[2]}"
-
-                envars.each { key, value ->
-                  sh """
-                    set +x
-                    oc set env dc/${oc_app[2]} ${input.bash_escape(key)}=${input.bash_escape(value)}
-                  """
-                }
-
-                sh "oc start-build ${oc_app[2]} --commit=${env.Version} --follow"
-              }
             }
           }
         }

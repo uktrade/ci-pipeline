@@ -2,9 +2,7 @@ FROM ubuntu:18.04
 
 ENV CF_CLI_VER 6.40.1
 ENV NVM_VER=v0.33.11 \
-    JABBA_VER=0.11.0 \
-    OC_REL=v3.7.0 \
-    OC_BUILD=7ed6862
+    JABBA_VER=0.11.0
 
 RUN groupadd -g 1000 ubuntu && \
     useradd -u 1000 -g 1000 -m -s /bin/bash ubuntu
@@ -18,8 +16,7 @@ RUN apt-get update && \
     apt-get install -y python3 python3-pip ruby-full rubygems bundler gettext jq && \
     rm -rf /var/lib/apt/lists/*
 
-RUN curl -Lfs "https://github.com/openshift/origin/releases/download/$OC_REL/openshift-origin-client-tools-$OC_REL-$OC_BUILD-linux-64bit.tar.gz" | tar -xzf - -C /usr/local/bin --strip 1 --wildcards */oc && \
-    pip3 install --upgrade awscli virtualenv && \
+RUN pip3 install --upgrade awscli virtualenv && \
     curl -Lfs https://cli-assets.heroku.com/install-ubuntu.sh | bash && \
     curl -Lfs https://packages.cloudfoundry.org/debian/cli.cloudfoundry.org.key | apt-key add - && \
     echo "deb https://packages.cloudfoundry.org/debian stable main" > /etc/apt/sources.list.d/cloudfoundry-cli.list && \
