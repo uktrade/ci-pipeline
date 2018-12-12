@@ -132,7 +132,7 @@ pipeline {
               dot_docker = fileExists "${env.WORKSPACE}/.docker"
               if (dot_docker) {
                 env.DOCKER_DEPLOY_IMAGE = readFile "${env.WORKSPACE}/.docker"
-                echo "\u001B[32mINFO: Detected Docker deployement ${DOCKER_DEPLOY_IMAGE}\u001B[m"
+                echo "\u001B[32mINFO: Detected Docker deployement ${env.DOCKER_DEPLOY_IMAGE}\u001B[m"
               }
 
               if (config.PAAS_RUN) {
