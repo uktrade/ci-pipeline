@@ -129,6 +129,12 @@ pipeline {
                 sh "bash -l -c 'jabba install ${java_ver.trim()}'"
               }
 
+              dot_docker = fileExists "${env.WORKSPACE}/.docker"
+              if (dot_docker) {
+                env.DOCKER_DEPLOY_IMAGE = readFile "${env.WORKSPACE}/.docker"
+                echo "\u001B[32mINFO: Detected Docker deployement ${docker_image}\u001B[m"
+              }
+
               if (config.PAAS_RUN) {
                 sh "bash -l -c \"${config.PAAS_RUN}\""
               }
@@ -258,10 +264,14 @@ pipeline {
                 config.APP_PATH = "${env.Project}-${env.Version}.${config.JAVA_EXTENSION.toLowerCase()}".toString()
               }
 
-              if (config.APP_PATH) {
-                package_guid = sh(script: "cf v3-create-package ${new_app_name} -p ${config.APP_PATH} | perl -lne 'print \$& if /(\\{{0,1}([0-9a-fA-F]){8}-([0-9a-fA-F]){4}-([0-9a-fA-F]){4}-([0-9a-fA-F]){4}-([0-9a-fA-F]){12}\\}{0,1})/'", returnStdout: true).trim()
+              if (env.DOCKER_DEPLOY_IMAGE) {
+                package_guid = sh(script: "cf v3-create-package ${new_app_name} --docker-image ${env.DOCKER_DEPLOY_IMAGE} | perl -lne 'print \$& if /(\\{{0,1}([0-9a-fA-F]){8}-([0-9a-fA-F]){4}-([0-9a-fA-F]){4}-([0-9a-fA-F]){4}-([0-9a-fA-F]){12}\\}{0,1})/'", returnStdout: true).trim()
               } else {
-                package_guid = sh(script: "cf v3-create-package ${new_app_name} | perl -lne 'print \$& if /(\\{{0,1}([0-9a-fA-F]){8}-([0-9a-fA-F]){4}-([0-9a-fA-F]){4}-([0-9a-fA-F]){4}-([0-9a-fA-F]){12}\\}{0,1})/'", returnStdout: true).trim()
+                if (config.APP_PATH) {
+                  package_guid = sh(script: "cf v3-create-package ${new_app_name} -p ${config.APP_PATH} | perl -lne 'print \$& if /(\\{{0,1}([0-9a-fA-F]){8}-([0-9a-fA-F]){4}-([0-9a-fA-F]){4}-([0-9a-fA-F]){4}-([0-9a-fA-F]){12}\\}{0,1})/'", returnStdout: true).trim()
+                } else {
+                  package_guid = sh(script: "cf v3-create-package ${new_app_name} | perl -lne 'print \$& if /(\\{{0,1}([0-9a-fA-F]){8}-([0-9a-fA-F]){4}-([0-9a-fA-F]){4}-([0-9a-fA-F]){4}-([0-9a-fA-F]){12}\\}{0,1})/'", returnStdout: true).trim()
+                }
               }
 
               echo "\u001B[32mINFO: Creating app ${new_app_name} release\u001B[m"
@@ -328,7 +338,6 @@ pipeline {
                   cf curl '/networking/v1/external/policies' -X POST -d '${new_app_network_policy_json}'
                 """
               }
-
 
               echo "\u001B[32mINFO: Start app ${new_app_name}\u001B[m"
               sh "cf v3-start ${new_app_name}"
