@@ -225,7 +225,13 @@ pipeline {
 
               new_app_name = gds_app[2] + "-" + env.Version
               echo "\u001B[32mINFO: Creating new app ${new_app_name}\u001B[m"
-              sh "cf v3-create-app ${new_app_name}"
+              if (env.DOCKER_DEPLOY_IMAGE) {
+                sh """
+                  cf curl '/v3/apps' -X POST -d '{"lifecycle":{"data":{},"type":"docker"},"name":"${new_app_name}","relationships":{"space":{"data":{"guid":"${space_guid}"}}}}'
+                """
+              } else {
+                sh "cf v3-create-app ${new_app_name}"
+              }
               new_app_guid = sh(script: "cf app ${new_app_name} --guid | perl -lne 'print \$& if /(\\{{0,1}([0-9a-fA-F]){8}-([0-9a-fA-F]){4}-([0-9a-fA-F]){4}-([0-9a-fA-F]){4}-([0-9a-fA-F]){12}\\}{0,1})/'", returnStdout: true).trim()
 
               echo "\u001B[32mINFO: Configuring new app ${new_app_name}\u001B[m"
@@ -277,7 +283,7 @@ pipeline {
               echo "\u001B[32mINFO: Creating app ${new_app_name} release\u001B[m"
               if (env.DOCKER_DEPLOY_IMAGE) {
                 sh """
-                  cf curl '/v3/builds' -X POST -d '{"package":{"guid":"${package_guid}"},"lifecycle":{"type": "docker","data": {}}}'
+                  cf curl '/v3/builds' -X POST -d '{"package":{"guid":"${package_guid}"}}'
                 """
                 try {
                   timeout(time: 300, unit: 'SECONDS') {
