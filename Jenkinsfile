@@ -227,7 +227,7 @@ pipeline {
               echo "\u001B[32mINFO: Creating new app ${new_app_name}\u001B[m"
               if (env.DOCKER_DEPLOY_IMAGE) {
                 sh """
-                  cf curl '/v3/apps' -X POST -d '{"lifecycle":{"data":{},"type":"docker"},"name":"${new_app_name}","relationships":{"space":{"data":{"guid":"${space_guid}"}}}}'
+                  cf curl '/v3/apps' -X POST -d '{"lifecycle":{"data":{},"type":"docker"},"name":"${new_app_name}","relationships":{"space":{"data":{"guid":"${space_guid}"}}}}' | jq -C 'del(.links, .relationships)'
                 """
               } else {
                 sh "cf v3-create-app ${new_app_name}"
@@ -292,6 +292,7 @@ pipeline {
                       sleep 10
                     }
                     release_guid = sh(script: "cf curl '/v3/builds?app_guids=${new_app_guid}&states=STAGED' | jq -r '.resources[].droplet.guid'", returnStdout: true).trim()
+                    sh "cf v3-set-droplet ${new_app_name} --droplet-guid ${release_guid}"
                   }
                 } catch (err) {
                   error "Failed to stage Docker image ${env.DOCKER_DEPLOY_IMAGE}."
@@ -299,8 +300,8 @@ pipeline {
               } else {
                 sh "cf v3-stage ${new_app_name} --package-guid ${package_guid}"
                 release_guid = sh(script: "cf curl '/v3/apps/${new_app_guid}/droplets' | jq -r '.resources[] | select(.links.package.href | test(\"${package_guid}\")==true) | .guid'", returnStdout: true).trim()
+                sh "cf v3-set-droplet ${new_app_name} --droplet-guid ${release_guid}"
               }
-              sh "cf v3-set-droplet ${new_app_name} --droplet-guid ${release_guid}"
 
               echo "\u001B[32mINFO: Configuring health check for app ${new_app_name}\u001B[m"
               if (!env.PAAS_TIMEOUT) {
