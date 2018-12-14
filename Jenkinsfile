@@ -129,12 +129,6 @@ pipeline {
                 sh "bash -l -c 'jabba install ${java_ver.trim()}'"
               }
 
-              dot_docker = fileExists "${env.WORKSPACE}/.docker"
-              if (dot_docker) {
-                env.DOCKER_DEPLOY_IMAGE = readFile "${env.WORKSPACE}/.docker"
-                echo "\u001B[32mINFO: Detected Docker deployement ${env.DOCKER_DEPLOY_IMAGE}\u001B[m"
-              }
-
               if (config.PAAS_RUN) {
                 sh "bash -l -c \"${config.PAAS_RUN}\""
               }
@@ -203,6 +197,10 @@ pipeline {
                 if (cf_manifest.applications[0]."timeout") {
                   echo "\u001B[32mINFO: Setting application ${gds_app[2]} timeout to ${cf_manifest.applications[0].'timeout'}\u001B[m"
                   env.PAAS_TIMEOUT = cf_manifest.applications[0]."timeout"
+                }
+                if (cf_manifest.applications[0]."docker") {
+                  echo "\u001B[32mINFO: Detected Docker deployement ${env.DOCKER_DEPLOY_IMAGE}\u001B[m"
+                  env.DOCKER_DEPLOY_IMAGE = cf_manifest.applications[0]."docker"
                 }
               }
 
