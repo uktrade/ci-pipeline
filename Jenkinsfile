@@ -198,6 +198,10 @@ pipeline {
                   echo "\u001B[32mINFO: Setting application ${gds_app[2]} timeout to ${cf_manifest.applications[0].'timeout'}\u001B[m"
                   env.PAAS_TIMEOUT = cf_manifest.applications[0]."timeout"
                 }
+                if (cf_manifest.applications[0]."docker") {
+                  echo "\u001B[32mINFO: Detected Docker deployement ${env.DOCKER_DEPLOY_IMAGE}\u001B[m"
+                  env.DOCKER_DEPLOY_IMAGE = cf_manifest.applications[0]."docker"
+                }
               }
 
               cfignore_exist = fileExists "${env.WORKSPACE}/.cfignore"
@@ -219,7 +223,13 @@ pipeline {
 
               new_app_name = gds_app[2] + "-" + env.Version
               echo "\u001B[32mINFO: Creating new app ${new_app_name}\u001B[m"
-              sh "cf v3-create-app ${new_app_name}"
+              if (env.DOCKER_DEPLOY_IMAGE) {
+                sh """
+                  cf curl '/v3/apps' -X POST -d '{"lifecycle":{"data":{},"type":"docker"},"name":"${new_app_name}","relationships":{"space":{"data":{"guid":"${space_guid}"}}}}' | jq -C 'del(.links, .relationships)'
+                """
+              } else {
+                sh "cf v3-create-app ${new_app_name}"
+              }
               new_app_guid = sh(script: "cf app ${new_app_name} --guid | perl -lne 'print \$& if /(\\{{0,1}([0-9a-fA-F]){8}-([0-9a-fA-F]){4}-([0-9a-fA-F]){4}-([0-9a-fA-F]){4}-([0-9a-fA-F]){12}\\}{0,1})/'", returnStdout: true).trim()
 
               echo "\u001B[32mINFO: Configuring new app ${new_app_name}\u001B[m"
@@ -258,16 +268,38 @@ pipeline {
                 config.APP_PATH = "${env.Project}-${env.Version}.${config.JAVA_EXTENSION.toLowerCase()}".toString()
               }
 
-              if (config.APP_PATH) {
-                package_guid = sh(script: "cf v3-create-package ${new_app_name} -p ${config.APP_PATH} | perl -lne 'print \$& if /(\\{{0,1}([0-9a-fA-F]){8}-([0-9a-fA-F]){4}-([0-9a-fA-F]){4}-([0-9a-fA-F]){4}-([0-9a-fA-F]){12}\\}{0,1})/'", returnStdout: true).trim()
+              if (env.DOCKER_DEPLOY_IMAGE) {
+                package_guid = sh(script: "cf v3-create-package ${new_app_name} --docker-image ${env.DOCKER_DEPLOY_IMAGE.trim()} | perl -lne 'print \$& if /(\\{{0,1}([0-9a-fA-F]){8}-([0-9a-fA-F]){4}-([0-9a-fA-F]){4}-([0-9a-fA-F]){4}-([0-9a-fA-F]){12}\\}{0,1})/'", returnStdout: true).trim()
               } else {
-                package_guid = sh(script: "cf v3-create-package ${new_app_name} | perl -lne 'print \$& if /(\\{{0,1}([0-9a-fA-F]){8}-([0-9a-fA-F]){4}-([0-9a-fA-F]){4}-([0-9a-fA-F]){4}-([0-9a-fA-F]){12}\\}{0,1})/'", returnStdout: true).trim()
+                if (config.APP_PATH) {
+                  package_guid = sh(script: "cf v3-create-package ${new_app_name} -p ${config.APP_PATH} | perl -lne 'print \$& if /(\\{{0,1}([0-9a-fA-F]){8}-([0-9a-fA-F]){4}-([0-9a-fA-F]){4}-([0-9a-fA-F]){4}-([0-9a-fA-F]){12}\\}{0,1})/'", returnStdout: true).trim()
+                } else {
+                  package_guid = sh(script: "cf v3-create-package ${new_app_name} | perl -lne 'print \$& if /(\\{{0,1}([0-9a-fA-F]){8}-([0-9a-fA-F]){4}-([0-9a-fA-F]){4}-([0-9a-fA-F]){4}-([0-9a-fA-F]){12}\\}{0,1})/'", returnStdout: true).trim()
+                }
               }
 
               echo "\u001B[32mINFO: Creating app ${new_app_name} release\u001B[m"
-              sh "cf v3-stage ${new_app_name} --package-guid ${package_guid}"
-              release_guid = sh(script: "cf curl '/v3/apps/${new_app_guid}/droplets' | jq -r '.resources[] | select(.links.package.href | test(\"${package_guid}\")==true) | .guid'", returnStdout: true).trim()
-              sh "cf v3-set-droplet ${new_app_name} --droplet-guid ${release_guid}"
+              if (env.DOCKER_DEPLOY_IMAGE) {
+                sh """
+                  cf curl '/v3/builds' -X POST -d '{"package":{"guid":"${package_guid}"}}'
+                """
+                try {
+                  timeout(time: 300, unit: 'SECONDS') {
+                    docker_builds_count = sh(script: "cf curl '/v3/builds?app_guids=${new_app_guid}&states=STAGED' | jq '.resources | length'", returnStdout: true).trim()
+                    while (docker_builds_count == 0) {
+                      sleep 10
+                    }
+                    release_guid = sh(script: "cf curl '/v3/builds?app_guids=${new_app_guid}&states=STAGED' | jq -r '.resources[].droplet.guid'", returnStdout: true).trim()
+                    sh "cf v3-set-droplet ${new_app_name} --droplet-guid ${release_guid}"
+                  }
+                } catch (err) {
+                  error "Failed to stage Docker image ${env.DOCKER_DEPLOY_IMAGE}."
+                }
+              } else {
+                sh "cf v3-stage ${new_app_name} --package-guid ${package_guid}"
+                release_guid = sh(script: "cf curl '/v3/apps/${new_app_guid}/droplets' | jq -r '.resources[] | select(.links.package.href | test(\"${package_guid}\")==true) | .guid'", returnStdout: true).trim()
+                sh "cf v3-set-droplet ${new_app_name} --droplet-guid ${release_guid}"
+              }
 
               echo "\u001B[32mINFO: Configuring health check for app ${new_app_name}\u001B[m"
               if (!env.PAAS_TIMEOUT) {
@@ -328,7 +360,6 @@ pipeline {
                   cf curl '/networking/v1/external/policies' -X POST -d '${new_app_network_policy_json}'
                 """
               }
-
 
               echo "\u001B[32mINFO: Start app ${new_app_name}\u001B[m"
               sh "cf v3-start ${new_app_name}"
