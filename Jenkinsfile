@@ -218,15 +218,13 @@ pipeline {
               app_svc_json = sh(script: "cf curl '/v2/apps/${app_guid}/service_bindings' | jq '.resources[] | [.entity.service_instance_guid]' | jq -s add", returnStdout: true).trim()
               app_scale_json = sh(script: "cf curl '/v3/apps/${app_guid}/processes' | jq '.resources | del(.[].links)'", returnStdout: true).trim()
               app_scale = readJSON text: app_scale_json
-              app_network_policy_json = sh(script: "cf curl /networking/v1/external/policies | jq '{policies: [.policies[] | select(.source.id==\"${app_guid}\") // select(.destination.id==\"${app_guid}\")]}'", returnStdout: true).trim()
+              app_network_policy_json = sh(script: "cf curl '/networking/v1/external/policies?id=${app_guid}' | jq 'del(.total_policies)'", returnStdout: true).trim()
               app_network_policy = readJSON text: app_network_policy_json
 
               new_app_name = gds_app[2] + "-" + env.Version
               echo "\u001B[32mINFO: Creating new app ${new_app_name}\u001B[m"
               if (env.DOCKER_DEPLOY_IMAGE) {
-                sh """
-                  cf curl '/v3/apps' -X POST -d '{"lifecycle":{"data":{},"type":"docker"},"name":"${new_app_name}","relationships":{"space":{"data":{"guid":"${space_guid}"}}}}' | jq -C 'del(.links, .relationships)'
-                """
+                sh "cf v3-create-app ${new_app_name} --app-type docker"
               } else {
                 sh "cf v3-create-app ${new_app_name}"
               }
