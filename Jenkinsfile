@@ -110,22 +110,22 @@ pipeline {
               java_ver_exist = fileExists "${env.WORKSPACE}/.java-version"
               if (node_ver_exist) {
                 node_ver = readFile "${env.WORKSPACE}/.nvmrc"
-                echo "\\e[32mINFO: Detected Nodejs version ${node_ver}"
+                echo "\033[32mINFO: Detected Nodejs version ${node_ver}"
                 sh "bash -l -c 'nvm install ${node_ver.trim()}'"
               }
               if (py_ver_exist) {
                 py_ver = readFile "${env.WORKSPACE}/.python-version"
-                echo "\\e[32mINFO: Detected Python version ${py_ver}"
+                echo "\033[32mINFO: Detected Python version ${py_ver}"
                 sh "bash -l -c 'pyenv install ${py_ver.trim()}'"
               }
               if (rb_ver_exist) {
                 rb_ver = readFile "${env.WORKSPACE}/.ruby-version"
-                echo "\\e[32mINFO: Detected Ruby version ${rb_ver}"
+                echo "\033[32mINFO: Detected Ruby version ${rb_ver}"
                 sh "bash -l -c 'rvm install ${rb_ver.trim()}'"
               }
               if (java_ver_exist) {
                 java_ver = readFile "${env.WORKSPACE}/.java-version"
-                echo "\\e[32mINFO: Detected Java version ${java_ver}"
+                echo "\033[32mINFO: Detected Java version ${java_ver}"
                 sh "bash -l -c 'jabba install ${java_ver.trim()}'"
               }
 
@@ -156,7 +156,7 @@ pipeline {
                 config.PAAS_REGION = paas_config.default
               }
               paas_region = paas_config.regions."${config.PAAS_REGION}"
-              echo "\\e[32mINFO: Setting PaaS region to ${paas_region.name}."
+              echo "\033[32mINFO: Setting PaaS region to ${paas_region.name}."
 
               withCredentials([usernamePassword(credentialsId: paas_region.credential, passwordVariable: 'gds_pass', usernameVariable: 'gds_user')]) {
                 sh """
@@ -170,13 +170,13 @@ pipeline {
               cf_manifest_exist = fileExists "${env.WORKSPACE}/manifest.yml"
               buildpack_json = readJSON text:  """{"buildpacks": []}"""
               if (cf_manifest_exist) {
-                echo "\\e[32mINFO: Detected CF V2 manifest.yml"
+                echo "\033[32mINFO: Detected CF V2 manifest.yml"
                 cf_manifest = readYaml file: "${env.WORKSPACE}/manifest.yml"
                 if (cf_manifest.applications.size() != 1 || cf_manifest.applications[0].size() > 4) {
-                  echo "\\e[31mWARNING: Only 'buildpack', 'health-check-type' and 'health-check-http-endpoint' attributes are supported in CF V2 manifest.yml."
+                  echo "\033[31mWARNING: Only 'buildpack', 'health-check-type' and 'health-check-http-endpoint' attributes are supported in CF V2 manifest.yml."
                 }
                 if (cf_manifest.applications[0].buildpack) {
-                  echo "\\e[32mINFO: Setting application ${gds_app[2]} buildpack to ${cf_manifest.applications[0].buildpack}"
+                  echo "\033[32mINFO: Setting application ${gds_app[2]} buildpack to ${cf_manifest.applications[0].buildpack}"
                   if (cf_manifest.applications[0].buildpack[0].size() == 1) {
                     buildpack_json.buildpacks[0] = cf_manifest.applications[0].buildpack
                   } else {
@@ -187,19 +187,19 @@ pipeline {
                   writeJSON file: "${env.WORKSPACE}/.ci/buildpacks.json", json:buildpack_json
                 }
                 if (cf_manifest.applications[0]."health-check-type") {
-                  echo "\\e[32mINFO: Setting application ${gds_app[2]} health-check-type to ${cf_manifest.applications[0].'health-check-type'}"
+                  echo "\033[32mINFO: Setting application ${gds_app[2]} health-check-type to ${cf_manifest.applications[0].'health-check-type'}"
                   env.PAAS_HEALTHCHECK_TYPE = cf_manifest.applications[0]."health-check-type"
                 }
                 if (cf_manifest.applications[0]."health-check-http-endpoint") {
-                  echo "\\e[32mINFO: Setting application ${gds_app[2]} health-check-http-endpoint to ${cf_manifest.applications[0].'health-check-http-endpoint'}"
+                  echo "\033[32mINFO: Setting application ${gds_app[2]} health-check-http-endpoint to ${cf_manifest.applications[0].'health-check-http-endpoint'}"
                   env.PAAS_HEALTHCHECK_ENDPOINT = cf_manifest.applications[0]."health-check-http-endpoint"
                 }
                 if (cf_manifest.applications[0]."timeout") {
-                  echo "\\e[32mINFO: Setting application ${gds_app[2]} timeout to ${cf_manifest.applications[0].'timeout'}"
+                  echo "\033[32mINFO: Setting application ${gds_app[2]} timeout to ${cf_manifest.applications[0].'timeout'}"
                   env.PAAS_TIMEOUT = cf_manifest.applications[0]."timeout"
                 }
                 if (cf_manifest.applications[0]."docker") {
-                  echo "\\e[32mINFO: Detected Docker deployement ${env.DOCKER_DEPLOY_IMAGE}"
+                  echo "\033[32mINFO: Detected Docker deployement ${cf_manifest.applications[0].'docker'}"
                   env.DOCKER_DEPLOY_IMAGE = cf_manifest.applications[0]."docker"
                 }
               }
@@ -222,7 +222,7 @@ pipeline {
               app_network_policy = readJSON text: app_network_policy_json
 
               new_app_name = gds_app[2] + "-" + env.Version
-              echo "\\e[32mINFO: Creating new app ${new_app_name}"
+              echo "\033[32mINFO: Creating new app ${new_app_name}"
               if (env.DOCKER_DEPLOY_IMAGE) {
                 sh "cf v3-create-app ${new_app_name} --app-type docker"
               } else {
@@ -230,9 +230,9 @@ pipeline {
               }
               new_app_guid = sh(script: "cf app ${new_app_name} --guid | perl -lne 'print \$& if /(\\{{0,1}([0-9a-fA-F]){8}-([0-9a-fA-F]){4}-([0-9a-fA-F]){4}-([0-9a-fA-F]){4}-([0-9a-fA-F]){12}\\}{0,1})/'", returnStdout: true).trim()
 
-              echo "\\e[32mINFO: Configuring new app ${new_app_name}"
+              echo "\033[32mINFO: Configuring new app ${new_app_name}"
               if (buildpack_json.buildpacks.size() > 0) {
-                echo "\\e[42mINFO: Setting buildpack to ${buildpack_json.buildpacks}"
+                echo "\033[42mINFO: Setting buildpack to ${buildpack_json.buildpacks}"
                 env.PAAS_BUILDPACK = readFile file: "${env.WORKSPACE}/.ci/buildpacks.json"
                 sh """
                   cf curl '/v3/apps/${new_app_guid}' -X PATCH -d '{"name": "${new_app_name}","lifecycle": {"type":"buildpack","data": ${env.PAAS_BUILDPACK}}}' | jq -C 'del(.links, .relationships)'
@@ -244,14 +244,14 @@ pipeline {
               if (vars_check.trim() != '{}') {
                 sh "jq '{\"var\": .}' ${env.WORKSPACE}/.ci/env.json > ${env.WORKSPACE}/.ci/cf_envar.json"
                 updated_vars = sh(script: "cf curl '/v3/apps/${new_app_guid}/environment_variables' -X PATCH -d @${env.WORKSPACE}/.ci/cf_envar.json | jq -r '.var | keys'", returnStdout: true).trim()
-                echo "\\e[32mINFO: Application environment variables updated: ${updated_vars} "
+                echo "\033[32mINFO: Application environment variables updated: ${updated_vars} "
               }
 
               if (app_svc_json != 'null') {
                 app_svc = readJSON text: app_svc_json
                 app_svc.each {
                   svc_name = sh(script: "cf curl '/v2/service_instances/${it}' | jq -r '.entity.name'", returnStdout: true).trim()
-                  echo "\\e[32mINFO: Migrating service ${svc_name} to ${new_app_name}"
+                  echo "\033[32mINFO: Migrating service ${svc_name} to ${new_app_name}"
                   sh """
                     cf curl /v2/service_bindings -X POST -d '{"service_instance_guid": "${it}", "app_guid": "${new_app_guid}"}' | jq -C 'del(.entity.credentials)'
                   """
@@ -259,7 +259,7 @@ pipeline {
               }
 
               if (config.USE_NEXUS) {
-                echo "\\e[32mINFO: Downloading artifact ${env.Project}-${env.Version}.${config.JAVA_EXTENSION.toLowerCase()}"
+                echo "\033[32mINFO: Downloading artifact ${env.Project}-${env.Version}.${config.JAVA_EXTENSION.toLowerCase()}"
                 withCredentials([usernamePassword(credentialsId: env.NEXUS_CREDENTIAL, passwordVariable: 'nexus_pass', usernameVariable: 'nexus_user')]) {
                   sh "curl -LOfs 'https://${nexus_user}:${nexus_pass}@${env.NEXUS_URL}/repository/${config.NEXUS_PATH}/${env.Version}/${env.Project}-${env.Version}.${config.JAVA_EXTENSION.toLowerCase()}'"
                 }
@@ -276,10 +276,10 @@ pipeline {
                 }
               }
 
-              echo "\\e[32mINFO: Creating app ${new_app_name} release"
+              echo "\033[32mINFO: Creating app ${new_app_name} release"
               if (env.DOCKER_DEPLOY_IMAGE) {
                 sh """
-                  cf curl '/v3/builds' -X POST -d '{"package":{"guid":"${package_guid}"}}'
+                  cf curl '/v3/builds' -X POST -d '{"package":{"guid":"${package_guid}"}}' | jq -C 'del(.links, .created_by)'
                 """
                 try {
                   timeout(time: 300, unit: 'SECONDS') {
@@ -299,7 +299,7 @@ pipeline {
                 sh "cf v3-set-droplet ${new_app_name} --droplet-guid ${release_guid}"
               }
 
-              echo "\\e[32mINFO: Configuring health check for app ${new_app_name}"
+              echo "\033[32mINFO: Configuring health check for app ${new_app_name}"
               if (!env.PAAS_TIMEOUT) {
                 env.PAAS_TIMEOUT = 60
               }
@@ -323,12 +323,12 @@ pipeline {
                       cf curl '/v3/processes/${new_app_guid}' -X PATCH -d '{"health_check": {"type": "http", "data": {"timeout": ${env.PAAS_TIMEOUT}, "endpoint": "${env.PAAS_HEALTHCHECK_ENDPOINT}"}}}' | jq -C 'del(.links)'
                     """
                   } else {
-                    echo "\\e[31mWARNING: 'health-check-http-endpoint' not configured for 'http' health check."
+                    echo "\033[31mWARNING: 'health-check-http-endpoint' not configured for 'http' health check."
                   }
                   break
               }
 
-              echo "\\e[32mINFO: Scale app ${new_app_name}"
+              echo "\033[32mINFO: Scale app ${new_app_name}"
               procfile_exist = fileExists "${env.WORKSPACE}/Procfile"
               if (procfile_exist) {
                 procfile = readProperties file: "${env.WORKSPACE}/Procfile"
@@ -350,7 +350,7 @@ pipeline {
               }
 
               if (app_network_policy.policies.size() > 0) {
-                echo "\\e[32mINFO: Update network policy for app ${new_app_name}"
+                echo "\033[32mINFO: Update network policy for app ${new_app_name}"
                 writeFile file: "${env.WORKSPACE}/.ci/network_policy.json", text: app_network_policy_json
                 sh "sed -ie 's/${app_guid}/${new_app_guid}/g' ${env.WORKSPACE}/.ci/network_policy.json"
                 new_app_network_policy_json = readFile file: "${env.WORKSPACE}/.ci/network_policy.json"
@@ -359,7 +359,7 @@ pipeline {
                 """
               }
 
-              echo "\\e[32mINFO: Start app ${new_app_name}"
+              echo "\033[32mINFO: Start app ${new_app_name}"
               sh "cf v3-start ${new_app_name}"
 
               try {
@@ -369,16 +369,16 @@ pipeline {
                   app_stopped = sh(script: "cf curl '/v3/apps/${new_app_guid}/processes/web' | jq -r 'contains({\"instances\": 0})'", returnStdout: true).trim()
                   while (app_ready == 'false' && app_stopped == 'false') {
                     app_ready = sh(script: "cf curl '/v3/apps/${new_app_guid}/processes/web/stats' | jq -r '.resources[] | select(.type=\"web\") | [contains({\"state\": \"RUNNING\"})]' | jq -sr 'add | all'", returnStdout: true).trim()
-                    echo "\\e[32mINFO: App ${new_app_name} not ready, wait for 10 seconds..."
+                    echo "\033[32mINFO: App ${new_app_name} not ready, wait for 10 seconds..."
                     sleep 10
                   }
-                  echo "\\e[32mINFO: App ${new_app_name} is ready"
+                  echo "\033[32mINFO: App ${new_app_name} is ready"
                 }
               } catch (err) {
                 error "App failed to start."
               }
 
-              echo "\\e[32mINFO: Switching app routes"
+              echo "\033[32mINFO: Switching app routes"
               app_routes.each {
                 sh """
                   cf curl '/v2/routes/${it}/apps/${new_app_guid}' -X PUT | jq -C '.'
@@ -402,7 +402,7 @@ pipeline {
                     cf auth ${gds_user} ${gds_pass}
                   """
                 }
-                echo "\\e[32mINFO: Cleanup old app"
+                echo "\033[32mINFO: Cleanup old app"
                 sh """
                   cf target -o ${gds_app[0]} -s ${gds_app[1]}
                   cf curl '/v3/apps/${app_guid}' -X PATCH -d '{"name": "${gds_app[2]}-delete"}' | jq -C 'del(.links, .relationships)'
@@ -424,7 +424,7 @@ pipeline {
                     cf auth ${gds_user} ${gds_pass}
                   """
                 }
-                echo "\\e[31mWARNING: Rollback app"
+                echo "\033[31mWARNING: Rollback app"
                 sh """
                   cf target -o ${gds_app[0]} -s ${gds_app[1]}
                   cf logs ${new_app_name} --recent || true
