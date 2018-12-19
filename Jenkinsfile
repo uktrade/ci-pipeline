@@ -170,7 +170,6 @@ pipeline {
             cf_manifest_exist = fileExists "${env.WORKSPACE}/manifest.yml"
             buildpack_json = readJSON text:  """{"buildpacks": []}"""
             if (cf_manifest_exist) {
-              echo "${log_info}Detected CF V2 manifest.yml"
               cf_manifest = readYaml file: "${env.WORKSPACE}/manifest.yml"
               if (cf_manifest.applications.size() == 1 && cf_manifest.applications[0].size() > 0) {
                 echo "${log_warn}CloudFoundry API V2 manifest.yml support is limited."
