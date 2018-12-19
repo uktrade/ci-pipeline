@@ -172,8 +172,8 @@ pipeline {
             if (cf_manifest_exist) {
               echo "${log_info}Detected CF V2 manifest.yml"
               cf_manifest = readYaml file: "${env.WORKSPACE}/manifest.yml"
-              if (cf_manifest.applications.size() != 1 || cf_manifest.applications[0].size() > 4) {
-                echo "${log_warn}Only 'buildpack', 'health-check-type' and 'health-check-http-endpoint' attributes are supported in CF V2 manifest.yml."
+              if (cf_manifest.applications.size() != 1 || cf_manifest.applications[0].size() > 5) {
+                echo "${log_warn}Only 'buildpack', 'health-check-type', 'health-check-http-endpoint', 'timeout' and 'docker' attributes are supported in CF V2 manifest.yml."
               }
               if (cf_manifest.applications[0].buildpack) {
                 echo "${log_info}Setting application ${gds_app[2]} buildpack to ${cf_manifest.applications[0].buildpack}"
@@ -355,7 +355,7 @@ pipeline {
               sh "sed -ie 's/${app_guid}/${new_app_guid}/g' ${env.WORKSPACE}/.ci/network_policy.json"
               new_app_network_policy_json = readFile file: "${env.WORKSPACE}/.ci/network_policy.json"
               sh """
-                cf curl '/networking/v1/external/policies' -X POST -d '${new_app_network_policy_json}'
+                cf curl '/networking/v1/external/policies' -X POST -d '${new_app_network_policy_json}' | jq -C '.'
               """
             }
 
