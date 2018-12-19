@@ -8,6 +8,7 @@ pipeline {
 
   options {
     timestamps()
+    ansiColor('xterm')
   }
 
   parameters {
@@ -101,39 +102,37 @@ pipeline {
     stage('Build') {
       steps {
         script {
-          ansiColor('xterm') {
-            deployer.inside {
-              checkout([$class: 'GitSCM', branches: [[name: env.Version]], doGenerateSubmoduleConfigurations: false, extensions: [[$class: 'SubmoduleOption', disableSubmodules: false, parentCredentials: true, recursiveSubmodules: true, reference: '', trackingSubmodules: false]], submoduleCfg: [], userRemoteConfigs: [[credentialsId: env.SCM_CREDENTIAL, url: config.SCM]]])
+          deployer.inside {
+            checkout([$class: 'GitSCM', branches: [[name: env.Version]], doGenerateSubmoduleConfigurations: false, extensions: [[$class: 'SubmoduleOption', disableSubmodules: false, parentCredentials: true, recursiveSubmodules: true, reference: '', trackingSubmodules: false]], submoduleCfg: [], userRemoteConfigs: [[credentialsId: env.SCM_CREDENTIAL, url: config.SCM]]])
 
-              app_git_commit = sh(script: "git rev-parse HEAD", returnStdout: true).trim()
-              node_ver_exist = fileExists "${env.WORKSPACE}/.nvmrc"
-              py_ver_exist = fileExists "${env.WORKSPACE}/.python-version"
-              rb_ver_exist = fileExists "${env.WORKSPACE}/.ruby-version"
-              java_ver_exist = fileExists "${env.WORKSPACE}/.java-version"
-              if (node_ver_exist) {
-                node_ver = readFile "${env.WORKSPACE}/.nvmrc"
-                echo "${log_info}Detected Nodejs version ${node_ver}"
-                sh "bash -l -c 'nvm install ${node_ver.trim()}'"
-              }
-              if (py_ver_exist) {
-                py_ver = readFile "${env.WORKSPACE}/.python-version"
-                echo "${log_info}Detected Python version ${py_ver}"
-                sh "bash -l -c 'pyenv install ${py_ver.trim()}'"
-              }
-              if (rb_ver_exist) {
-                rb_ver = readFile "${env.WORKSPACE}/.ruby-version"
-                echo "${log_info}Detected Ruby version ${rb_ver}"
-                sh "bash -l -c 'rvm install ${rb_ver.trim()}'"
-              }
-              if (java_ver_exist) {
-                java_ver = readFile "${env.WORKSPACE}/.java-version"
-                echo "${log_info}Detected Java version ${java_ver}"
-                sh "bash -l -c 'jabba install ${java_ver.trim()}'"
-              }
+            app_git_commit = sh(script: "git rev-parse HEAD", returnStdout: true).trim()
+            node_ver_exist = fileExists "${env.WORKSPACE}/.nvmrc"
+            py_ver_exist = fileExists "${env.WORKSPACE}/.python-version"
+            rb_ver_exist = fileExists "${env.WORKSPACE}/.ruby-version"
+            java_ver_exist = fileExists "${env.WORKSPACE}/.java-version"
+            if (node_ver_exist) {
+              node_ver = readFile "${env.WORKSPACE}/.nvmrc"
+              echo "${log_info}Detected Nodejs version ${node_ver}"
+              sh "bash -l -c 'nvm install ${node_ver.trim()}'"
+            }
+            if (py_ver_exist) {
+              py_ver = readFile "${env.WORKSPACE}/.python-version"
+              echo "${log_info}Detected Python version ${py_ver}"
+              sh "bash -l -c 'pyenv install ${py_ver.trim()}'"
+            }
+            if (rb_ver_exist) {
+              rb_ver = readFile "${env.WORKSPACE}/.ruby-version"
+              echo "${log_info}Detected Ruby version ${rb_ver}"
+              sh "bash -l -c 'rvm install ${rb_ver.trim()}'"
+            }
+            if (java_ver_exist) {
+              java_ver = readFile "${env.WORKSPACE}/.java-version"
+              echo "${log_info}Detected Java version ${java_ver}"
+              sh "bash -l -c 'jabba install ${java_ver.trim()}'"
+            }
 
-              if (config.PAAS_RUN) {
-                sh "bash -l -c \"${config.PAAS_RUN}\""
-              }
+            if (config.PAAS_RUN) {
+              sh "bash -l -c \"${config.PAAS_RUN}\""
             }
           }
         }
@@ -149,246 +148,244 @@ pipeline {
 
       steps {
         script {
-          ansiColor('xterm') {
-            deployer.inside {
-              withCredentials([string(credentialsId: env.GDS_PAAS_CONFIG, variable: 'paas_config_raw')]) {
-                paas_config = readJSON text: paas_config_raw
-              }
-              if (!config.PAAS_REGION) {
-                config.PAAS_REGION = paas_config.default
-              }
-              paas_region = paas_config.regions."${config.PAAS_REGION}"
-              echo "${log_info}Setting PaaS region to ${paas_region.name}."
+          deployer.inside {
+            withCredentials([string(credentialsId: env.GDS_PAAS_CONFIG, variable: 'paas_config_raw')]) {
+              paas_config = readJSON text: paas_config_raw
+            }
+            if (!config.PAAS_REGION) {
+              config.PAAS_REGION = paas_config.default
+            }
+            paas_region = paas_config.regions."${config.PAAS_REGION}"
+            echo "${log_info}Setting PaaS region to ${paas_region.name}."
 
-              withCredentials([usernamePassword(credentialsId: paas_region.credential, passwordVariable: 'gds_pass', usernameVariable: 'gds_user')]) {
-                sh """
-                  cf api ${paas_region.api}
-                  cf auth ${gds_user} ${gds_pass}
-                """
+            withCredentials([usernamePassword(credentialsId: paas_region.credential, passwordVariable: 'gds_pass', usernameVariable: 'gds_user')]) {
+              sh """
+                cf api ${paas_region.api}
+                cf auth ${gds_user} ${gds_pass}
+              """
+            }
+
+            gds_app = config.PAAS_APP.split("/")
+            sh "cf target -o ${gds_app[0]} -s ${gds_app[1]}"
+            cf_manifest_exist = fileExists "${env.WORKSPACE}/manifest.yml"
+            buildpack_json = readJSON text:  """{"buildpacks": []}"""
+            if (cf_manifest_exist) {
+              echo "${log_info}Detected CF V2 manifest.yml"
+              cf_manifest = readYaml file: "${env.WORKSPACE}/manifest.yml"
+              if (cf_manifest.applications.size() != 1 || cf_manifest.applications[0].size() > 4) {
+                echo "${log_warn}Only 'buildpack', 'health-check-type' and 'health-check-http-endpoint' attributes are supported in CF V2 manifest.yml."
               }
-
-              gds_app = config.PAAS_APP.split("/")
-              sh "cf target -o ${gds_app[0]} -s ${gds_app[1]}"
-              cf_manifest_exist = fileExists "${env.WORKSPACE}/manifest.yml"
-              buildpack_json = readJSON text:  """{"buildpacks": []}"""
-              if (cf_manifest_exist) {
-                echo "${log_info}Detected CF V2 manifest.yml"
-                cf_manifest = readYaml file: "${env.WORKSPACE}/manifest.yml"
-                if (cf_manifest.applications.size() != 1 || cf_manifest.applications[0].size() > 4) {
-                  echo "${log_warn}Only 'buildpack', 'health-check-type' and 'health-check-http-endpoint' attributes are supported in CF V2 manifest.yml."
-                }
-                if (cf_manifest.applications[0].buildpack) {
-                  echo "${log_info}Setting application ${gds_app[2]} buildpack to ${cf_manifest.applications[0].buildpack}"
-                  if (cf_manifest.applications[0].buildpack[0].size() == 1) {
-                    buildpack_json.buildpacks[0] = cf_manifest.applications[0].buildpack
-                  } else {
-                    cf_manifest.applications[0].buildpack.eachWithIndex { build, index ->
-                      buildpack_json.buildpacks[index] = build
-                    }
-                  }
-                  writeJSON file: "${env.WORKSPACE}/.ci/buildpacks.json", json:buildpack_json
-                }
-                if (cf_manifest.applications[0]."health-check-type") {
-                  echo "${log_info}Setting application ${gds_app[2]} health-check-type to ${cf_manifest.applications[0].'health-check-type'}"
-                  env.PAAS_HEALTHCHECK_TYPE = cf_manifest.applications[0]."health-check-type"
-                }
-                if (cf_manifest.applications[0]."health-check-http-endpoint") {
-                  echo "${log_info}Setting application ${gds_app[2]} health-check-http-endpoint to ${cf_manifest.applications[0].'health-check-http-endpoint'}"
-                  env.PAAS_HEALTHCHECK_ENDPOINT = cf_manifest.applications[0]."health-check-http-endpoint"
-                }
-                if (cf_manifest.applications[0]."timeout") {
-                  echo "${log_info}Setting application ${gds_app[2]} timeout to ${cf_manifest.applications[0].'timeout'}"
-                  env.PAAS_TIMEOUT = cf_manifest.applications[0]."timeout"
-                }
-                if (cf_manifest.applications[0]."docker") {
-                  echo "${log_info}Detected Docker deployement ${cf_manifest.applications[0].'docker'}"
-                  env.DOCKER_DEPLOY_IMAGE = cf_manifest.applications[0]."docker"
-                }
-              }
-
-              cfignore_exist = fileExists "${env.WORKSPACE}/.cfignore"
-              if (!cfignore_exist) {
-                sh "ln -snf ${env.WORKSPACE}/.gitignore ${env.WORKSPACE}/.cfignore"
-              }
-              sh "echo .ci/ >> ${env.WORKSPACE}/.cfignore"
-
-              sh "cf v3-create-app ${gds_app[2]}"
-              space_guid = sh(script: "cf space ${gds_app[1]}  --guid", returnStdout: true).trim()
-              app_guid = sh(script: "cf app ${gds_app[2]} --guid | perl -lne 'print \$& if /(\\{{0,1}([0-9a-fA-F]){8}-([0-9a-fA-F]){4}-([0-9a-fA-F]){4}-([0-9a-fA-F]){4}-([0-9a-fA-F]){12}\\}{0,1})/'", returnStdout: true).trim()
-              app_routes_json = sh(script: "cf curl '/v2/apps/${app_guid}/route_mappings' | jq '[.resources[].entity.route_guid]' 2>/dev/null || echo '[]'", returnStdout: true).trim()
-              app_routes = readJSON text: app_routes_json
-              app_svc_json = sh(script: "cf curl '/v2/apps/${app_guid}/service_bindings' | jq '.resources[] | [.entity.service_instance_guid]' | jq -s add", returnStdout: true).trim()
-              app_scale_json = sh(script: "cf curl '/v3/apps/${app_guid}/processes' | jq '.resources | del(.[].links)'", returnStdout: true).trim()
-              app_scale = readJSON text: app_scale_json
-              app_network_policy_json = sh(script: "cf curl '/networking/v1/external/policies?id=${app_guid}' | jq 'del(.total_policies)'", returnStdout: true).trim()
-              app_network_policy = readJSON text: app_network_policy_json
-
-              new_app_name = gds_app[2] + "-" + env.Version
-              echo "${log_info}Creating new app ${new_app_name}"
-              if (env.DOCKER_DEPLOY_IMAGE) {
-                sh "cf v3-create-app ${new_app_name} --app-type docker"
-              } else {
-                sh "cf v3-create-app ${new_app_name}"
-              }
-              new_app_guid = sh(script: "cf app ${new_app_name} --guid | perl -lne 'print \$& if /(\\{{0,1}([0-9a-fA-F]){8}-([0-9a-fA-F]){4}-([0-9a-fA-F]){4}-([0-9a-fA-F]){4}-([0-9a-fA-F]){12}\\}{0,1})/'", returnStdout: true).trim()
-
-              echo "${log_info}Configuring new app ${new_app_name}"
-              if (buildpack_json.buildpacks.size() > 0) {
-                echo "${log_info}Setting buildpack to ${buildpack_json.buildpacks}"
-                env.PAAS_BUILDPACK = readFile file: "${env.WORKSPACE}/.ci/buildpacks.json"
-                sh """
-                  cf curl '/v3/apps/${new_app_guid}' -X PATCH -d '{"name": "${new_app_name}","lifecycle": {"type":"buildpack","data": ${env.PAAS_BUILDPACK}}}' | jq -C 'del(.links, .relationships)'
-                """
-              }
-
-              sh "cf v3-set-env ${new_app_name} GIT_COMMIT ${app_git_commit}"
-              vars_check = readFile file: "${env.WORKSPACE}/.ci/env.json"
-              if (vars_check.trim() != '{}') {
-                sh "jq '{\"var\": .}' ${env.WORKSPACE}/.ci/env.json > ${env.WORKSPACE}/.ci/cf_envar.json"
-                updated_vars = sh(script: "cf curl '/v3/apps/${new_app_guid}/environment_variables' -X PATCH -d @${env.WORKSPACE}/.ci/cf_envar.json | jq -r '.var | keys'", returnStdout: true).trim()
-                echo "${log_info}Application environment variables updated: ${updated_vars} "
-              }
-
-              if (app_svc_json != 'null') {
-                app_svc = readJSON text: app_svc_json
-                app_svc.each {
-                  svc_name = sh(script: "cf curl '/v2/service_instances/${it}' | jq -r '.entity.name'", returnStdout: true).trim()
-                  echo "${log_info}Migrating service ${svc_name} to ${new_app_name}"
-                  sh """
-                    cf curl /v2/service_bindings -X POST -d '{"service_instance_guid": "${it}", "app_guid": "${new_app_guid}"}' | jq -C 'del(.entity.credentials)'
-                  """
-                }
-              }
-
-              if (config.USE_NEXUS) {
-                echo "${log_info}Downloading artifact ${env.Project}-${env.Version}.${config.JAVA_EXTENSION.toLowerCase()}"
-                withCredentials([usernamePassword(credentialsId: env.NEXUS_CREDENTIAL, passwordVariable: 'nexus_pass', usernameVariable: 'nexus_user')]) {
-                  sh "curl -LOfs 'https://${nexus_user}:${nexus_pass}@${env.NEXUS_URL}/repository/${config.NEXUS_PATH}/${env.Version}/${env.Project}-${env.Version}.${config.JAVA_EXTENSION.toLowerCase()}'"
-                }
-                config.APP_PATH = "${env.Project}-${env.Version}.${config.JAVA_EXTENSION.toLowerCase()}".toString()
-              }
-
-              if (env.DOCKER_DEPLOY_IMAGE) {
-                package_guid = sh(script: "cf v3-create-package ${new_app_name} --docker-image ${env.DOCKER_DEPLOY_IMAGE.trim()} | perl -lne 'print \$& if /(\\{{0,1}([0-9a-fA-F]){8}-([0-9a-fA-F]){4}-([0-9a-fA-F]){4}-([0-9a-fA-F]){4}-([0-9a-fA-F]){12}\\}{0,1})/'", returnStdout: true).trim()
-              } else {
-                if (config.APP_PATH) {
-                  package_guid = sh(script: "cf v3-create-package ${new_app_name} -p ${config.APP_PATH} | perl -lne 'print \$& if /(\\{{0,1}([0-9a-fA-F]){8}-([0-9a-fA-F]){4}-([0-9a-fA-F]){4}-([0-9a-fA-F]){4}-([0-9a-fA-F]){12}\\}{0,1})/'", returnStdout: true).trim()
+              if (cf_manifest.applications[0].buildpack) {
+                echo "${log_info}Setting application ${gds_app[2]} buildpack to ${cf_manifest.applications[0].buildpack}"
+                if (cf_manifest.applications[0].buildpack[0].size() == 1) {
+                  buildpack_json.buildpacks[0] = cf_manifest.applications[0].buildpack
                 } else {
-                  package_guid = sh(script: "cf v3-create-package ${new_app_name} | perl -lne 'print \$& if /(\\{{0,1}([0-9a-fA-F]){8}-([0-9a-fA-F]){4}-([0-9a-fA-F]){4}-([0-9a-fA-F]){4}-([0-9a-fA-F]){12}\\}{0,1})/'", returnStdout: true).trim()
+                  cf_manifest.applications[0].buildpack.eachWithIndex { build, index ->
+                    buildpack_json.buildpacks[index] = build
+                  }
                 }
+                writeJSON file: "${env.WORKSPACE}/.ci/buildpacks.json", json:buildpack_json
               }
+              if (cf_manifest.applications[0]."health-check-type") {
+                echo "${log_info}Setting application ${gds_app[2]} health-check-type to ${cf_manifest.applications[0].'health-check-type'}"
+                env.PAAS_HEALTHCHECK_TYPE = cf_manifest.applications[0]."health-check-type"
+              }
+              if (cf_manifest.applications[0]."health-check-http-endpoint") {
+                echo "${log_info}Setting application ${gds_app[2]} health-check-http-endpoint to ${cf_manifest.applications[0].'health-check-http-endpoint'}"
+                env.PAAS_HEALTHCHECK_ENDPOINT = cf_manifest.applications[0]."health-check-http-endpoint"
+              }
+              if (cf_manifest.applications[0]."timeout") {
+                echo "${log_info}Setting application ${gds_app[2]} timeout to ${cf_manifest.applications[0].'timeout'}"
+                env.PAAS_TIMEOUT = cf_manifest.applications[0]."timeout"
+              }
+              if (cf_manifest.applications[0]."docker") {
+                echo "${log_info}Detected Docker deployement ${cf_manifest.applications[0].'docker'}"
+                env.DOCKER_DEPLOY_IMAGE = cf_manifest.applications[0]."docker"
+              }
+            }
 
-              echo "${log_info}Creating app ${new_app_name} release"
-              if (env.DOCKER_DEPLOY_IMAGE) {
+            cfignore_exist = fileExists "${env.WORKSPACE}/.cfignore"
+            if (!cfignore_exist) {
+              sh "ln -snf ${env.WORKSPACE}/.gitignore ${env.WORKSPACE}/.cfignore"
+            }
+            sh "echo .ci/ >> ${env.WORKSPACE}/.cfignore"
+
+            sh "cf v3-create-app ${gds_app[2]}"
+            space_guid = sh(script: "cf space ${gds_app[1]}  --guid", returnStdout: true).trim()
+            app_guid = sh(script: "cf app ${gds_app[2]} --guid | perl -lne 'print \$& if /(\\{{0,1}([0-9a-fA-F]){8}-([0-9a-fA-F]){4}-([0-9a-fA-F]){4}-([0-9a-fA-F]){4}-([0-9a-fA-F]){12}\\}{0,1})/'", returnStdout: true).trim()
+            app_routes_json = sh(script: "cf curl '/v2/apps/${app_guid}/route_mappings' | jq '[.resources[].entity.route_guid]' 2>/dev/null || echo '[]'", returnStdout: true).trim()
+            app_routes = readJSON text: app_routes_json
+            app_svc_json = sh(script: "cf curl '/v2/apps/${app_guid}/service_bindings' | jq '.resources[] | [.entity.service_instance_guid]' | jq -s add", returnStdout: true).trim()
+            app_scale_json = sh(script: "cf curl '/v3/apps/${app_guid}/processes' | jq '.resources | del(.[].links)'", returnStdout: true).trim()
+            app_scale = readJSON text: app_scale_json
+            app_network_policy_json = sh(script: "cf curl '/networking/v1/external/policies?id=${app_guid}' | jq 'del(.total_policies)'", returnStdout: true).trim()
+            app_network_policy = readJSON text: app_network_policy_json
+
+            new_app_name = gds_app[2] + "-" + env.Version
+            echo "${log_info}Creating new app ${new_app_name}"
+            if (env.DOCKER_DEPLOY_IMAGE) {
+              sh "cf v3-create-app ${new_app_name} --app-type docker"
+            } else {
+              sh "cf v3-create-app ${new_app_name}"
+            }
+            new_app_guid = sh(script: "cf app ${new_app_name} --guid | perl -lne 'print \$& if /(\\{{0,1}([0-9a-fA-F]){8}-([0-9a-fA-F]){4}-([0-9a-fA-F]){4}-([0-9a-fA-F]){4}-([0-9a-fA-F]){12}\\}{0,1})/'", returnStdout: true).trim()
+
+            echo "${log_info}Configuring new app ${new_app_name}"
+            if (buildpack_json.buildpacks.size() > 0) {
+              echo "${log_info}Setting buildpack to ${buildpack_json.buildpacks}"
+              env.PAAS_BUILDPACK = readFile file: "${env.WORKSPACE}/.ci/buildpacks.json"
+              sh """
+                cf curl '/v3/apps/${new_app_guid}' -X PATCH -d '{"name": "${new_app_name}","lifecycle": {"type":"buildpack","data": ${env.PAAS_BUILDPACK}}}' | jq -C 'del(.links, .relationships)'
+              """
+            }
+
+            sh "cf v3-set-env ${new_app_name} GIT_COMMIT ${app_git_commit}"
+            vars_check = readFile file: "${env.WORKSPACE}/.ci/env.json"
+            if (vars_check.trim() != '{}') {
+              sh "jq '{\"var\": .}' ${env.WORKSPACE}/.ci/env.json > ${env.WORKSPACE}/.ci/cf_envar.json"
+              updated_vars = sh(script: "cf curl '/v3/apps/${new_app_guid}/environment_variables' -X PATCH -d @${env.WORKSPACE}/.ci/cf_envar.json | jq -r '.var | keys'", returnStdout: true).trim()
+              echo "${log_info}Application environment variables updated: ${updated_vars} "
+            }
+
+            if (app_svc_json != 'null') {
+              app_svc = readJSON text: app_svc_json
+              app_svc.each {
+                svc_name = sh(script: "cf curl '/v2/service_instances/${it}' | jq -r '.entity.name'", returnStdout: true).trim()
+                echo "${log_info}Migrating service ${svc_name} to ${new_app_name}"
                 sh """
-                  cf curl '/v3/builds' -X POST -d '{"package":{"guid":"${package_guid}"}}' | jq -C 'del(.links, .created_by)'
-                """
-                try {
-                  timeout(time: 300, unit: 'SECONDS') {
-                    docker_builds_count = sh(script: "cf curl '/v3/builds?app_guids=${new_app_guid}&states=STAGED' | jq '.resources | length'", returnStdout: true).trim()
-                    while (docker_builds_count == 0) {
-                      sleep 10
-                    }
-                    release_guid = sh(script: "cf curl '/v3/builds?app_guids=${new_app_guid}&states=STAGED' | jq -r '.resources[].droplet.guid'", returnStdout: true).trim()
-                    sh "cf v3-set-droplet ${new_app_name} --droplet-guid ${release_guid}"
-                  }
-                } catch (err) {
-                  error "Failed to stage Docker image ${env.DOCKER_DEPLOY_IMAGE}."
-                }
-              } else {
-                sh "cf v3-stage ${new_app_name} --package-guid ${package_guid}"
-                release_guid = sh(script: "cf curl '/v3/apps/${new_app_guid}/droplets' | jq -r '.resources[] | select(.links.package.href | test(\"${package_guid}\")==true) | .guid'", returnStdout: true).trim()
-                sh "cf v3-set-droplet ${new_app_name} --droplet-guid ${release_guid}"
-              }
-
-              echo "${log_info}Configuring health check for app ${new_app_name}"
-              if (!env.PAAS_TIMEOUT) {
-                env.PAAS_TIMEOUT = 60
-              }
-              if (!env.PAAS_HEALTHCHECK_TYPE) {
-                env.PAAS_HEALTHCHECK_TYPE = "port"
-              }
-              switch(env.PAAS_HEALTHCHECK_TYPE) {
-                case "port":
-                  sh """
-                    cf curl '/v3/processes/${new_app_guid}' -X PATCH -d '{"health_check": {"type": "port", "data": {"timeout": ${env.PAAS_TIMEOUT}}}}' | jq -C 'del(.links)'
-                  """
-                  break
-                case "process":
-                  sh """
-                    cf curl '/v3/processes/${new_app_guid}' -X PATCH -d '{"health_check": {"type": "process", "data": {"timeout": ${env.PAAS_TIMEOUT}}}}' | jq -C 'del(.links)'
-                  """
-                  break
-                case "http":
-                  if (env.PAAS_HEALTHCHECK_ENDPOINT) {
-                    sh """
-                      cf curl '/v3/processes/${new_app_guid}' -X PATCH -d '{"health_check": {"type": "http", "data": {"timeout": ${env.PAAS_TIMEOUT}, "endpoint": "${env.PAAS_HEALTHCHECK_ENDPOINT}"}}}' | jq -C 'del(.links)'
-                    """
-                  } else {
-                    echo "${log_warn}'health-check-http-endpoint' not configured for 'http' health check."
-                  }
-                  break
-              }
-
-              echo "${log_info}Scale app ${new_app_name}"
-              procfile_exist = fileExists "${env.WORKSPACE}/Procfile"
-              if (procfile_exist) {
-                procfile = readProperties file: "${env.WORKSPACE}/Procfile"
-                procfile.each { proc, cmd ->
-                  app_scale.each {
-                    if (proc == it.type) {
-                      sh """
-                        cf curl '/v3/apps/${new_app_guid}/processes/${it.type}/actions/scale' -X POST -d '{"instances": ${it.instances}, "memory_in_mb": ${it.memory_in_mb}, "disk_in_mb": ${it.disk_in_mb}}' | jq -C 'del(.links)'
-                      """
-                    }
-                  }
-                }
-              } else {
-                app_scale.each {
-                  sh """
-                    cf curl '/v3/apps/${new_app_guid}/processes/${it.type}/actions/scale' -X POST -d '{"instances": ${it.instances}, "memory_in_mb": ${it.memory_in_mb}, "disk_in_mb": ${it.disk_in_mb}}' | jq -C 'del(.links)'
-                  """
-                }
-              }
-
-              if (app_network_policy.policies.size() > 0) {
-                echo "${log_info}Update network policy for app ${new_app_name}"
-                writeFile file: "${env.WORKSPACE}/.ci/network_policy.json", text: app_network_policy_json
-                sh "sed -ie 's/${app_guid}/${new_app_guid}/g' ${env.WORKSPACE}/.ci/network_policy.json"
-                new_app_network_policy_json = readFile file: "${env.WORKSPACE}/.ci/network_policy.json"
-                sh """
-                  cf curl '/networking/v1/external/policies' -X POST -d '${new_app_network_policy_json}'
+                  cf curl /v2/service_bindings -X POST -d '{"service_instance_guid": "${it}", "app_guid": "${new_app_guid}"}' | jq -C 'del(.entity.credentials)'
                 """
               }
+            }
 
-              echo "${log_info}Start app ${new_app_name}"
-              sh "cf v3-start ${new_app_name}"
+            if (config.USE_NEXUS) {
+              echo "${log_info}Downloading artifact ${env.Project}-${env.Version}.${config.JAVA_EXTENSION.toLowerCase()}"
+              withCredentials([usernamePassword(credentialsId: env.NEXUS_CREDENTIAL, passwordVariable: 'nexus_pass', usernameVariable: 'nexus_user')]) {
+                sh "curl -LOfs 'https://${nexus_user}:${nexus_pass}@${env.NEXUS_URL}/repository/${config.NEXUS_PATH}/${env.Version}/${env.Project}-${env.Version}.${config.JAVA_EXTENSION.toLowerCase()}'"
+              }
+              config.APP_PATH = "${env.Project}-${env.Version}.${config.JAVA_EXTENSION.toLowerCase()}".toString()
+            }
 
+            if (env.DOCKER_DEPLOY_IMAGE) {
+              package_guid = sh(script: "cf v3-create-package ${new_app_name} --docker-image ${env.DOCKER_DEPLOY_IMAGE.trim()} | perl -lne 'print \$& if /(\\{{0,1}([0-9a-fA-F]){8}-([0-9a-fA-F]){4}-([0-9a-fA-F]){4}-([0-9a-fA-F]){4}-([0-9a-fA-F]){12}\\}{0,1})/'", returnStdout: true).trim()
+            } else {
+              if (config.APP_PATH) {
+                package_guid = sh(script: "cf v3-create-package ${new_app_name} -p ${config.APP_PATH} | perl -lne 'print \$& if /(\\{{0,1}([0-9a-fA-F]){8}-([0-9a-fA-F]){4}-([0-9a-fA-F]){4}-([0-9a-fA-F]){4}-([0-9a-fA-F]){12}\\}{0,1})/'", returnStdout: true).trim()
+              } else {
+                package_guid = sh(script: "cf v3-create-package ${new_app_name} | perl -lne 'print \$& if /(\\{{0,1}([0-9a-fA-F]){8}-([0-9a-fA-F]){4}-([0-9a-fA-F]){4}-([0-9a-fA-F]){4}-([0-9a-fA-F]){12}\\}{0,1})/'", returnStdout: true).trim()
+              }
+            }
+
+            echo "${log_info}Creating app ${new_app_name} release"
+            if (env.DOCKER_DEPLOY_IMAGE) {
+              sh """
+                cf curl '/v3/builds' -X POST -d '{"package":{"guid":"${package_guid}"}}' | jq -C 'del(.links, .created_by)'
+              """
               try {
-                app_wait_timeout = sh(script: "expr ${env.PAAS_TIMEOUT} \\* 3", returnStdout: true).trim()
-                timeout(time: app_wait_timeout.toInteger(), unit: 'SECONDS') {
-                  app_ready = 'false'
-                  app_stopped = sh(script: "cf curl '/v3/apps/${new_app_guid}/processes/web' | jq -r 'contains({\"instances\": 0})'", returnStdout: true).trim()
-                  while (app_ready == 'false' && app_stopped == 'false') {
-                    app_ready = sh(script: "cf curl '/v3/apps/${new_app_guid}/processes/web/stats' | jq -r '.resources[] | select(.type=\"web\") | [contains({\"state\": \"RUNNING\"})]' | jq -sr 'add | all'", returnStdout: true).trim()
-                    echo "${log_info}App ${new_app_name} not ready, wait for 10 seconds..."
+                timeout(time: 300, unit: 'SECONDS') {
+                  docker_builds_count = sh(script: "cf curl '/v3/builds?app_guids=${new_app_guid}&states=STAGED' | jq '.resources | length'", returnStdout: true).trim()
+                  while (docker_builds_count == 0) {
                     sleep 10
                   }
-                  echo "${log_info}App ${new_app_name} is ready"
+                  release_guid = sh(script: "cf curl '/v3/builds?app_guids=${new_app_guid}&states=STAGED' | jq -r '.resources[].droplet.guid'", returnStdout: true).trim()
+                  sh "cf v3-set-droplet ${new_app_name} --droplet-guid ${release_guid}"
                 }
               } catch (err) {
-                error "App failed to start."
+                error "Failed to stage Docker image ${env.DOCKER_DEPLOY_IMAGE}."
               }
+            } else {
+              sh "cf v3-stage ${new_app_name} --package-guid ${package_guid}"
+              release_guid = sh(script: "cf curl '/v3/apps/${new_app_guid}/droplets' | jq -r '.resources[] | select(.links.package.href | test(\"${package_guid}\")==true) | .guid'", returnStdout: true).trim()
+              sh "cf v3-set-droplet ${new_app_name} --droplet-guid ${release_guid}"
+            }
 
-              echo "${log_info}Switching app routes"
-              app_routes.each {
+            echo "${log_info}Configuring health check for app ${new_app_name}"
+            if (!env.PAAS_TIMEOUT) {
+              env.PAAS_TIMEOUT = 60
+            }
+            if (!env.PAAS_HEALTHCHECK_TYPE) {
+              env.PAAS_HEALTHCHECK_TYPE = "port"
+            }
+            switch(env.PAAS_HEALTHCHECK_TYPE) {
+              case "port":
                 sh """
-                  cf curl '/v2/routes/${it}/apps/${new_app_guid}' -X PUT | jq -C '.'
-                  cf curl '/v2/routes/${it}/apps/${app_guid}' -X DELETE
+                  cf curl '/v3/processes/${new_app_guid}' -X PATCH -d '{"health_check": {"type": "port", "data": {"timeout": ${env.PAAS_TIMEOUT}}}}' | jq -C 'del(.links)'
+                """
+                break
+              case "process":
+                sh """
+                  cf curl '/v3/processes/${new_app_guid}' -X PATCH -d '{"health_check": {"type": "process", "data": {"timeout": ${env.PAAS_TIMEOUT}}}}' | jq -C 'del(.links)'
+                """
+                break
+              case "http":
+                if (env.PAAS_HEALTHCHECK_ENDPOINT) {
+                  sh """
+                    cf curl '/v3/processes/${new_app_guid}' -X PATCH -d '{"health_check": {"type": "http", "data": {"timeout": ${env.PAAS_TIMEOUT}, "endpoint": "${env.PAAS_HEALTHCHECK_ENDPOINT}"}}}' | jq -C 'del(.links)'
+                  """
+                } else {
+                  echo "${log_warn}'health-check-http-endpoint' not configured for 'http' health check."
+                }
+                break
+            }
+
+            echo "${log_info}Scale app ${new_app_name}"
+            procfile_exist = fileExists "${env.WORKSPACE}/Procfile"
+            if (procfile_exist) {
+              procfile = readProperties file: "${env.WORKSPACE}/Procfile"
+              procfile.each { proc, cmd ->
+                app_scale.each {
+                  if (proc == it.type) {
+                    sh """
+                      cf curl '/v3/apps/${new_app_guid}/processes/${it.type}/actions/scale' -X POST -d '{"instances": ${it.instances}, "memory_in_mb": ${it.memory_in_mb}, "disk_in_mb": ${it.disk_in_mb}}' | jq -C 'del(.links)'
+                    """
+                  }
+                }
+              }
+            } else {
+              app_scale.each {
+                sh """
+                  cf curl '/v3/apps/${new_app_guid}/processes/${it.type}/actions/scale' -X POST -d '{"instances": ${it.instances}, "memory_in_mb": ${it.memory_in_mb}, "disk_in_mb": ${it.disk_in_mb}}' | jq -C 'del(.links)'
                 """
               }
-
             }
+
+            if (app_network_policy.policies.size() > 0) {
+              echo "${log_info}Update network policy for app ${new_app_name}"
+              writeFile file: "${env.WORKSPACE}/.ci/network_policy.json", text: app_network_policy_json
+              sh "sed -ie 's/${app_guid}/${new_app_guid}/g' ${env.WORKSPACE}/.ci/network_policy.json"
+              new_app_network_policy_json = readFile file: "${env.WORKSPACE}/.ci/network_policy.json"
+              sh """
+                cf curl '/networking/v1/external/policies' -X POST -d '${new_app_network_policy_json}'
+              """
+            }
+
+            echo "${log_info}Start app ${new_app_name}"
+            sh "cf v3-start ${new_app_name}"
+
+            try {
+              app_wait_timeout = sh(script: "expr ${env.PAAS_TIMEOUT} \\* 3", returnStdout: true).trim()
+              timeout(time: app_wait_timeout.toInteger(), unit: 'SECONDS') {
+                app_ready = 'false'
+                app_stopped = sh(script: "cf curl '/v3/apps/${new_app_guid}/processes/web' | jq -r 'contains({\"instances\": 0})'", returnStdout: true).trim()
+                while (app_ready == 'false' && app_stopped == 'false') {
+                  app_ready = sh(script: "cf curl '/v3/apps/${new_app_guid}/processes/web/stats' | jq -r '.resources[] | select(.type=\"web\") | [contains({\"state\": \"RUNNING\"})]' | jq -sr 'add | all'", returnStdout: true).trim()
+                  echo "${log_info}App ${new_app_name} not ready, wait for 10 seconds..."
+                  sleep 10
+                }
+                echo "${log_info}App ${new_app_name} is ready"
+              }
+            } catch (err) {
+              error "App failed to start."
+            }
+
+            echo "${log_info}Switching app routes"
+            app_routes.each {
+              sh """
+                cf curl '/v2/routes/${it}/apps/${new_app_guid}' -X PUT | jq -C '.'
+                cf curl '/v2/routes/${it}/apps/${app_guid}' -X DELETE
+              """
+            }
+
           }
         }
       }
@@ -396,43 +393,39 @@ pipeline {
       post {
         success {
           script {
-            ansiColor('xterm') {
-              deployer.inside {
-                withCredentials([usernamePassword(credentialsId: paas_region.credential, passwordVariable: 'gds_pass', usernameVariable: 'gds_user')]) {
-                  sh """
-                    cf api ${paas_region.api}
-                    cf auth ${gds_user} ${gds_pass}
-                  """
-                }
-                echo "${log_info}Cleanup old app"
+            deployer.inside {
+              withCredentials([usernamePassword(credentialsId: paas_region.credential, passwordVariable: 'gds_pass', usernameVariable: 'gds_user')]) {
                 sh """
-                  cf target -o ${gds_app[0]} -s ${gds_app[1]}
-                  cf curl '/v3/apps/${app_guid}' -X PATCH -d '{"name": "${gds_app[2]}-delete"}' | jq -C 'del(.links, .relationships)'
-                  cf curl '/v3/apps/${new_app_guid}' -X PATCH -d '{"name": "${gds_app[2]}"}' | jq -C 'del(.links, .relationships)'
-                  cf curl '/v3/apps/${app_guid}' -X DELETE
+                  cf api ${paas_region.api}
+                  cf auth ${gds_user} ${gds_pass}
                 """
               }
+              echo "${log_info}Cleanup old app"
+              sh """
+                cf target -o ${gds_app[0]} -s ${gds_app[1]}
+                cf curl '/v3/apps/${app_guid}' -X PATCH -d '{"name": "${gds_app[2]}-delete"}' | jq -C 'del(.links, .relationships)'
+                cf curl '/v3/apps/${new_app_guid}' -X PATCH -d '{"name": "${gds_app[2]}"}' | jq -C 'del(.links, .relationships)'
+                cf curl '/v3/apps/${app_guid}' -X DELETE
+              """
             }
           }
         }
 
         failure {
           script {
-            ansiColor('xterm') {
-              deployer.inside {
-                withCredentials([usernamePassword(credentialsId: paas_region.credential, passwordVariable: 'gds_pass', usernameVariable: 'gds_user')]) {
-                  sh """
-                    cf api ${paas_region.api}
-                    cf auth ${gds_user} ${gds_pass}
-                  """
-                }
-                echo "${log_warn}Rollback app"
+            deployer.inside {
+              withCredentials([usernamePassword(credentialsId: paas_region.credential, passwordVariable: 'gds_pass', usernameVariable: 'gds_user')]) {
                 sh """
-                  cf target -o ${gds_app[0]} -s ${gds_app[1]}
-                  cf logs ${new_app_name} --recent || true
-                  cf curl '/v3/apps/${new_app_guid}' -X DELETE || true
+                  cf api ${paas_region.api}
+                  cf auth ${gds_user} ${gds_pass}
                 """
               }
+              echo "${log_warn}Rollback app"
+              sh """
+                cf target -o ${gds_app[0]} -s ${gds_app[1]}
+                cf logs ${new_app_name} --recent || true
+                cf curl '/v3/apps/${new_app_guid}' -X DELETE || true
+              """
             }
           }
         }
@@ -448,24 +441,22 @@ pipeline {
       }
       steps {
         script {
-          ansiColor('xterm') {
-            deployer.inside {
-              if (envars.S3_WEBSITE_SRC == null) {
-                s3_path = env.WORKSPACE
-              } else {
-                s3_path = "${env.WORKSPACE}/${envars.S3_WEBSITE_SRC}"
-              }
-              sh """
-                set +x
-                export AWS_DEFAULT_REGION=${envars.AWS_DEFAULT_REGION}
-                export AWS_ACCESS_KEY_ID=${envars.AWS_ACCESS_KEY_ID}
-                export AWS_SECRET_ACCESS_KEY=${envars.AWS_SECRET_ACCESS_KEY}
-                aws s3 sync --sse --acl public-read --delete --exclude '.*' ${s3_path} s3://${config.PAAS_APP}
-                if [ -f ${env.WORKSPACE}/${envars.S3_WEBSITE_REDIRECT} ]; then
-                  aws s3api put-bucket-website --bucket ${config.PAAS_APP} --website-configuration file://${env.WORKSPACE}/${envars.S3_WEBSITE_REDIRECT}
-                fi
-              """
+          deployer.inside {
+            if (envars.S3_WEBSITE_SRC == null) {
+              s3_path = env.WORKSPACE
+            } else {
+              s3_path = "${env.WORKSPACE}/${envars.S3_WEBSITE_SRC}"
             }
+            sh """
+              set +x
+              export AWS_DEFAULT_REGION=${envars.AWS_DEFAULT_REGION}
+              export AWS_ACCESS_KEY_ID=${envars.AWS_ACCESS_KEY_ID}
+              export AWS_SECRET_ACCESS_KEY=${envars.AWS_SECRET_ACCESS_KEY}
+              aws s3 sync --sse --acl public-read --delete --exclude '.*' ${s3_path} s3://${config.PAAS_APP}
+              if [ -f ${env.WORKSPACE}/${envars.S3_WEBSITE_REDIRECT} ]; then
+                aws s3api put-bucket-website --bucket ${config.PAAS_APP} --website-configuration file://${env.WORKSPACE}/${envars.S3_WEBSITE_REDIRECT}
+              fi
+            """
           }
         }
       }
@@ -476,46 +467,42 @@ pipeline {
   post {
     failure {
       script {
-        ansiColor('xterm') {
-          emailext body: '${DEFAULT_CONTENT}', recipientProviders: [[$class: 'CulpritsRecipientProvider'], [$class: 'DevelopersRecipientProvider'], [$class: 'RequesterRecipientProvider'], [$class: 'UpstreamComitterRecipientProvider']], subject: "${currentBuild.result}: ${env.Project} ${env.Environment}", to: '${DEFAULT_RECIPIENTS}'
-        }
+        emailext body: '${DEFAULT_CONTENT}', recipientProviders: [[$class: 'CulpritsRecipientProvider'], [$class: 'DevelopersRecipientProvider'], [$class: 'RequesterRecipientProvider'], [$class: 'UpstreamComitterRecipientProvider']], subject: "${currentBuild.result}: ${env.Project} ${env.Environment}", to: '${DEFAULT_RECIPIENTS}'
       }
     }
 
     always {
       script {
-        ansiColor('xterm') {
-          message_colour_map = readJSON text: '{"SUCCESS": "#36a64f", "FAILURE": "#FF0000", "UNSTABLE": "#FFCC00"}'
-          message_colour = message_colour_map."${currentBuild.currentResult}".toString()
-          message_body = """
-            [{
-              "fallback": "${currentBuild.currentResult}: ${env.JOB_NAME} #${env.BUILD_NUMBER} - ${env.Project} ${env.Environment} (<${env.BUILD_URL}|Open>)",
-              "color": "${message_colour}",
-              "author_name": "${env.JOB_NAME}",
-              "author_link": "${env.JOB_URL}",
-              "title": "${currentBuild.currentResult}: Build #${env.BUILD_NUMBER}",
-              "title_link": "${env.BUILD_URL}",
-              "fields": [{
-                "title": "Team",
-                "value": "${env.Team}",
-                "short": true
-              }, {
-                "title": "Project",
-                "value": "${env.Project}",
-                "short": true
-              }, {
-                "title": "Environment",
-                "value": "${env.Environment}",
-                "short": true
-              }],
-              "footer": "<${JENKINS_URL}|Jenkins>",
-              "footer_icon": "https://raw.githubusercontent.com/jenkinsci/jenkins/master/war/src/main/webapp/images/jenkins.png",
-              "ts": "${currentBuild.timeInMillis/1000}"
-            }]
-          """
-          slackSend botUser: true, attachments: message_body.toString().trim()
-          deleteDir()
-        }
+        message_colour_map = readJSON text: '{"SUCCESS": "#36a64f", "FAILURE": "#FF0000", "UNSTABLE": "#FFCC00"}'
+        message_colour = message_colour_map."${currentBuild.currentResult}".toString()
+        message_body = """
+          [{
+            "fallback": "${currentBuild.currentResult}: ${env.JOB_NAME} #${env.BUILD_NUMBER} - ${env.Project} ${env.Environment} (<${env.BUILD_URL}|Open>)",
+            "color": "${message_colour}",
+            "author_name": "${env.JOB_NAME}",
+            "author_link": "${env.JOB_URL}",
+            "title": "${currentBuild.currentResult}: Build #${env.BUILD_NUMBER}",
+            "title_link": "${env.BUILD_URL}",
+            "fields": [{
+              "title": "Team",
+              "value": "${env.Team}",
+              "short": true
+            }, {
+              "title": "Project",
+              "value": "${env.Project}",
+              "short": true
+            }, {
+              "title": "Environment",
+              "value": "${env.Environment}",
+              "short": true
+            }],
+            "footer": "<${JENKINS_URL}|Jenkins>",
+            "footer_icon": "https://raw.githubusercontent.com/jenkinsci/jenkins/master/war/src/main/webapp/images/jenkins.png",
+            "ts": "${currentBuild.timeInMillis/1000}"
+          }]
+        """
+        slackSend botUser: true, attachments: message_body.toString().trim()
+        deleteDir()
       }
     }
   }
