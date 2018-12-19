@@ -112,22 +112,22 @@ pipeline {
             java_ver_exist = fileExists "${env.WORKSPACE}/.java-version"
             if (node_ver_exist) {
               node_ver = readFile "${env.WORKSPACE}/.nvmrc"
-              echo "${log_info}Detected Nodejs version ${node_ver}"
+              echo "${log_info}Detected Nodejs version ${node_ver.trim()}"
               sh "bash -l -c 'nvm install ${node_ver.trim()}'"
             }
             if (py_ver_exist) {
               py_ver = readFile "${env.WORKSPACE}/.python-version"
-              echo "${log_info}Detected Python version ${py_ver}"
+              echo "${log_info}Detected Python version ${py_ver.trim()}"
               sh "bash -l -c 'pyenv install ${py_ver.trim()}'"
             }
             if (rb_ver_exist) {
               rb_ver = readFile "${env.WORKSPACE}/.ruby-version"
-              echo "${log_info}Detected Ruby version ${rb_ver}"
+              echo "${log_info}Detected Ruby version ${rb_ver.trim()}"
               sh "bash -l -c 'rvm install ${rb_ver.trim()}'"
             }
             if (java_ver_exist) {
               java_ver = readFile "${env.WORKSPACE}/.java-version"
-              echo "${log_info}Detected Java version ${java_ver}"
+              echo "${log_info}Detected Java version ${java_ver.trim()}"
               sh "bash -l -c 'jabba install ${java_ver.trim()}'"
             }
 
@@ -172,35 +172,44 @@ pipeline {
             if (cf_manifest_exist) {
               echo "${log_info}Detected CF V2 manifest.yml"
               cf_manifest = readYaml file: "${env.WORKSPACE}/manifest.yml"
-              if (cf_manifest.applications.size() != 1 || cf_manifest.applications[0].size() > 5) {
-                echo "${log_warn}Only 'buildpack', 'health-check-type', 'health-check-http-endpoint', 'timeout' and 'docker' attributes are supported in CF V2 manifest.yml."
-              }
-              if (cf_manifest.applications[0].buildpack) {
-                echo "${log_info}Setting application ${gds_app[2]} buildpack to ${cf_manifest.applications[0].buildpack}"
-                if (cf_manifest.applications[0].buildpack[0].size() == 1) {
-                  buildpack_json.buildpacks[0] = cf_manifest.applications[0].buildpack
-                } else {
-                  cf_manifest.applications[0].buildpack.eachWithIndex { build, index ->
-                    buildpack_json.buildpacks[index] = build
+              if (cf_manifest.applications.size() == 1 && cf_manifest.applications[0].size() > 0) {
+                echo "${log_warn}CloudFoundry API V2 manifest.yml support is limited."
+                cf_manifest.applications[0].each { key, value ->
+                  switch (key) {
+                    case 'buildpack':
+                      echo "${log_info}Setting application ${gds_app[2]} buildpack to ${value}"
+                      if (cf_manifest.applications[0].buildpack[0].size() == 1) {
+                        buildpack_json.buildpacks[0] = value
+                      } else {
+                        cf_manifest.applications[0].buildpack.eachWithIndex { build, index ->
+                          buildpack_json.buildpacks[index] = build
+                        }
+                      }
+                      writeJSON file: "${env.WORKSPACE}/.ci/buildpacks.json", json:buildpack_json
+                      break
+                    case 'health-check-type':
+                      echo "${log_info}Setting application ${gds_app[2]} health-check-type to ${value}"
+                      env.PAAS_HEALTHCHECK_TYPE = value
+                      break
+                    case 'health-check-http-endpoint':
+                      echo "${log_info}Setting application ${gds_app[2]} health-check-http-endpoint to ${value}"
+                      env.PAAS_HEALTHCHECK_ENDPOINT = value
+                      break
+                    case 'timeout':
+                      echo "${log_info}Setting application ${gds_app[2]} timeout to ${value}"
+                      env.PAAS_TIMEOUT = value
+                      break
+                    case 'docker':
+                      echo "${log_info}Detected Docker deployement ${value}"
+                      env.DOCKER_DEPLOY_IMAGE = value
+                      break
+                    default:
+                      echo "${log_warn}CloudFoundry API V2 manifest.yml attribute '${key}' is not supported."
+                      break
                   }
                 }
-                writeJSON file: "${env.WORKSPACE}/.ci/buildpacks.json", json:buildpack_json
-              }
-              if (cf_manifest.applications[0]."health-check-type") {
-                echo "${log_info}Setting application ${gds_app[2]} health-check-type to ${cf_manifest.applications[0].'health-check-type'}"
-                env.PAAS_HEALTHCHECK_TYPE = cf_manifest.applications[0]."health-check-type"
-              }
-              if (cf_manifest.applications[0]."health-check-http-endpoint") {
-                echo "${log_info}Setting application ${gds_app[2]} health-check-http-endpoint to ${cf_manifest.applications[0].'health-check-http-endpoint'}"
-                env.PAAS_HEALTHCHECK_ENDPOINT = cf_manifest.applications[0]."health-check-http-endpoint"
-              }
-              if (cf_manifest.applications[0]."timeout") {
-                echo "${log_info}Setting application ${gds_app[2]} timeout to ${cf_manifest.applications[0].'timeout'}"
-                env.PAAS_TIMEOUT = cf_manifest.applications[0]."timeout"
-              }
-              if (cf_manifest.applications[0]."docker") {
-                echo "${log_info}Detected Docker deployement ${cf_manifest.applications[0].'docker'}"
-                env.DOCKER_DEPLOY_IMAGE = cf_manifest.applications[0]."docker"
+              } else {
+                echo "${log_warn}Invalid CloudFoundry API V2 manifest.yml ignored."
               }
             }
 
