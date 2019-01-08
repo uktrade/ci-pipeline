@@ -2,7 +2,7 @@ FROM ubuntu:18.04
 
 ENV CF_CLI_VER 6.40.1
 ENV NVM_VER=v0.33.11
-ENV JABBA_VER=0.11.1
+ENV JABBA_VER=0.11.2
 
 RUN groupadd -g 1000 ubuntu && \
     useradd -u 1000 -g 1000 -m -s /bin/bash ubuntu
