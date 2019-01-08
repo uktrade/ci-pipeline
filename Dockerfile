@@ -3,7 +3,7 @@ FROM ubuntu:18.04
 ENV CF_CLI_VER 6.41.0
 ENV NVM_VER=v0.34.0
 ENV JABBA_VER=0.11.2
-ENV NVM_VER=1.29.7
+ENV RVM_VER=1.29.7
 
 RUN groupadd -g 1000 ubuntu && \
     useradd -u 1000 -g 1000 -m -s /bin/bash ubuntu
@@ -23,6 +23,8 @@ RUN pip3 install --upgrade awscli virtualenv && \
     echo "deb https://packages.cloudfoundry.org/debian stable main" > /etc/apt/sources.list.d/cloudfoundry-cli.list && \
     apt-get update && \
     apt-get install -y --allow-unauthenticated cf-cli=$CF_CLI_VER && \
+    apt-add-repository -y ppa:rael-gc/rvm && \
+    apt-get install -y rvm="$RVM_VER"-\* && \
     rm -rf /var/lib/apt/lists/*
 
 COPY Gemfile* /tmp/
@@ -35,13 +37,9 @@ ENV HOME /home/ubuntu
 RUN curl -Lfs https://github.com/shyiko/jabba/raw/$JABBA_VER/install.sh | bash && \
     curl -Lfs https://github.com/pyenv/pyenv-installer/raw/master/bin/pyenv-installer | bash && \
     curl -Lfs https://github.com/creationix/nvm/raw/$NVM_VER/install.sh | bash && \
-    apt-add-repository -y ppa:rael-gc/rvm && \
-    apt-get install -y rvm="$NVM_VER"-\* && \
-    bash -c "source ~/.rvm/scripts/rvm && rvm autolibs disable" && \
-    echo 'export PATH="$HOME/.pyenv/bin:$PATH"' >> ~/.profile && \
-    echo 'eval "$(pyenv init -)"\neval "$(pyenv virtualenv-init -)"' >> ~/.profile && \
-    echo 'export NVM_DIR="$HOME/.nvm"\n[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"' >> ~/.profile && \
-    cf install-plugin -f conduit && \
-    rm -rf /var/lib/apt/lists/*
+    echo 'export PATH="$HOME/.pyenv/bin:$PATH:/usr/share/rvm/bin"' >> ~/.bashrc && \
+    echo 'eval "$(pyenv init -)"\neval "$(pyenv virtualenv-init -)"' >> ~/.bashrc && \
+    echo '[[ -s "/usr/share/rvm/scripts/rvm" ]] && source "/usr/share/rvm/scripts/rvm"' >> ~/.bashrc && \
+    cf install-plugin -f conduit
 
 ENTRYPOINT ["bash", "-c"]
