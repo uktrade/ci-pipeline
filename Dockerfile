@@ -3,6 +3,7 @@ FROM ubuntu:18.04
 ENV CF_CLI_VER 6.41.0
 ENV NVM_VER=v0.34.0
 ENV JABBA_VER=0.11.2
+ENV NVM_VER=1.29.7
 
 RUN groupadd -g 1000 ubuntu && \
     useradd -u 1000 -g 1000 -m -s /bin/bash ubuntu
@@ -34,12 +35,13 @@ ENV HOME /home/ubuntu
 RUN curl -Lfs https://github.com/shyiko/jabba/raw/$JABBA_VER/install.sh | bash && \
     curl -Lfs https://github.com/pyenv/pyenv-installer/raw/master/bin/pyenv-installer | bash && \
     curl -Lfs https://github.com/creationix/nvm/raw/$NVM_VER/install.sh | bash && \
-    gpg2 --keyserver hkp://keys.gnupg.net --recv-keys 409B6B1796C275462A1703113804BB82D39DC0E3 7D2BAF1CF37B13E2069D6956105BD0E739499BDB && \
-    curl -Lfs https://get.rvm.io | bash && \
+    apt-add-repository -y ppa:rael-gc/rvm && \
+    apt-get install -y rvm="$NVM_VER"-\* && \
     bash -c "source ~/.rvm/scripts/rvm && rvm autolibs disable" && \
     echo 'export PATH="$HOME/.pyenv/bin:$PATH"' >> ~/.profile && \
     echo 'eval "$(pyenv init -)"\neval "$(pyenv virtualenv-init -)"' >> ~/.profile && \
     echo 'export NVM_DIR="$HOME/.nvm"\n[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"' >> ~/.profile && \
-    cf install-plugin -f conduit
+    cf install-plugin -f conduit && \
+    rm -rf /var/lib/apt/lists/*
 
 ENTRYPOINT ["bash", "-c"]
