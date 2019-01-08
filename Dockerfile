@@ -17,13 +17,16 @@ RUN apt-get update && \
     apt-get install -y python3 python3-pip ruby-full rubygems bundler gettext jq && \
     rm -rf /var/lib/apt/lists/*
 
-RUN pip3 install --upgrade awscli virtualenv && \
-    curl -Lfs https://cli-assets.heroku.com/install-ubuntu.sh | bash && \
-    curl -Lfs https://packages.cloudfoundry.org/debian/cli.cloudfoundry.org.key | apt-key add - && \
+RUN curl -Lfs https://packages.cloudfoundry.org/debian/cli.cloudfoundry.org.key | apt-key add - && \
     echo "deb https://packages.cloudfoundry.org/debian stable main" > /etc/apt/sources.list.d/cloudfoundry-cli.list && \
     apt-get update && \
     apt-get install -y --allow-unauthenticated cf-cli=$CF_CLI_VER && \
-    apt-add-repository -y ppa:rael-gc/rvm && \
+    rm -rf /var/lib/apt/lists/*
+
+RUN pip3 install --upgrade awscli virtualenv pip
+RUN curl -Lfs https://cli-assets.heroku.com/install-ubuntu.sh | bash
+
+RUN apt-add-repository -y ppa:rael-gc/rvm && \
     apt-get install -y rvm="$RVM_VER"-\* && \
     bash -c "source /usr/share/rvm/scripts/rvm && rvm autolibs disable" && \
     rm -rf /var/lib/apt/lists/*
@@ -35,12 +38,14 @@ RUN gem install bundler && \
 USER ubuntu:ubuntu
 ENV HOME /home/ubuntu
 
-RUN curl -Lfs https://github.com/shyiko/jabba/raw/$JABBA_VER/install.sh | bash && \
-    curl -Lfs https://github.com/pyenv/pyenv-installer/raw/master/bin/pyenv-installer | bash && \
-    curl -Lfs https://github.com/creationix/nvm/raw/$NVM_VER/install.sh | bash && \
-    echo 'export PATH="$HOME/.pyenv/bin:$PATH:/usr/share/rvm/bin"' >> ~/.bashrc && \
-    echo 'eval "$(pyenv init -)"\neval "$(pyenv virtualenv-init -)"' >> ~/.bashrc && \
-    echo '[[ -s "/usr/share/rvm/scripts/rvm" ]] && source "/usr/share/rvm/scripts/rvm"' >> ~/.bashrc && \
-    cf install-plugin -f conduit
+RUN cf install-plugin -f conduit
+
+RUN curl -Lfs https://github.com/shyiko/jabba/raw/$JABBA_VER/install.sh | bash
+RUN curl -Lfs https://github.com/pyenv/pyenv-installer/raw/master/bin/pyenv-installer | bash
+RUN curl -Lfs https://github.com/creationix/nvm/raw/$NVM_VER/install.sh | bash
+
+RUN echo 'export PATH="$HOME/.pyenv/bin:$PATH:/usr/share/rvm/bin"' >> ~/.profile && \
+    echo 'eval "$(pyenv init -)"\neval "$(pyenv virtualenv-init -)"' >> ~/.profile && \
+    echo '[[ -s "/usr/share/rvm/scripts/rvm" ]] && source "/usr/share/rvm/scripts/rvm"' >> ~/.profile
 
 ENTRYPOINT ["bash", "-c"]
