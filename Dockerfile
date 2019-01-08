@@ -27,11 +27,6 @@ RUN curl -Lfs https://packages.cloudfoundry.org/debian/cli.cloudfoundry.org.key 
 RUN pip3 install --upgrade awscli virtualenv pip
 RUN curl -Lfs https://cli-assets.heroku.com/install-ubuntu.sh | bash
 
-RUN apt-add-repository -y ppa:rael-gc/rvm && \
-    apt-get install -y rvm="$RVM_VER"-\* && \
-    bash -c "source /usr/share/rvm/scripts/rvm && rvm autolibs disable" && \
-    rm -rf /var/lib/apt/lists/*
-
 COPY Gemfile* /tmp/
 RUN gem install bundler && \
     bundle check || bundle install --gemfile=/tmp/Gemfile
@@ -40,10 +35,12 @@ USER ubuntu:ubuntu
 ENV HOME /home/ubuntu
 
 RUN cf install-plugin -f conduit
-
-RUN curl -Lfs https://github.com/shyiko/jabba/raw/$JABBA_VER/install.sh | bash
 RUN curl -Lfs https://github.com/pyenv/pyenv-installer/raw/master/bin/pyenv-installer | bash
 RUN curl -Lfs https://github.com/creationix/nvm/raw/$NVM_VER/install.sh | bash
+RUN curl -Lfs https://rvm.io/mpapis.asc | gpg2 --import - && \
+    curl -Lfs https://rvm.io/pkuczynski.asc | gpg2 --import - && \
+    curl -Lfs https://get.rvm.io | bash -s -- --autolibs=disable --version $RVM_VER
+RUN curl -Lfs https://github.com/shyiko/jabba/raw/$JABBA_VER/install.sh | bash
 
 RUN echo 'export PATH="$HOME/.pyenv/bin:$PATH:/usr/share/rvm/bin"' >> ~/.profile && \
     echo 'eval "$(pyenv init -)"\neval "$(pyenv virtualenv-init -)"' >> ~/.profile && \
