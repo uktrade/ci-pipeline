@@ -40,6 +40,7 @@ RUN curl -Lfs https://github.com/shyiko/jabba/raw/$JABBA_VER/install.sh | bash &
     echo 'export PATH="$HOME/.pyenv/bin:$PATH:/usr/share/rvm/bin"' >> ~/.bashrc && \
     echo 'eval "$(pyenv init -)"\neval "$(pyenv virtualenv-init -)"' >> ~/.bashrc && \
     echo '[[ -s "/usr/share/rvm/scripts/rvm" ]] && source "/usr/share/rvm/scripts/rvm"' >> ~/.bashrc && \
+    bash -c "source /usr/share/rvm/scripts/rvm && rvm autolibs disable" && \
     cf install-plugin -f conduit
 
 ENTRYPOINT ["bash", "-c"]
