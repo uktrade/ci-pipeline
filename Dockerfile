@@ -45,9 +45,9 @@ RUN curl -Lfs https://github.com/shyiko/jabba/raw/$JABBA_VER/install.sh | bash
 RUN curl -Lfs https://github.com/pyenv/pyenv-installer/raw/master/bin/pyenv-installer | bash
 RUN curl -Lfs https://github.com/creationix/nvm/raw/$NVM_VER/install.sh | bash
 
-RUN echo 'export PATH="$HOME/.pyenv/bin:$PATH:/usr/share/rvm/bin"' >> ~/.bashrc && \
-    echo 'eval "$(pyenv init -)"\neval "$(pyenv virtualenv-init -)"' >> ~/.bashrc && \
-    echo '[[ -s "/usr/share/rvm/scripts/rvm" ]] && source "/usr/share/rvm/scripts/rvm"' >> ~/.bashrc && \
-    echo 'export NVM_DIR="$HOME/.nvm"\n[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"' >> ~/.bashrc
+RUN echo 'export PATH="$HOME/.pyenv/bin:$PATH:/usr/share/rvm/bin"' >> ~/.profile && \
+    echo 'eval "$(pyenv init -)"\neval "$(pyenv virtualenv-init -)"' >> ~/.profile && \
+    echo '[[ -s "/usr/share/rvm/scripts/rvm" ]] && source "/usr/share/rvm/scripts/rvm"' >> ~/.profile && \
+    echo 'export NVM_DIR="$HOME/.nvm"\n[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"' >> ~/.profile
 
 ENTRYPOINT ["bash", "-c"]
