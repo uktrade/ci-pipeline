@@ -1,7 +1,7 @@
 FROM ubuntu:18.04
 
 ENV CF_CLI_VER 6.41.0
-ENV NVM_VER=v0.33.11
+ENV NVM_VER=v0.34.0
 ENV JABBA_VER=0.11.2
 
 RUN groupadd -g 1000 ubuntu && \
