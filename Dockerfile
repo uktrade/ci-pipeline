@@ -42,9 +42,8 @@ RUN curl -Lfs https://rvm.io/mpapis.asc | gpg2 --import - && \
     curl -Lfs https://get.rvm.io | bash -s -- --autolibs=disable --version $RVM_VER
 RUN curl -Lfs https://github.com/shyiko/jabba/raw/$JABBA_VER/install.sh | bash
 
-RUN echo 'export PATH="$HOME/.pyenv/bin:$PATH:/usr/share/rvm/bin"' >> ~/.profile && \
+RUN echo 'export PATH="$HOME/.pyenv/bin:$PATH"' >> ~/.profile && \
     echo 'eval "$(pyenv init -)"\neval "$(pyenv virtualenv-init -)"' >> ~/.profile && \
-    echo '[[ -s "/usr/share/rvm/scripts/rvm" ]] && source "/usr/share/rvm/scripts/rvm"' >> ~/.profile && \
     echo 'export NVM_DIR="$HOME/.nvm"\n[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"' >> ~/.profile
 
 ENTRYPOINT ["bash", "-c"]
