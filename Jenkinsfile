@@ -113,22 +113,22 @@ pipeline {
             if (node_ver_exist) {
               node_ver = readFile "${env.WORKSPACE}/.nvmrc"
               echo "${log_info}Detected Nodejs version ${node_ver.trim()}"
-              sh "bash -l -c 'nvm install ${node_ver.trim()}'"
+              sh "bash -l -c 'nvm install ${node_ver.trim()} && nvm use ${node_ver.trim()}'"
             }
             if (py_ver_exist) {
               py_ver = readFile "${env.WORKSPACE}/.python-version"
               echo "${log_info}Detected Python version ${py_ver.trim()}"
-              sh "bash -l -c 'pyenv install ${py_ver.trim()}'"
+              sh "bash -l -c 'pyenv install ${py_ver.trim()} && pyenv global ${py_ver.trim()}'"
             }
             if (rb_ver_exist) {
               rb_ver = readFile "${env.WORKSPACE}/.ruby-version"
               echo "${log_info}Detected Ruby version ${rb_ver.trim()}"
-              sh "bash -l -c 'rvm install ${rb_ver.trim()}'"
+              sh "bash -l -c 'rvm install ${rb_ver.trim()} && rvm use ${rb_ver.trim()}'"
             }
             if (java_ver_exist) {
               java_ver = readFile "${env.WORKSPACE}/.java-version"
               echo "${log_info}Detected Java version ${java_ver.trim()}"
-              sh "bash -l -c 'jabba install ${java_ver.trim()}'"
+              sh "bash -l -c 'jabba install ${java_ver.trim()} && jabba use ${java_ver.trim()}'"
             }
 
             if (config.PAAS_RUN) {
