@@ -139,15 +139,15 @@ def main(args)
     save_json(ENV_FILE, file_content)
 
   when "get-lock"
-    puts consul_get("#{params}")['lock']
+    puts consul_get(params)['lock']
 
   when "lock"
-    lock = consul_get("#{params}").deep_merge!({'lock' => true})
-    consul_add("#{params}", JSON.dump(lock))
+    lock = consul_get(params).deep_merge!({'lock' => true})
+    consul_add(params, JSON.dump(lock))
 
   when "unlock"
-    unlock = consul_get("#{params}").deep_merge!({'lock' => false})
-    consul_add("#{params}", JSON.dump(unlock))
+    unlock = consul_get(params).deep_merge!({'lock' => false})
+    consul_add(params, JSON.dump(unlock))
 
   else
     abort("Usage: bootstrap.rb [parse-all|parse|get-lock|lock|unlock] [APP_PATH|Team/Porject/Environment]")
