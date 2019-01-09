@@ -32,7 +32,7 @@ pipeline {
             checkout([$class: 'GitSCM', branches: [[name: env.GIT_BRANCH]], doGenerateSubmoduleConfigurations: false, extensions: [[$class: 'RelativeTargetDirectory', relativeTargetDir: '.ci'], [$class: 'SubmoduleOption', disableSubmodules: false, parentCredentials: true, recursiveSubmodules: true, reference: '', trackingSubmodules: true], [$class: 'WipeWorkspace']], submoduleCfg: [], userRemoteConfigs: [[credentialsId: env.SCM_CREDENTIAL, url: env.PIPELINE_SCM]]])
             checkout([$class: 'GitSCM', branches: [[name: env.GIT_BRANCH]], doGenerateSubmoduleConfigurations: false, extensions: [[$class: 'SubmoduleOption', disableSubmodules: false, parentCredentials: true, recursiveSubmodules: true, reference: '', trackingSubmodules: false], [$class: 'RelativeTargetDirectory', relativeTargetDir: '.ci/config']], submoduleCfg: [], userRemoteConfigs: [[credentialsId: env.SCM_CREDENTIAL, url: env.PIPELINE_CONF_SCM]]])
             sh "${env.WORKSPACE}/.ci/bootstrap.rb parse-all"
-            options_json = readJSON file: "${env.WORKSPACE}/.ci/.option.json"
+            options_json = readJSON file: "${env.WORKSPACE}/.ci/option.json"
           }
         }
       }
@@ -91,8 +91,8 @@ pipeline {
               env.VAULT_SERECT_ID = TOKEN
               sh "${env.WORKSPACE}/.ci/bootstrap.rb parse ${env.Team}/${env.Project}/${env.Environment}"
             }
-            envars = readJSON file: "${env.WORKSPACE}/.ci/.env.json"
-            config = readJSON file: "${env.WORKSPACE}/.ci/.config.json"
+            envars = readJSON file: "${env.WORKSPACE}/.ci/env.json"
+            config = readJSON file: "${env.WORKSPACE}/.ci/config.json"
 
             lock = sh(script: "${env.WORKSPACE}/.ci/bootstrap.rb get-lock ${env.Team}/${env.Project}/${env.Environment}", returnStdout: true).trim()
             if (lock == 'true') {
