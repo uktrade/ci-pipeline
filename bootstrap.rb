@@ -7,16 +7,16 @@ require 'rest-client'
 require 'deep_merge'
 require 'base64'
 
-CONFIG_DIR = "#{ENV['WORKSPACE']}/config"
-JSON_SCHEMA = "#{ENV['WORKSPACE']}/schema.json"
+CONFIG_DIR = "#{ENV['WORKSPACE']}/.ci/config"
+JSON_SCHEMA = "#{ENV['WORKSPACE']}/.ci/schema.json"
 CONSUL = ENV['CONSUL']
 VAULT_API = ENV['VAULT_API']
 VAULT_PREFIX = ENV['VAULT_PREFIX']
 VAULT_ROLE_ID = ENV['VAULT_ROLE_ID']
 VAULT_SERECT_ID = ENV['VAULT_SERECT_ID']
-OPTION_FILE = "#{ENV['WORKSPACE']}/.option.json"
-ENV_FILE = "#{ENV['WORKSPACE']}/.env.json"
-CONF_FILE = "#{ENV['WORKSPACE']}/.config.json"
+OPTION_FILE = "#{ENV['WORKSPACE']}/.ci/.option.json"
+ENV_FILE = "#{ENV['WORKSPACE']}/.ci/.env.json"
+CONF_FILE = "#{ENV['WORKSPACE']}/.ci/.config.json"
 
 def validate(schema, data)
   return JSON::Validator.validate!(schema, data, {:validate_schema => true, :strict => false})
