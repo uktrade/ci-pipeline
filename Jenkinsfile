@@ -31,7 +31,7 @@ pipeline {
           deployer.inside {
             checkout([$class: 'GitSCM', branches: [[name: env.GIT_BRANCH]], doGenerateSubmoduleConfigurations: false, extensions: [[$class: 'RelativeTargetDirectory', relativeTargetDir: '.ci'], [$class: 'SubmoduleOption', disableSubmodules: false, parentCredentials: true, recursiveSubmodules: true, reference: '', trackingSubmodules: true], [$class: 'WipeWorkspace']], submoduleCfg: [], userRemoteConfigs: [[credentialsId: env.SCM_CREDENTIAL, url: env.PIPELINE_SCM]]])
             checkout([$class: 'GitSCM', branches: [[name: env.GIT_BRANCH]], doGenerateSubmoduleConfigurations: false, extensions: [[$class: 'SubmoduleOption', disableSubmodules: false, parentCredentials: true, recursiveSubmodules: true, reference: '', trackingSubmodules: false], [$class: 'RelativeTargetDirectory', relativeTargetDir: '.ci/config']], submoduleCfg: [], userRemoteConfigs: [[credentialsId: env.SCM_CREDENTIAL, url: env.PIPELINE_CONF_SCM]]])
-            sh "cd ${env.WORKSPACE}/.ci && ./bootstrap.rb parse-all"
+            sh "${env.WORKSPACE}/.ci/bootstrap.rb parse-all"
             options_json = readJSON file: "${env.WORKSPACE}/.ci/.option.json"
           }
         }
@@ -89,16 +89,16 @@ pipeline {
           deployer.inside {
             withCredentials([string(credentialsId: env.VAULT_TOKEN_ID, variable: 'TOKEN')]) {
               env.VAULT_SERECT_ID = TOKEN
-              sh "cd ${env.WORKSPACE}/.ci && ./bootstrap.rb parse ${env.Team}/${env.Project}/${env.Environment}"
+              sh "${env.WORKSPACE}/.ci/bootstrap.rb parse ${env.Team}/${env.Project}/${env.Environment}"
             }
             envars = readJSON file: "${env.WORKSPACE}/.ci/.env.json"
             config = readJSON file: "${env.WORKSPACE}/.ci/.config.json"
 
-            lock = sh(script: "cd ${env.WORKSPACE}/.ci && ./bootstrap.rb get-lock ${env.Team}/${env.Project}/${env.Environment}", returnStdout: true).trim()
+            lock = sh(script: "${env.WORKSPACE}/.ci/bootstrap.rb get-lock ${env.Team}/${env.Project}/${env.Environment}", returnStdout: true).trim()
             if (lock) {
               error 'Parallel job of the same project is not allow.'
             } else {
-              sh "cd ${env.WORKSPACE}/.ci && ./bootstrap.rb lock ${env.Team}/${env.Project}/${env.Environment}"
+              sh "${env.WORKSPACE}/.ci/bootstrap.rb lock ${env.Team}/${env.Project}/${env.Environment}"
             }
 
             // consul_env_response = httpRequest url: "${env.CONSUL}/${env.Team}/${env.Project}/${env.Environment}"
@@ -500,7 +500,7 @@ pipeline {
 
     always {
       script {
-        sh "cd ${env.WORKSPACE}/.ci && ./bootstrap.rb unlock ${env.Team}/${env.Project}/${env.Environment}"
+        sh "${env.WORKSPACE}/.ci/bootstrap.rb unlock ${env.Team}/${env.Project}/${env.Environment}"
         // consul_env.lock = false
         // writeJSON json: consul_env, file: "${env.WORKSPACE}/.ci/.consul.json"
         // consul_data = readFile "${env.WORKSPACE}/.ci/.consul.json"
