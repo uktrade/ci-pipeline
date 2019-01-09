@@ -95,24 +95,11 @@ pipeline {
             config = readJSON file: "${env.WORKSPACE}/.ci/.config.json"
 
             lock = sh(script: "${env.WORKSPACE}/.ci/bootstrap.rb get-lock ${env.Team}/${env.Project}/${env.Environment}", returnStdout: true).trim()
-            if (lock) {
+            if (lock == 'true') {
               error 'Parallel job of the same project is not allow.'
             } else {
               sh "${env.WORKSPACE}/.ci/bootstrap.rb lock ${env.Team}/${env.Project}/${env.Environment}"
             }
-
-            // consul_env_response = httpRequest url: "${env.CONSUL}/${env.Team}/${env.Project}/${env.Environment}"
-            // consul_env_response_json = readJSON text: consul_env_response.content
-            // consul_env_json = new String(consul_env_response_json[0]['Value'].decodeBase64())
-            // consul_env = readJSON text: consul_env_json
-            // if (consul_env.lock) {
-            //   error 'Parallel job of the same project is not allow.'
-            // } else {
-            //   consul_env.lock = true
-            //   writeJSON json: consul_env, file: "${env.WORKSPACE}/.ci/.consul.json"
-            //   consul_data = readFile "${env.WORKSPACE}/.ci/.consul.json"
-            //   httpRequest url: "${env.CONSUL}/${env.Team}/${env.Project}/${env.Environment}", httpMode: 'PUT', requestBody: consul_data
-            // }
           }
         }
       }
@@ -501,11 +488,6 @@ pipeline {
     always {
       script {
         sh "${env.WORKSPACE}/.ci/bootstrap.rb unlock ${env.Team}/${env.Project}/${env.Environment}"
-        // consul_env.lock = false
-        // writeJSON json: consul_env, file: "${env.WORKSPACE}/.ci/.consul.json"
-        // consul_data = readFile "${env.WORKSPACE}/.ci/.consul.json"
-        // httpRequest url: "${env.CONSUL}/${env.Team}/${env.Project}/${env.Environment}", httpMode: 'PUT', requestBody: consul_data
-
         message_colour_map = readJSON text: '{"SUCCESS": "#36a64f", "FAILURE": "#FF0000", "UNSTABLE": "#FFCC00"}'
         message_colour = message_colour_map."${currentBuild.currentResult}".toString()
         message_body = """
