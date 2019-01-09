@@ -14,9 +14,9 @@ VAULT_API = ENV['VAULT_API']
 VAULT_PREFIX = ENV['VAULT_PREFIX']
 VAULT_ROLE_ID = ENV['VAULT_ROLE_ID']
 VAULT_SERECT_ID = ENV['VAULT_SERECT_ID']
-OPTION_FILE = "#{ENV['WORKSPACE']}/.ci/option.json"
-ENV_FILE = "#{ENV['WORKSPACE']}/.ci/env.json"
-CONF_FILE = "#{ENV['WORKSPACE']}/.ci/config.json"
+OPTION_FILE = "#{ENV['WORKSPACE']}/.option.json"
+ENV_FILE = "#{ENV['WORKSPACE']}/.env.json"
+CONF_FILE = "#{ENV['WORKSPACE']}/.config.json"
 
 def validate(schema, data)
   return JSON::Validator.validate!(schema, data, {:validate_schema => true, :strict => false})
@@ -57,11 +57,11 @@ def save_json(file, data)
 end
 
 def main(args)
-  team, project, env = args
+  ops, params = args
+  case ops
 
-  if team.nil? || project.nil? || env.nil? || ENV['VAULT_SERECT_ID'].nil?
-    puts "Validating files:"
-
+  when "parse-all"
+    puts "Validating config files:"
     config_files = Array.new
     Dir.foreach(CONFIG_DIR) do |file|
       if MIME::Types.type_for(file).to_s =~ /(text|application)\/(x-)?yaml/
@@ -73,14 +73,16 @@ def main(args)
         end
       end
     end
-
     puts "Updating Consul data."
-
     option_data = Hash.new
     config_files.each { |file|
       file_data = YAML.load_file(file)
       env_data = Array.new
       file_data['environments'].each { |env|
+        if consul_get("#{file_data['namespace']}/#{file_data['name']}/#{env['environment']}" != 404)
+          consul_get("#{file_data['namespace']}/#{file_data['name']}/#{env['environment']}")['lock'].nil? ? lock = false : lock = consul_get("#{file_data['namespace']}/#{file_data['name']}/#{env['environment']}")['lock']
+          env.deep_merge!({'lock' => lock})
+        end
         consul_add("#{file_data['namespace']}/#{file_data['name']}/#{env['environment']}", JSON.dump(env))
         env_data += [ env['environment'] ]
       }
@@ -101,8 +103,8 @@ def main(args)
     }
     save_json(OPTION_FILE, option_data)
 
-  else
-
+  when "parse"
+    team, project, env = params.split('/')
     puts "Saving environment variables."
 
     data = consul_get("#{team}/#{project}/#{env}")
@@ -135,6 +137,23 @@ def main(args)
 
     save_json(CONF_FILE, conf_content)
     save_json(ENV_FILE, file_content)
+
+  when "get-lock"
+    team, project, env = params.split('/')
+    puts consul_get("#{team}/#{project}/#{env}")['lock']
+
+  when "lock"
+    team, project, env = params.split('/')
+    lock = consul_get("#{team}/#{project}/#{env}").deep_merge!({'lock' => true})
+    consul_add("#{team}/#{project}/#{env}", JSON.dump(lock))
+
+  when "unlock"
+    team, project, env = params.split('/')
+    unlock = consul_get("#{team}/#{project}/#{env}").deep_merge!({'lock' => false})
+    consul_add("#{team}/#{project}/#{env}", JSON.dump(unlock))
+
+  else
+    abort("Usage: bootstrap.rb [parse-all|parse|get-lock|lock|unlock] [APP_PATH|Team/Porject/Environment]")
   end
 
 end

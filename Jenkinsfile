@@ -29,10 +29,9 @@ pipeline {
           deployer = docker.image("quay.io/uktrade/deployer:${env.GIT_BRANCH.split("/")[1]}")
           deployer.pull()
           deployer.inside {
-            checkout([$class: 'GitSCM', branches: [[name: env.GIT_BRANCH]], doGenerateSubmoduleConfigurations: false, extensions: [[$class: 'SubmoduleOption', disableSubmodules: false, parentCredentials: true, recursiveSubmodules: true, reference: '', trackingSubmodules: false]], submoduleCfg: [], userRemoteConfigs: [[credentialsId: env.SCM_CREDENTIAL, url: env.PIPELINE_SCM]]])
-            checkout([$class: 'GitSCM', branches: [[name: env.GIT_BRANCH]], doGenerateSubmoduleConfigurations: false, extensions: [[$class: 'SubmoduleOption', disableSubmodules: false, parentCredentials: true, recursiveSubmodules: true, reference: '', trackingSubmodules: false], [$class: 'RelativeTargetDirectory', relativeTargetDir: 'config']], submoduleCfg: [], userRemoteConfigs: [[credentialsId: env.SCM_CREDENTIAL, url: env.PIPELINE_CONF_SCM]]])
-            sh "${env.WORKSPACE}/bootstrap.rb"
-            options_json = readJSON file: "${env.WORKSPACE}/.ci/option.json"
+            checkout([$class: 'GitSCM', branches: [[name: env.GIT_BRANCH]], doGenerateSubmoduleConfigurations: false, extensions: [[$class: 'RelativeTargetDirectory', relativeTargetDir: '.ci'], [$class: 'SubmoduleOption', disableSubmodules: false, parentCredentials: true, recursiveSubmodules: true, reference: '', trackingSubmodules: false], [$class: 'RelativeTargetDirectory', relativeTargetDir: '.ci/config']], submoduleCfg: [], userRemoteConfigs: [[credentialsId: env.SCM_CREDENTIAL, url: env.PIPELINE_CONF_SCM]]])
+            sh "cd ${env.WORKSPACE}/.ci && ./bootstrap.rb parse-all"
+            options_json = readJSON file: "${env.WORKSPACE}/.ci/.option.json"
           }
         }
       }
@@ -41,7 +40,7 @@ pipeline {
     stage('Input') {
       steps {
         script {
-          input = load "${env.WORKSPACE}/input.groovy"
+          input = load "${env.WORKSPACE}/.ci/input.groovy"
           if (!env.Team) {
             team = input(
               id: 'team', message: 'Please choose your team: ', parameters: [
@@ -89,11 +88,30 @@ pipeline {
           deployer.inside {
             withCredentials([string(credentialsId: env.VAULT_TOKEN_ID, variable: 'TOKEN')]) {
               env.VAULT_SERECT_ID = TOKEN
-              sh "${env.WORKSPACE}/bootstrap.rb ${env.Team} ${env.Project} ${env.Environment}"
+              sh "cd ${env.WORKSPACE}/.ci && ./bootstrap.rb parse ${env.Team}/${env.Project}/${env.Environment}"
             }
-            envars = readJSON file: "${env.WORKSPACE}/.ci/env.json"
-            config = readJSON file: "${env.WORKSPACE}/.ci/config.json"
-            sh "rm -rf config config@*"
+            envars = readJSON file: "${env.WORKSPACE}/.ci/.env.json"
+            config = readJSON file: "${env.WORKSPACE}/.ci/.config.json"
+
+            lock = sh(script: "cd ${env.WORKSPACE}/.ci && ./bootstrap.rb get-lock ${env.Team}/${env.Project}/${env.Environment}", returnStdout: true).trim()
+            if (lock) {
+              error 'Parallel job of the same project is not allow.'
+            } else {
+              sh "cd ${env.WORKSPACE}/.ci && ./bootstrap.rb lock ${env.Team}/${env.Project}/${env.Environment}"
+            }
+
+            // consul_env_response = httpRequest url: "${env.CONSUL}/${env.Team}/${env.Project}/${env.Environment}"
+            // consul_env_response_json = readJSON text: consul_env_response.content
+            // consul_env_json = new String(consul_env_response_json[0]['Value'].decodeBase64())
+            // consul_env = readJSON text: consul_env_json
+            // if (consul_env.lock) {
+            //   error 'Parallel job of the same project is not allow.'
+            // } else {
+            //   consul_env.lock = true
+            //   writeJSON json: consul_env, file: "${env.WORKSPACE}/.ci/.consul.json"
+            //   consul_data = readFile "${env.WORKSPACE}/.ci/.consul.json"
+            //   httpRequest url: "${env.CONSUL}/${env.Team}/${env.Project}/${env.Environment}", httpMode: 'PUT', requestBody: consul_data
+            // }
           }
         }
       }
@@ -165,6 +183,12 @@ pipeline {
               """
             }
 
+            cfignore_exist = fileExists "${env.WORKSPACE}/.cfignore"
+            if (!cfignore_exist) {
+              sh "ln -snf ${env.WORKSPACE}/.gitignore ${env.WORKSPACE}/.cfignore"
+            }
+            sh "echo .ci/ >> ${env.WORKSPACE}/.cfignore"
+
             gds_app = config.PAAS_APP.split("/")
             sh "cf target -o ${gds_app[0]} -s ${gds_app[1]}"
             cf_manifest_exist = fileExists "${env.WORKSPACE}/manifest.yml"
@@ -211,12 +235,6 @@ pipeline {
                 echo "${log_warn}Invalid CloudFoundry API V2 manifest.yml ignored."
               }
             }
-
-            cfignore_exist = fileExists "${env.WORKSPACE}/.cfignore"
-            if (!cfignore_exist) {
-              sh "ln -snf ${env.WORKSPACE}/.gitignore ${env.WORKSPACE}/.cfignore"
-            }
-            sh "echo .ci/ >> ${env.WORKSPACE}/.cfignore"
 
             sh "cf v3-create-app ${gds_app[2]}"
             space_guid = sh(script: "cf space ${gds_app[1]}  --guid", returnStdout: true).trim()
@@ -481,6 +499,12 @@ pipeline {
 
     always {
       script {
+        sh "cd ${env.WORKSPACE}/.ci && ./bootstrap.rb unlock ${env.Team}/${env.Project}/${env.Environment}"
+        // consul_env.lock = false
+        // writeJSON json: consul_env, file: "${env.WORKSPACE}/.ci/.consul.json"
+        // consul_data = readFile "${env.WORKSPACE}/.ci/.consul.json"
+        // httpRequest url: "${env.CONSUL}/${env.Team}/${env.Project}/${env.Environment}", httpMode: 'PUT', requestBody: consul_data
+
         message_colour_map = readJSON text: '{"SUCCESS": "#36a64f", "FAILURE": "#FF0000", "UNSTABLE": "#FFCC00"}'
         message_colour = message_colour_map."${currentBuild.currentResult}".toString()
         message_body = """
