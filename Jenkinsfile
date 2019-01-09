@@ -487,8 +487,10 @@ pipeline {
 
     always {
       script {
-        if (lock == 'false') {
-          sh "${env.WORKSPACE}/.ci/bootstrap.rb unlock ${env.Team}/${env.Project}/${env.Environment}"
+        deployer.inside {
+          if (lock == 'false') {
+            sh "${env.WORKSPACE}/.ci/bootstrap.rb unlock ${env.Team}/${env.Project}/${env.Environment}"
+          }
         }
 
         message_colour_map = readJSON text: '{"SUCCESS": "#36a64f", "FAILURE": "#FF0000", "UNSTABLE": "#FFCC00"}'
