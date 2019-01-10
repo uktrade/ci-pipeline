@@ -7,8 +7,8 @@ require 'rest-client'
 require 'deep_merge'
 require 'base64'
 
-CONFIG_DIR = "#{ENV['WORKSPACE']}/config"
-JSON_SCHEMA = "#{ENV['WORKSPACE']}/schema.json"
+CONFIG_DIR = "#{ENV['WORKSPACE']}/.ci/config"
+JSON_SCHEMA = "#{ENV['WORKSPACE']}/.ci/schema.json"
 CONSUL = ENV['CONSUL']
 VAULT_API = ENV['VAULT_API']
 VAULT_PREFIX = ENV['VAULT_PREFIX']
@@ -57,11 +57,11 @@ def save_json(file, data)
 end
 
 def main(args)
-  team, project, env = args
+  ops, params = args
+  case ops
 
-  if team.nil? || project.nil? || env.nil? || ENV['VAULT_SERECT_ID'].nil?
-    puts "Validating files:"
-
+  when "parse-all"
+    puts "Validating config files:"
     config_files = Array.new
     Dir.foreach(CONFIG_DIR) do |file|
       if MIME::Types.type_for(file).to_s =~ /(text|application)\/(x-)?yaml/
@@ -73,14 +73,14 @@ def main(args)
         end
       end
     end
-
     puts "Updating Consul data."
-
     option_data = Hash.new
     config_files.each { |file|
       file_data = YAML.load_file(file)
       env_data = Array.new
       file_data['environments'].each { |env|
+        existing_env = consul_get("#{file_data['namespace']}/#{file_data['name']}/#{env['environment']}")
+        existing_env['lock'].nil? ? env.deep_merge!({'lock' => false}) : env.deep_merge!({'lock' => existing_env['lock']}) if existing_env != 404
         consul_add("#{file_data['namespace']}/#{file_data['name']}/#{env['environment']}", JSON.dump(env))
         env_data += [ env['environment'] ]
       }
@@ -101,8 +101,8 @@ def main(args)
     }
     save_json(OPTION_FILE, option_data)
 
-  else
-
+  when "parse"
+    team, project, env = params.split('/')
     puts "Saving environment variables."
 
     data = consul_get("#{team}/#{project}/#{env}")
@@ -135,6 +135,18 @@ def main(args)
 
     save_json(CONF_FILE, conf_content)
     save_json(ENV_FILE, file_content)
+
+  when "get-lock"
+    puts consul_get(params)['lock']
+
+  when "lock"
+    consul_add(params, JSON.dump(consul_get(params).deep_merge!({'lock' => true})))
+
+  when "unlock"
+    consul_add(params, JSON.dump(consul_get(params).deep_merge!({'lock' => false})))
+
+  else
+    abort("Usage: bootstrap.rb [parse-all|parse|get-lock|lock|unlock] [APP_PATH|Team/Porject/Environment]")
   end
 
 end
