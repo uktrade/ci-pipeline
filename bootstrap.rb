@@ -79,10 +79,8 @@ def main(args)
       file_data = YAML.load_file(file)
       env_data = Array.new
       file_data['environments'].each { |env|
-        if consul_get("#{file_data['namespace']}/#{file_data['name']}/#{env['environment']}" != 404)
-          consul_get("#{file_data['namespace']}/#{file_data['name']}/#{env['environment']}")['lock'].nil? ? lock = false : lock = consul_get("#{file_data['namespace']}/#{file_data['name']}/#{env['environment']}")['lock']
-          env.deep_merge!({'lock' => lock})
-        end
+        existing_env = consul_get("#{file_data['namespace']}/#{file_data['name']}/#{env['environment']}")
+        existing_env['lock'].nil? ? env.deep_merge!({'lock' => false}) : env.deep_merge!({'lock' => existing_env['lock']}) if existing_env != 404
         consul_add("#{file_data['namespace']}/#{file_data['name']}/#{env['environment']}", JSON.dump(env))
         env_data += [ env['environment'] ]
       }
