@@ -297,8 +297,9 @@ pipeline {
               """
               try {
                 timeout(time: 300, unit: 'SECONDS') {
-                  docker_builds_count = sh(script: "cf curl '/v3/builds?app_guids=${new_app_guid}&states=STAGED' | jq '.resources | length'", returnStdout: true).trim()
+                  docker_builds_count = 0
                   while (docker_builds_count == 0) {
+                    docker_builds_count = sh(script: "cf curl '/v3/builds?app_guids=${new_app_guid}&states=STAGED' | jq '.resources | length'", returnStdout: true).trim()
                     sleep 10
                   }
                   release_guid = sh(script: "cf curl '/v3/builds?app_guids=${new_app_guid}&states=STAGED' | jq -r '.resources[].droplet.guid'", returnStdout: true).trim()
