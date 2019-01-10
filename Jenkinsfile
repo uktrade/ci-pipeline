@@ -211,8 +211,8 @@ pipeline {
                       env.PAAS_TIMEOUT = value
                       break
                     case 'docker':
-                      echo "${log_info}Detected Docker deployement ${value}"
-                      env.DOCKER_DEPLOY_IMAGE = value.image
+                      echo "${log_info}Detected Docker deployement ${value['image']}"
+                      env.DOCKER_DEPLOY_IMAGE = value['image']
                       break
                     default:
                       echo "${log_warn}CloudFoundry API V2 manifest.yml attribute '${key}' is not supported."
@@ -297,11 +297,17 @@ pipeline {
               """
               try {
                 timeout(time: 300, unit: 'SECONDS') {
-                  docker_builds_count = sh(script: "cf curl '/v3/builds?app_guids=${new_app_guid}&states=STAGED' | jq '.resources | length'", returnStdout: true).trim()
-                  while (docker_builds_count == 0) {
+                  docker_build = 'false'
+                  while (docker_build == 'false') {
+                    docker_build = sh(script: "cf curl '/v3/builds?app_guids=${new_app_guid}' | jq '.resources[] | select(.state == \"STAGED\") and select(.package.guid == \"${package_guid}\")'", returnStdout: true).trim()
+                    docker_build_fail = sh(script: "cf curl '/v3/builds?app_guids=${new_app_guid}' | jq '.resources[] | select(.state == \"FAILED\") and select(.package.guid == \"${package_guid}\")'", returnStdout: true).trim()
+                    if (docker_build_fail == 'true') {
+                      docker_build_err = sh(script: "cf curl '/v3/builds?app_guids=${new_app_guid}' | jq '.resources[] | select(.state == \"FAILED\") | select(.package.guid == \"${package_guid}\").error'", returnStdout: true).trim()
+                      error docker_build_err
+                    }
                     sleep 10
                   }
-                  release_guid = sh(script: "cf curl '/v3/builds?app_guids=${new_app_guid}&states=STAGED' | jq -r '.resources[].droplet.guid'", returnStdout: true).trim()
+                  release_guid = sh(script: "cf curl '/v3/builds?app_guids=${new_app_guid}' | jq -r '.resources[] | select(.package.guid == \"${package_guid}\") | select(.state == \"STAGED\").droplet.guid'", returnStdout: true).trim()
                   sh "cf v3-set-droplet ${new_app_name} --droplet-guid ${release_guid}"
                 }
               } catch (err) {
