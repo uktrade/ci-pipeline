@@ -140,12 +140,10 @@ def main(args)
     puts consul_get(params)['lock']
 
   when "lock"
-    lock = consul_get(params).deep_merge!({'lock' => true})
-    consul_add(params, JSON.dump(lock))
+    consul_add(params, JSON.dump(consul_get(params).deep_merge!({'lock' => true})))
 
   when "unlock"
-    unlock = consul_get(params).deep_merge!({'lock' => false})
-    consul_add(params, JSON.dump(unlock))
+    consul_add(params, JSON.dump(consul_get(params).deep_merge!({'lock' => false})))
 
   else
     abort("Usage: bootstrap.rb [parse-all|parse|get-lock|lock|unlock] [APP_PATH|Team/Porject/Environment]")
