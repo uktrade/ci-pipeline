@@ -211,8 +211,8 @@ pipeline {
                       env.PAAS_TIMEOUT = value
                       break
                     case 'docker':
-                      echo "${log_info}Detected Docker deployement ${value}"
-                      env.DOCKER_DEPLOY_IMAGE = value.image
+                      echo "${log_info}Detected Docker deployement ${value['image']}"
+                      env.DOCKER_DEPLOY_IMAGE = value['image']
                       break
                     default:
                       echo "${log_warn}CloudFoundry API V2 manifest.yml attribute '${key}' is not supported."
