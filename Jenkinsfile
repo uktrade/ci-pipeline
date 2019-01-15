@@ -196,11 +196,14 @@ pipeline {
                           buildpack_json.buildpacks[index] = build
                         }
                       }
-                      writeJSON file: "${env.WORKSPACE}/.ci/buildpacks.json", json:buildpack_json
+                      writeJSON file: "${env.WORKSPACE}/.ci/buildpacks.json", json: buildpack_json
                       break
-                    case 'health-check-type':
+                    case 'stack':
                       echo "${log_info}Setting application ${gds_app[2]} health-check-type to ${value}"
-                      env.PAAS_HEALTHCHECK_TYPE = value
+                    case 'health-check-type':
+                      echo "${log_info}Setting application ${gds_app[2]} base image to ${value}"
+                      buildpack_json['stack'] = value
+                      writeJSON file: "${env.WORKSPACE}/.ci/buildpacks.json", json: buildpack_json
                       break
                     case 'health-check-http-endpoint':
                       echo "${log_info}Setting application ${gds_app[2]} health-check-http-endpoint to ${value}"
