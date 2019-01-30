@@ -111,7 +111,7 @@ def main(args)
       (index + 1) < data['run'].length ? run += "#{cmd} && " : run += cmd
     } unless data['run'].empty?
     file_content = Hash.new
-    data['vars'].each { |var| file_content.deep_merge!(var) } unless data['vars'].empty?
+    data['vars'].each { |var| var.each_pair { |key, value| file_content.deep_merge!({key => value.to_s}) } } unless data['vars'].empty?
     if data['secrets']
       secrets = vault_get("#{team}/#{project}/#{env}")
       unless secrets.empty?
