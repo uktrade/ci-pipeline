@@ -111,14 +111,10 @@ def main(args)
       (index + 1) < data['run'].length ? run += "#{cmd} && " : run += cmd
     } unless data['run'].empty?
     file_content = Hash.new
-    data['vars'].each { |var| var.each_pair { |key, value| file_content.deep_merge!({key => value.to_s}) } } unless data['vars'].empty?
-    if data['secrets']
-      secrets = vault_get("#{team}/#{project}/#{env}")
-      unless secrets.empty?
-        file_content.deep_merge!(secrets)
-        file_content.each { |key, value| file_content.deep_merge!({key => value.to_s}) unless value.kind_of? String }
-      end
-    end
+    data['vars'].each { |var| file_content.deep_merge!(var) } unless data['vars'].empty?
+    secrets = vault_get("#{team}/#{project}/#{env}") if data['secrets']
+    file_content.deep_merge!(secrets) unless !defined?(secrets) && secrets.empty?
+    file_content.each { |key, value| file_content.deep_merge!({key => value.to_s}) } unless file_content.empty?
 
     conf_content = {
       'SCM' => consul_get("#{team}/#{project}/_")['scm'],
