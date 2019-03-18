@@ -504,7 +504,7 @@ pipeline {
           }
         }
 
-        message_colour_map = readJSON text: '{"SUCCESS": "#36a64f", "FAILURE": "#FF0000", "UNSTABLE": "#FFCC00"}'
+        message_colour_map = readJSON text: '{"SUCCESS": "good", "FAILURE": "danger", "UNSTABLE": "warning"}'
         message_colour = message_colour_map."${currentBuild.currentResult}".toString()
         message_body = """
           [{
