@@ -258,7 +258,8 @@ pipeline {
               """
             }
 
-            sh "cf v3-set-env ${new_app_name} GIT_COMMIT ${app_git_commit}"
+            sh "cf v3-set-env ${new_app_name} GIT_COMMIT '${app_git_commit}'"
+            sh "cf v3-set-env ${new_app_name} GIT_BRANCH '${env.Version}'"
             vars_check = readFile file: "${env.WORKSPACE}/.ci/env.json"
             if (vars_check.trim() != '{}') {
               sh "jq '{\"var\": .}' ${env.WORKSPACE}/.ci/env.json > ${env.WORKSPACE}/.ci/cf_envar.json"
