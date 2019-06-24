@@ -3,7 +3,7 @@ FROM ubuntu:18.04
 ENV CF_CLI_VER 6.45.0
 ENV NVM_VER=v0.34.0
 ENV JABBA_VER=0.11.2
-ENV RVM_VER=1.29.7
+ENV RVM_VER=1.29.8
 
 ENV DEBIAN_FRONTEND=noninteractive
 RUN groupadd -g 1000 ubuntu && \
