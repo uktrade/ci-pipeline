@@ -26,6 +26,7 @@ pipeline {
           validateDeclarativePipeline("${env.WORKSPACE}/Jenkinsfile")
           log_info = "\033[32mINFO: "
           log_warn = "\033[31mWARNING: "
+          lock = "false"
           deployer = docker.image("quay.io/uktrade/deployer:${env.GIT_BRANCH.split("/")[1]}")
           docker_args = "--network host"
           deployer.pull()
