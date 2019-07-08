@@ -53,7 +53,7 @@ def vault_get(path)
 end
 
 def save_json(file, data)
-  return File.write(file, JSON.dump(data))
+  return File.write(file, JSON.pretty_generate(data))
 end
 
 def main(args)
@@ -67,7 +67,7 @@ def main(args)
       if MIME::Types.type_for(file).to_s =~ /(text|application)\/(x-)?yaml/
         puts "+ config/#{file}"
         begin
-          config_files += ["#{CONFIG_DIR}/#{file}"] if validate(JSON_SCHEMA, JSON.dump(YAML.load_file("#{CONFIG_DIR}/#{file}")))
+          config_files += ["#{CONFIG_DIR}/#{file}"] if validate(JSON_SCHEMA, JSON.pretty_generate(YAML.load_file("#{CONFIG_DIR}/#{file}")))
         rescue Exception => e
           puts e.to_s
         end
@@ -81,7 +81,7 @@ def main(args)
       file_data['environments'].each { |env|
         existing_env = consul_get("#{file_data['namespace']}/#{file_data['name']}/#{env['environment']}")
         existing_env['lock'].nil? ? env.deep_merge!({'lock' => false}) : env.deep_merge!({'lock' => existing_env['lock']}) if existing_env != 404
-        consul_add("#{file_data['namespace']}/#{file_data['name']}/#{env['environment']}", JSON.dump(env))
+        consul_add("#{file_data['namespace']}/#{file_data['name']}/#{env['environment']}", JSON.pretty_generate(env))
         env_data += [ env['environment'] ]
       }
 
@@ -96,7 +96,7 @@ def main(args)
         'scm' => file_data['scm'],
         'environments' => env_data
       }
-      consul_add("#{file_data['namespace']}/#{file_data['name']}/_", JSON.dump(path_data))
+      consul_add("#{file_data['namespace']}/#{file_data['name']}/_", JSON.pretty_generate(path_data))
       option_data.deep_merge!({ file_data['namespace'] => { file_data['name'] => env_data }})
     }
     save_json(OPTION_FILE, option_data)
@@ -136,10 +136,10 @@ def main(args)
     puts consul_get(params)['lock']
 
   when "lock"
-    consul_add(params, JSON.dump(consul_get(params).deep_merge!({'lock' => true})))
+    consul_add(params, JSON.pretty_generate(consul_get(params).deep_merge!({'lock' => true})))
 
   when "unlock"
-    consul_add(params, JSON.dump(consul_get(params).deep_merge!({'lock' => false})))
+    consul_add(params, JSON.pretty_generate(consul_get(params).deep_merge!({'lock' => false})))
 
   else
     abort("Usage: bootstrap.rb [parse-all|parse|get-lock|lock|unlock] [APP_PATH|Team/Porject/Environment]")
