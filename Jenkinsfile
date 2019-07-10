@@ -433,8 +433,22 @@ pipeline {
                 cf target -o ${gds_app[0]} -s ${gds_app[1]}
                 cf curl '/v3/apps/${app_guid}' -X PATCH -d '{"name": "${gds_app[2]}-delete"}' | jq -C 'del(.links, .relationships)'
                 cf curl '/v3/apps/${new_app_guid}' -X PATCH -d '{"name": "${gds_app[2]}"}' | jq -C 'del(.links, .relationships)'
-                cf curl '/v3/apps/${app_guid}' -X DELETE
               """
+              try {
+                timeout(time: 60, unit: 'SECONDS') {
+                  old_app_stop = 'false'
+                  while (old_app_stop != "STOPPED") {
+                    echo "${log_info}Gracefully stopping app ${gds_app[2]}-delete"
+                    old_app_stop = sh(script: "cf curl '/v3/apps/${app_guid}/actions/stop' -X POST | jq -r '.state'", returnStdout: true).trim()
+                    sleep 5
+                  }
+                  echo "${log_info}Gracefully stopped app ${gds_app[2]}-delete"
+                  sh "cf curl '/v3/apps/${app_guid}' -X DELETE"
+                }
+              } catch (err) {
+                echo "${log_warn}Force deleting app ${gds_app[2]}-delete"
+                sh "cf curl '/v3/apps/${app_guid}' -X DELETE"
+              }
             }
           }
         }
