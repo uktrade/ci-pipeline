@@ -504,6 +504,32 @@ pipeline {
       }
     }
 
+    stage("Deploy ECS") {
+      when {
+        expression {
+          config.PAAS_TYPE == 'ecs'
+        }
+      }
+
+      steps {
+        script {
+          deployer.inside(docker_args) {
+            if (envars.AWS_DEFAULT_REGION == null) {
+              aws_region = env.AWS_DEFAULT_REGION
+            } else {
+              aws_region = envars.AWS_DEFAULT_REGION
+            }
+            sh """
+              set +x
+              export AWS_DEFAULT_REGION=${aws_region}
+              export AWS_ACCESS_KEY_ID=${envars.AWS_ACCESS_KEY_ID}
+              export AWS_SECRET_ACCESS_KEY=${envars.AWS_SECRET_ACCESS_KEY}
+            """
+          }
+        }
+      }
+    }
+
   }
 
   post {

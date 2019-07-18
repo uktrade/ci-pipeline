@@ -35,7 +35,7 @@
           "type": {
             "description": "Platform type",
             "type": "string",
-            "enum": ["gds", "s3"]
+            "enum": ["gds", "s3", "ecs"]
           },
           "app": {
             "description": "Destination app name",
