@@ -9,6 +9,7 @@ pipeline {
   options {
     timestamps()
     ansiColor('xterm')
+    buildDiscarder(logRotator(daysToKeepStr: '180'))
   }
 
   parameters {
