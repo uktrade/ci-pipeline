@@ -413,7 +413,7 @@ pipeline {
               destinations = readJSON text: destinations_json
               destinations.each { dest ->
                 sh """
-                  cf curl '/v3/routes/${route}/destinations' -X POST -d '{"destinations": [ {"app": {"guid": "${new_app_guid}", "process": {"type": "${dest.app.process.type}"}}} ]}'
+                  cf curl '/v3/routes/${route}/destinations' -X POST -d '{"destinations": [ {"app": {"guid": "${new_app_guid}", "process": {"type": "${dest.app.process.type}"}}} ]}' | jq -C 'del(.links)'
                   cf curl '/v3/routes/${route}/destinations/${dest.guid}' -X DELETE
                 """
               }
