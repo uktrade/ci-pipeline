@@ -235,9 +235,9 @@ pipeline {
             sh "cf v3-create-app ${gds_app[2]}"
             space_guid = sh(script: "cf space ${gds_app[1]}  --guid", returnStdout: true).trim()
             app_guid = sh(script: "cf app ${gds_app[2]} --guid | perl -lne 'print \$& if /(\\{{0,1}([0-9a-fA-F]){8}-([0-9a-fA-F]){4}-([0-9a-fA-F]){4}-([0-9a-fA-F]){4}-([0-9a-fA-F]){12}\\}{0,1})/'", returnStdout: true).trim()
-            app_routes_json = sh(script: "cf curl '/v2/apps/${app_guid}/route_mappings' | jq '[.resources[].entity.route_guid]' 2>/dev/null || echo '[]'", returnStdout: true).trim()
+            app_routes_json = sh(script: "cf curl '/v3/apps/${app_guid}/routes' | jq '[.resources[].guid]'", returnStdout: true).trim()
             app_routes = readJSON text: app_routes_json
-            app_svc_json = sh(script: "cf curl '/v2/apps/${app_guid}/service_bindings' | jq '.resources[] | [.entity.service_instance_guid]' | jq -s add", returnStdout: true).trim()
+            app_svc_json = sh(script: "cf curl '/v2/apps/${app_guid}/service_bindings' | jq '[.resources[].entity.service_instance_guid]'", returnStdout: true).trim()
             app_scale_json = sh(script: "cf curl '/v3/apps/${app_guid}/processes' | jq '.resources | del(.[].links)'", returnStdout: true).trim()
             app_scale = readJSON text: app_scale_json
             app_network_policy_json = sh(script: "cf curl '/networking/v1/external/policies?id=${app_guid}' | jq 'del(.total_policies)'", returnStdout: true).trim()
@@ -408,13 +408,16 @@ pipeline {
             }
 
             echo "${log_info}Switching app routes"
-            app_routes.each {
-              sh """
-                cf curl '/v2/routes/${it}/apps/${new_app_guid}' -X PUT | jq -C '.'
-                cf curl '/v2/routes/${it}/apps/${app_guid}' -X DELETE
-              """
+            app_routes.each { route ->
+              destinations_json = sh(script: "cf curl '/v3/routes/${route}/destinations' | jq '[.destinations[] | select(.app.guid=\"${app_guid}\")]'", returnStdout: true).trim()
+              destinations = readJSON text: destinations_json
+              destinations.each { dest ->
+                sh """
+                  cf curl '/v3/routes/${route}/destinations' -X POST -d '{"destinations": [ {"app": {"guid": "${new_app_guid}", "process": {"type": "${dest.app.process.type}"}}} ]}' | jq -C 'del(.links)'
+                  cf curl '/v3/routes/${route}/destinations/${dest.guid}' -X DELETE
+                """
+              }
             }
-
           }
         }
       }
