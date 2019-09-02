@@ -409,7 +409,7 @@ pipeline {
 
             echo "${log_info}Switching app routes"
             app_routes.each { route ->
-              destinations_json = sh(script: "cf curl '/v3/routes/${app_guid}/destinations' | jq '[.destinations[] | select(.app.guid=\"${app_guid}\")]'", returnStdout: true).trim()
+              destinations_json = sh(script: "cf curl '/v3/routes/${route}/destinations' | jq '[.destinations[] | select(.app.guid=\"${app_guid}\")]'", returnStdout: true).trim()
               destinations = readJSON text: destinations_json
               destinations.each { dest ->
                 sh """
