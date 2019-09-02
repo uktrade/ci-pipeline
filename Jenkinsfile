@@ -408,13 +408,16 @@ pipeline {
             }
 
             echo "${log_info}Switching app routes"
-            app_routes.each {
-              sh """
-                cf curl '/v2/routes/${it}/apps/${new_app_guid}' -X PUT | jq -C '.'
-                cf curl '/v2/routes/${it}/apps/${app_guid}' -X DELETE
-              """
+            app_routes.each { route ->
+              destinations_json = sh(script: "cf curl '/v3/routes/${app_guid}/destinations' | jq '[.destinations[] | select(.app.guid=\"${app_guid}\")]'", returnStdout: true).trim()
+              destinations = readJSON text: destinations_json
+              destinations.each { dest ->
+                sh """
+                  cf curl '/v3/routes/${route}/destinations' -X POST -d '{"destinations": [ {"app": {"guid": "${new_app_guid}", "process": {"type": "${dest.app.process.type}"}}} ]}'
+                  cf curl '/v3/routes/${route}/destinations/${dest.guid}' -X DELETE
+                """
+              }
             }
-
           }
         }
       }
