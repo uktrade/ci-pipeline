@@ -32,8 +32,8 @@ pipeline {
           docker_args = "--network host"
           deployer.pull()
           deployer.inside(docker_args) {
-            checkout([$class: 'GitSCM', branches: [[name: env.GIT_BRANCH]], doGenerateSubmoduleConfigurations: false, extensions: [[$class: 'RelativeTargetDirectory', relativeTargetDir: '.ci'], [$class: 'SubmoduleOption', disableSubmodules: false, parentCredentials: true, recursiveSubmodules: true, trackingSubmodules: false], [$class: 'WipeWorkspace'], [$class: 'CloneOption', shallow: true, noTags: false]], submoduleCfg: [], userRemoteConfigs: [[credentialsId: env.SCM_CREDENTIAL, url: env.PIPELINE_SCM]]])
-            checkout([$class: 'GitSCM', branches: [[name: env.GIT_BRANCH]], doGenerateSubmoduleConfigurations: false, extensions: [[$class: 'SubmoduleOption', disableSubmodules: false, parentCredentials: true, recursiveSubmodules: true, trackingSubmodules: false], [$class: 'RelativeTargetDirectory', relativeTargetDir: '.ci/config'], [$class: 'CloneOption', shallow: true, noTags: false]], submoduleCfg: [], userRemoteConfigs: [[credentialsId: env.SCM_CREDENTIAL, url: env.PIPELINE_CONF_SCM]]])
+            checkout([$class: 'GitSCM', branches: [[name: env.GIT_BRANCH]], doGenerateSubmoduleConfigurations: false, extensions: [[$class: 'RelativeTargetDirectory', relativeTargetDir: '.ci'], [$class: 'SubmoduleOption', disableSubmodules: false, parentCredentials: true, recursiveSubmodules: true, trackingSubmodules: false, shallow: true], [$class: 'WipeWorkspace'], [$class: 'CloneOption', shallow: true, noTags: false]], submoduleCfg: [], userRemoteConfigs: [[credentialsId: env.SCM_CREDENTIAL, url: env.PIPELINE_SCM]]])
+            checkout([$class: 'GitSCM', branches: [[name: env.GIT_BRANCH]], doGenerateSubmoduleConfigurations: false, extensions: [[$class: 'SubmoduleOption', disableSubmodules: false, parentCredentials: true, recursiveSubmodules: true, trackingSubmodules: false, shallow: true], [$class: 'RelativeTargetDirectory', relativeTargetDir: '.ci/config'], [$class: 'CloneOption', shallow: true, noTags: false]], submoduleCfg: [], userRemoteConfigs: [[credentialsId: env.SCM_CREDENTIAL, url: env.PIPELINE_CONF_SCM]]])
             sh "${env.WORKSPACE}/.ci/bootstrap.rb parse-all"
             options_json = readJSON file: "${env.WORKSPACE}/.ci/.option.json"
           }
@@ -112,7 +112,7 @@ pipeline {
       steps {
         script {
           deployer.inside(docker_args) {
-            checkout([$class: 'GitSCM', branches: [[name: env.Version]], doGenerateSubmoduleConfigurations: false, extensions: [[$class: 'SubmoduleOption', disableSubmodules: false, parentCredentials: true, recursiveSubmodules: true, trackingSubmodules: false], [$class: 'CloneOption', shallow: true, noTags: false]], submoduleCfg: [], userRemoteConfigs: [[credentialsId: env.SCM_CREDENTIAL, url: config.SCM]]])
+            checkout([$class: 'GitSCM', branches: [[name: env.Version]], doGenerateSubmoduleConfigurations: false, extensions: [[$class: 'SubmoduleOption', disableSubmodules: false, parentCredentials: true, recursiveSubmodules: true, trackingSubmodules: false, shallow: true], [$class: 'CloneOption', shallow: true, noTags: false]], submoduleCfg: [], userRemoteConfigs: [[credentialsId: env.SCM_CREDENTIAL, url: config.SCM]]])
 
             app_git_commit = sh(script: "git rev-parse HEAD", returnStdout: true).trim()
             node_ver_exist = fileExists "${env.WORKSPACE}/.nvmrc"
