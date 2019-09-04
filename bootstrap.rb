@@ -65,7 +65,7 @@ def main(args)
     config_files = Array.new
     Dir.foreach(CONFIG_DIR) do |file|
       if MIME::Types.type_for(file).to_s =~ /(text|application)\/(x-)?yaml/
-        puts "> #{CONFIG_DIR}/#{file}"
+        puts "> #{CONFIG_DIR.gsub(/#{ENV['PWD']}/, '')}/#{file}"
         begin
           config_files += ["#{CONFIG_DIR}/#{file}"] if validate(JSON_SCHEMA, JSON.pretty_generate(YAML.load_file("#{CONFIG_DIR}/#{file}")))
         rescue Exception => e
