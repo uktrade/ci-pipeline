@@ -1,8 +1,27 @@
 pipeline {
 
   agent {
-    node {
-      label env.CI_SLAVE
+    kubernetes {
+      defaultContainer 'jnlp'
+      yaml """
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    job: ${env.BUILD_URL}
+spec:
+  containers:
+  - name: deployer
+    image: quay.io/uktrade/deployer:latest
+    command:
+    - cat
+    tty: true
+  - name: busybox
+    image: busybox
+    command:
+    - cat
+    tty: true
+"""
     }
   }
 
@@ -28,10 +47,7 @@ pipeline {
           log_info = "\033[32mINFO: "
           log_warn = "\033[31mWARNING: "
           lock = "false"
-          deployer = docker.image("quay.io/uktrade/deployer:${env.GIT_BRANCH.split("/")[1]}")
-          docker_args = "--network host"
-          deployer.pull()
-          deployer.inside(docker_args) {
+          container('deployer') {
             checkout([$class: 'GitSCM', branches: [[name: env.GIT_BRANCH]], doGenerateSubmoduleConfigurations: false, extensions: [[$class: 'RelativeTargetDirectory', relativeTargetDir: '.ci'], [$class: 'SubmoduleOption', disableSubmodules: false, parentCredentials: true, recursiveSubmodules: true, trackingSubmodules: false, shallow: true], [$class: 'WipeWorkspace'], [$class: 'CloneOption', shallow: true, noTags: false]], submoduleCfg: [], userRemoteConfigs: [[credentialsId: env.SCM_CREDENTIAL, url: env.PIPELINE_SCM]]])
             checkout([$class: 'GitSCM', branches: [[name: env.GIT_BRANCH]], doGenerateSubmoduleConfigurations: false, extensions: [[$class: 'SubmoduleOption', disableSubmodules: false, parentCredentials: true, recursiveSubmodules: true, trackingSubmodules: false, shallow: true], [$class: 'RelativeTargetDirectory', relativeTargetDir: '.ci/config'], [$class: 'CloneOption', shallow: true, noTags: false]], submoduleCfg: [], userRemoteConfigs: [[credentialsId: env.SCM_CREDENTIAL, url: env.PIPELINE_CONF_SCM]]])
             sh "${env.WORKSPACE}/.ci/bootstrap.rb parse-all"
@@ -89,7 +105,7 @@ pipeline {
     stage('Setup') {
       steps {
         script {
-          deployer.inside(docker_args) {
+          container('deployer') {
             withCredentials([string(credentialsId: env.VAULT_TOKEN_ID, variable: 'TOKEN')]) {
               env.VAULT_SERECT_ID = TOKEN
               sh "${env.WORKSPACE}/.ci/bootstrap.rb parse ${env.Team}/${env.Project}/${env.Environment}"
@@ -111,7 +127,7 @@ pipeline {
     stage('Build') {
       steps {
         script {
-          deployer.inside(docker_args) {
+          container('deployer') {
             checkout([$class: 'GitSCM', branches: [[name: env.Version]], doGenerateSubmoduleConfigurations: false, extensions: [[$class: 'SubmoduleOption', disableSubmodules: false, parentCredentials: true, recursiveSubmodules: true, trackingSubmodules: false, shallow: true], [$class: 'CloneOption', shallow: true, noTags: false]], submoduleCfg: [], userRemoteConfigs: [[credentialsId: env.SCM_CREDENTIAL, url: config.SCM]]])
 
             app_git_commit = sh(script: "git rev-parse HEAD", returnStdout: true).trim()
@@ -157,7 +173,7 @@ pipeline {
 
       steps {
         script {
-          deployer.inside(docker_args) {
+          container('deployer') {
             withCredentials([string(credentialsId: env.GDS_PAAS_CONFIG, variable: 'paas_config_raw')]) {
               paas_config = readJSON text: paas_config_raw
             }
@@ -425,7 +441,7 @@ pipeline {
       post {
         success {
           script {
-            deployer.inside(docker_args) {
+            container('deployer') {
               withCredentials([usernamePassword(credentialsId: paas_region.credential, passwordVariable: 'gds_pass', usernameVariable: 'gds_user')]) {
                 sh """
                   cf api ${paas_region.api}
@@ -459,7 +475,7 @@ pipeline {
 
         failure {
           script {
-            deployer.inside(docker_args) {
+            container('deployer') {
               withCredentials([usernamePassword(credentialsId: paas_region.credential, passwordVariable: 'gds_pass', usernameVariable: 'gds_user')]) {
                 sh """
                   cf api ${paas_region.api}
@@ -487,7 +503,7 @@ pipeline {
       }
       steps {
         script {
-          deployer.inside(docker_args) {
+          container('deployer') {
             if (envars.S3_WEBSITE_SRC == null) {
               s3_path = env.WORKSPACE
             } else {
@@ -519,7 +535,7 @@ pipeline {
 
     always {
       script {
-        deployer.inside(docker_args) {
+        container('deployer') {
           if (lock == 'false') {
             sh "${env.WORKSPACE}/.ci/bootstrap.rb unlock ${env.Team}/${env.Project}/${env.Environment}"
           }
