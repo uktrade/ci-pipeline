@@ -12,7 +12,8 @@ metadata:
 spec:
   containers:
   - name: deployer
-    image: quay.io/uktrade/deployer:latest
+    image: quay.io/uktrade/deployer:${env.GIT_BRANCH.split("/")[1]}
+    imagePullPolicy: Always
     command:
     - cat
     tty: true
