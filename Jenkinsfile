@@ -38,6 +38,10 @@ spec:
   stages {
 
     stage('Init') {
+      options {
+        timestamps()
+      }
+
       steps {
         script {
           validateDeclarativePipeline("${env.WORKSPACE}/Jenkinsfile")
@@ -57,6 +61,10 @@ spec:
     }
 
     stage('Input') {
+      options {
+        timestamps()
+      }
+
       steps {
         script {
           input = load "${env.WORKSPACE}/.ci/input.groovy"
@@ -102,6 +110,10 @@ spec:
     }
 
     stage('Setup') {
+      options {
+        timestamps()
+      }
+
       steps {
         container('deployer') {
           script {
@@ -124,6 +136,10 @@ spec:
     }
 
     stage('Build') {
+      options {
+        timestamps()
+      }
+
       steps {
         container('deployer') {
           script {
@@ -169,6 +185,11 @@ spec:
           config.PAAS_TYPE == 'gds'
         }
       }
+
+      options {
+        timestamps()
+      }
+
 
       steps {
         container('deployer') {
@@ -500,6 +521,11 @@ spec:
           config.PAAS_TYPE == 's3'
         }
       }
+
+      options {
+        timestamps()
+      }
+
       steps {
         container('deployer') {
           script {
