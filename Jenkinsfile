@@ -10,7 +10,6 @@ metadata:
   labels:
     job: ${env.JOB_NAME}
     job_id: ${env.BUILD_NUMBER}
-    job_url: ${env.BUILD_URL}
 spec:
   containers:
   - name: deployer
