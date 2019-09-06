@@ -8,11 +8,13 @@ apiVersion: v1
 kind: Pod
 metadata:
   labels:
-    job: ${env.BUILD_URL}
+    job: ${env.JOB_NAME}
+    job_id: ${env.BUILD_NUMBER}
+    job_url: ${env.BUILD_URL}
 spec:
   containers:
   - name: deployer
-    image: quay.io/uktrade/deployer:${env.GIT_BRANCH.split("/")[1]}
+    image: quay.io/uktrade/deployer
     imagePullPolicy: Always
     command:
     - cat
@@ -48,7 +50,9 @@ spec:
           log_info = "\033[32mINFO: "
           log_warn = "\033[31mWARNING: "
           lock = "false"
-          container('deployer') {
+        }
+        container('deployer') {
+          script {
             checkout([$class: 'GitSCM', branches: [[name: env.GIT_BRANCH]], doGenerateSubmoduleConfigurations: false, extensions: [[$class: 'RelativeTargetDirectory', relativeTargetDir: '.ci'], [$class: 'SubmoduleOption', disableSubmodules: false, parentCredentials: true, recursiveSubmodules: true, trackingSubmodules: false, shallow: true], [$class: 'WipeWorkspace'], [$class: 'CloneOption', shallow: true, noTags: false]], submoduleCfg: [], userRemoteConfigs: [[credentialsId: env.SCM_CREDENTIAL, url: env.PIPELINE_SCM]]])
             checkout([$class: 'GitSCM', branches: [[name: env.GIT_BRANCH]], doGenerateSubmoduleConfigurations: false, extensions: [[$class: 'SubmoduleOption', disableSubmodules: false, parentCredentials: true, recursiveSubmodules: true, trackingSubmodules: false, shallow: true], [$class: 'RelativeTargetDirectory', relativeTargetDir: '.ci/config'], [$class: 'CloneOption', shallow: true, noTags: false]], submoduleCfg: [], userRemoteConfigs: [[credentialsId: env.SCM_CREDENTIAL, url: env.PIPELINE_CONF_SCM]]])
             sh "${env.WORKSPACE}/.ci/bootstrap.rb parse-all"
@@ -105,8 +109,8 @@ spec:
 
     stage('Setup') {
       steps {
-        script {
-          container('deployer') {
+        container('deployer') {
+          script {
             withCredentials([string(credentialsId: env.VAULT_TOKEN_ID, variable: 'TOKEN')]) {
               env.VAULT_SERECT_ID = TOKEN
               sh "${env.WORKSPACE}/.ci/bootstrap.rb parse ${env.Team}/${env.Project}/${env.Environment}"
@@ -127,8 +131,8 @@ spec:
 
     stage('Build') {
       steps {
-        script {
-          container('deployer') {
+        container('deployer') {
+          script {
             checkout([$class: 'GitSCM', branches: [[name: env.Version]], doGenerateSubmoduleConfigurations: false, extensions: [[$class: 'SubmoduleOption', disableSubmodules: false, parentCredentials: true, recursiveSubmodules: true, trackingSubmodules: false, shallow: true], [$class: 'CloneOption', shallow: true, noTags: false]], submoduleCfg: [], userRemoteConfigs: [[credentialsId: env.SCM_CREDENTIAL, url: config.SCM]]])
 
             app_git_commit = sh(script: "git rev-parse HEAD", returnStdout: true).trim()
@@ -173,8 +177,8 @@ spec:
       }
 
       steps {
-        script {
-          container('deployer') {
+        container('deployer') {
+          script {
             withCredentials([string(credentialsId: env.GDS_PAAS_CONFIG, variable: 'paas_config_raw')]) {
               paas_config = readJSON text: paas_config_raw
             }
@@ -503,8 +507,8 @@ spec:
         }
       }
       steps {
-        script {
-          container('deployer') {
+        container('deployer') {
+          script {
             if (envars.S3_WEBSITE_SRC == null) {
               s3_path = env.WORKSPACE
             } else {
