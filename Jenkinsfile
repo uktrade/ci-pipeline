@@ -454,8 +454,8 @@ spec:
       post {
         success {
           script {
-            timestamps {
-              container('deployer') {
+            container('deployer') {
+              timestamps {
                 withCredentials([usernamePassword(credentialsId: paas_region.credential, passwordVariable: 'gds_pass', usernameVariable: 'gds_user')]) {
                   sh """
                     cf api ${paas_region.api}
@@ -490,8 +490,8 @@ spec:
 
         failure {
           script {
-            timestamps {
-              container('deployer') {
+            container('deployer') {
+              timestamps {
                 withCredentials([usernamePassword(credentialsId: paas_region.credential, passwordVariable: 'gds_pass', usernameVariable: 'gds_user')]) {
                   sh """
                     cf api ${paas_region.api}
@@ -557,43 +557,45 @@ spec:
 
     always {
       script {
-        timestamps {
-          container('deployer') {
+        container('deployer') {
+          timestamps {
             if (lock == 'false') {
               sh "${env.WORKSPACE}/.ci/bootstrap.rb unlock ${env.Team}/${env.Project}/${env.Environment}"
             }
           }
 
-          message_colour_map = readJSON text: '{"SUCCESS": "good", "FAILURE": "danger", "UNSTABLE": "warning"}'
-          message_colour = message_colour_map."${currentBuild.currentResult}".toString()
-          message_body = """
-            [{
-              "fallback": "${currentBuild.currentResult}: ${env.JOB_NAME} #${env.BUILD_NUMBER} - ${env.Project} ${env.Environment} (<${env.BUILD_URL}|Open>)",
-              "color": "${message_colour}",
-              "author_name": "${env.JOB_NAME}",
-              "author_link": "${env.JOB_URL}",
-              "title": "${currentBuild.currentResult}: Build #${env.BUILD_NUMBER}",
-              "title_link": "${env.BUILD_URL}",
-              "fields": [{
-                "title": "Team",
-                "value": "${env.Team}",
-                "short": true
-              }, {
-                "title": "Project",
-                "value": "${env.Project}",
-                "short": true
-              }, {
-                "title": "Environment",
-                "value": "${env.Environment}",
-                "short": true
-              }],
-              "footer": "<${JENKINS_URL}|Jenkins>",
-              "footer_icon": "https://raw.githubusercontent.com/jenkinsci/jenkins/master/war/src/main/webapp/images/jenkins.png",
-              "ts": "${currentBuild.timeInMillis/1000}"
-            }]
-          """
-          slackSend attachments: message_body.toString().trim()
-          deleteDir()
+          timestamps {
+            message_colour_map = readJSON text: '{"SUCCESS": "good", "FAILURE": "danger", "UNSTABLE": "warning"}'
+            message_colour = message_colour_map."${currentBuild.currentResult}".toString()
+            message_body = """
+              [{
+                "fallback": "${currentBuild.currentResult}: ${env.JOB_NAME} #${env.BUILD_NUMBER} - ${env.Project} ${env.Environment} (<${env.BUILD_URL}|Open>)",
+                "color": "${message_colour}",
+                "author_name": "${env.JOB_NAME}",
+                "author_link": "${env.JOB_URL}",
+                "title": "${currentBuild.currentResult}: Build #${env.BUILD_NUMBER}",
+                "title_link": "${env.BUILD_URL}",
+                "fields": [{
+                  "title": "Team",
+                  "value": "${env.Team}",
+                  "short": true
+                }, {
+                  "title": "Project",
+                  "value": "${env.Project}",
+                  "short": true
+                }, {
+                  "title": "Environment",
+                  "value": "${env.Environment}",
+                  "short": true
+                }],
+                "footer": "<${JENKINS_URL}|Jenkins>",
+                "footer_icon": "https://raw.githubusercontent.com/jenkinsci/jenkins/master/war/src/main/webapp/images/jenkins.png",
+                "ts": "${currentBuild.timeInMillis/1000}"
+              }]
+            """
+            slackSend attachments: message_body.toString().trim()
+            deleteDir()
+          }
         }
       }
     }
