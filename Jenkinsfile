@@ -136,8 +136,8 @@ spec:
     stage('Build') {
       steps {
         container('deployer') {
-          timestamps {
-            script {
+          script {
+            timestamps {
               checkout([$class: 'GitSCM', branches: [[name: env.Version]], doGenerateSubmoduleConfigurations: false, extensions: [[$class: 'SubmoduleOption', disableSubmodules: false, parentCredentials: true, recursiveSubmodules: true, trackingSubmodules: false, shallow: true], [$class: 'CloneOption', shallow: true, noTags: false]], submoduleCfg: [], userRemoteConfigs: [[credentialsId: env.SCM_CREDENTIAL, url: config.SCM]]])
 
               app_git_commit = sh(script: "git rev-parse HEAD", returnStdout: true).trim()
@@ -184,8 +184,8 @@ spec:
 
       steps {
         container('deployer') {
-          timestamps {
-            script {
+          script {
+            timestamps {
               withCredentials([string(credentialsId: env.GDS_PAAS_CONFIG, variable: 'paas_config_raw')]) {
                 paas_config = readJSON text: paas_config_raw
               }
