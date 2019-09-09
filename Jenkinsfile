@@ -11,6 +11,8 @@ metadata:
     job: ${env.JOB_NAME}
     job_id: ${env.BUILD_NUMBER}
 spec:
+  nodeSelector:
+    role: worker
   containers:
   - name: deployer
     image: quay.io/uktrade/deployer
