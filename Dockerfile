@@ -4,6 +4,7 @@ ENV CF_CLI_VER 6.46.1
 ENV NVM_VER=v0.34.0
 ENV JABBA_VER=0.11.2
 ENV RVM_VER=1.29.9
+ENV CF_CONDUIT_VER=0.0.8
 
 ENV DEBIAN_FRONTEND=noninteractive
 RUN groupadd -g 1000 ubuntu && \
@@ -34,7 +35,7 @@ RUN gem install bundler && \
 USER ubuntu:ubuntu
 ENV HOME /home/ubuntu
 
-RUN cf install-plugin -f conduit
+RUN cf install-plugin -f https://github.com/alphagov/paas-cf-conduit/releases/download/v$CF_CONDUIT_VER/cf-conduit.linux.amd64
 RUN curl -Lfs https://github.com/pyenv/pyenv-installer/raw/master/bin/pyenv-installer | bash
 RUN curl -Lfs https://github.com/creationix/nvm/raw/$NVM_VER/install.sh | bash
 RUN curl -Lfs https://rvm.io/mpapis.asc | gpg2 --import - && \
