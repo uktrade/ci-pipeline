@@ -1,12 +1,12 @@
 FROM ubuntu:18.04
 
 ENV CF_CLI_VER 6.46.1
-ENV NVM_VER=v0.34.0
-ENV JABBA_VER=0.11.2
-ENV RVM_VER=1.29.9
-ENV CF_CONDUIT_VER=0.0.8
+ENV NVM_VER 0.34.0
+ENV JABBA_VER 0.11.2
+ENV RVM_VER 1.29.9
+ENV CF_CONDUIT_VER 0.0.8
 
-ENV DEBIAN_FRONTEND=noninteractive
+ENV DEBIAN_FRONTEND noninteractive
 RUN groupadd -g 1000 ubuntu && \
     useradd -u 1000 -g 1000 -m -s /bin/bash ubuntu
 
@@ -37,14 +37,14 @@ ENV HOME /home/ubuntu
 
 RUN cf install-plugin -f https://github.com/alphagov/paas-cf-conduit/releases/download/v$CF_CONDUIT_VER/cf-conduit.linux.amd64
 RUN curl -Lfs https://github.com/pyenv/pyenv-installer/raw/master/bin/pyenv-installer | bash
-RUN curl -Lfs https://github.com/creationix/nvm/raw/$NVM_VER/install.sh | bash
+RUN curl -Lfs https://github.com/creationix/nvm/raw/v$NVM_VER/install.sh | bash
 RUN curl -Lfs https://rvm.io/mpapis.asc | gpg2 --import - && \
     curl -Lfs https://rvm.io/pkuczynski.asc | gpg2 --import - && \
     curl -Lfs https://get.rvm.io | bash -s -- --autolibs=disable --version $RVM_VER
 RUN curl -Lfs https://github.com/shyiko/jabba/raw/$JABBA_VER/install.sh | bash
 
-RUN echo 'export PATH="$HOME/.pyenv/bin:$PATH"' >> ~/.profile && \
-    echo 'eval "$(pyenv init -)"\neval "$(pyenv virtualenv-init -)"' >> ~/.profile && \
-    echo 'export NVM_DIR="$HOME/.nvm"\n[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"' >> ~/.profile
+RUN echo 'export PATH="$HOME/.pyenv/bin:$PATH"' >> $HOME/.profile && \
+    echo 'eval "$(pyenv init -)"\neval "$(pyenv virtualenv-init -)"' >> $HOME/.profile && \
+    echo 'export NVM_DIR="$HOME/.nvm"\n[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"' >> $HOME/.profile
 
 ENTRYPOINT ["bash", "-c"]
