@@ -145,6 +145,7 @@ spec:
               py_ver_exist = fileExists "${env.WORKSPACE}/.python-version"
               rb_ver_exist = fileExists "${env.WORKSPACE}/.ruby-version"
               java_ver_exist = fileExists "${env.WORKSPACE}/.java-version"
+              go_ver_exist = fileExists "${env.WORKSPACE}/.go-version"
               if (node_ver_exist) {
                 node_ver = readFile "${env.WORKSPACE}/.nvmrc"
                 echo "${log_info}Detected Nodejs version ${node_ver.trim()}"
@@ -164,6 +165,11 @@ spec:
                 java_ver = readFile "${env.WORKSPACE}/.java-version"
                 echo "${log_info}Detected Java version ${java_ver.trim()}"
                 sh "bash -l -c 'jabba install ${java_ver.trim()} && jabba use ${java_ver.trim()}'"
+              }
+              if (go_ver_exist) {
+                go_ver = readFile "${env.WORKSPACE}/.go-version"
+                echo "${log_info}Detected Go version ${go_ver.trim()}"
+                sh "bash -l -c 'goenv install ${go_ver.trim()} && goenv global ${go_ver.trim()}'"
               }
 
               if (config.PAAS_RUN) {

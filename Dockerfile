@@ -42,9 +42,15 @@ RUN curl -Lfs https://rvm.io/mpapis.asc | gpg2 --import - && \
     curl -Lfs https://rvm.io/pkuczynski.asc | gpg2 --import - && \
     curl -Lfs https://get.rvm.io | bash -s -- --autolibs=disable --version $RVM_VER
 RUN curl -Lfs https://github.com/shyiko/jabba/raw/$JABBA_VER/install.sh | bash
+RUN git clone https://github.com/syndbg/goenv.git ~/.goenv
 
 RUN echo 'export PATH="$HOME/.pyenv/bin:$PATH"' >> $HOME/.profile && \
     echo 'eval "$(pyenv init -)"\neval "$(pyenv virtualenv-init -)"' >> $HOME/.profile && \
-    echo 'export NVM_DIR="$HOME/.nvm"\n[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"' >> $HOME/.profile
+    echo 'export NVM_DIR="$HOME/.nvm"\n[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"' >> $HOME/.profile && \
+    echo 'export GOENV_ROOT="$HOME/.goenv"' >> $HOME/.profile && \
+    echo 'export PATH="$GOENV_ROOT/bin:$PATH"' >> $HOME/.profile && \
+    echo 'eval "$(goenv init -)"' >> $HOME/.profile && \
+    echo 'export PATH="$GOROOT/bin:$PATH"' >> $HOME/.profile && \
+    echo 'export PATH="$GOPATH/bin:$PATH"' >> $HOME/.profile
 
 ENTRYPOINT ["bash", "-c"]
