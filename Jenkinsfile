@@ -138,13 +138,14 @@ spec:
         container('deployer') {
           script {
             timestamps {
-              checkout([$class: 'GitSCM', branches: [[name: env.Version]], doGenerateSubmoduleConfigurations: false, extensions: [[$class: 'SubmoduleOption', disableSubmodules: false, parentCredentials: true, recursiveSubmodules: true, trackingSubmodules: false, shallow: true], [$class: 'CloneOption', shallow: true, noTags: false]], submoduleCfg: [], userRemoteConfigs: [[credentialsId: env.SCM_CREDENTIAL, url: config.SCM]]])
+              checkout([$class: 'GitSCM', branches: [[name: env.Version]], doGenerateSubmoduleConfigurations: false, extensions: [[$class: 'SubmoduleOption', disableSubmodules: false, parentCredentials: true, recursiveSubmodules: true, trackingSubmodules: false], [$class: 'CloneOption', shallow: true, noTags: false]], submoduleCfg: [], userRemoteConfigs: [[credentialsId: env.SCM_CREDENTIAL, url: config.SCM]]])
 
               app_git_commit = sh(script: "git rev-parse HEAD", returnStdout: true).trim()
               node_ver_exist = fileExists "${env.WORKSPACE}/.nvmrc"
               py_ver_exist = fileExists "${env.WORKSPACE}/.python-version"
               rb_ver_exist = fileExists "${env.WORKSPACE}/.ruby-version"
               java_ver_exist = fileExists "${env.WORKSPACE}/.java-version"
+              go_ver_exist = fileExists "${env.WORKSPACE}/.go-version"
               if (node_ver_exist) {
                 node_ver = readFile "${env.WORKSPACE}/.nvmrc"
                 echo "${log_info}Detected Nodejs version ${node_ver.trim()}"
@@ -164,6 +165,11 @@ spec:
                 java_ver = readFile "${env.WORKSPACE}/.java-version"
                 echo "${log_info}Detected Java version ${java_ver.trim()}"
                 sh "bash -l -c 'jabba install ${java_ver.trim()} && jabba use ${java_ver.trim()}'"
+              }
+              if (go_ver_exist) {
+                go_ver = readFile "${env.WORKSPACE}/.go-version"
+                echo "${log_info}Detected Go version ${go_ver.trim()}"
+                sh "bash -l -c 'goenv install ${go_ver.trim()} && goenv global ${go_ver.trim()}'"
               }
 
               if (config.PAAS_RUN) {
