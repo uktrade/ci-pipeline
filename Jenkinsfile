@@ -266,7 +266,7 @@ spec:
                 }
               }
 
-              sh "cf v3-create-app ${gds_app[2]}"
+              sh "cf v3-create-app ${gds_app[2]} || true"
               space_guid = sh(script: "cf space ${gds_app[1]}  --guid", returnStdout: true).trim()
               app_guid = sh(script: "cf app ${gds_app[2]} --guid | perl -lne 'print \$& if /(\\{{0,1}([0-9a-fA-F]){8}-([0-9a-fA-F]){4}-([0-9a-fA-F]){4}-([0-9a-fA-F]){4}-([0-9a-fA-F]){12}\\}{0,1})/'", returnStdout: true).trim()
               app_routes_json = sh(script: "cf curl '/v3/apps/${app_guid}/routes' | jq '[.resources[].guid]'", returnStdout: true).trim()
