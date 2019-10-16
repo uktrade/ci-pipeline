@@ -280,9 +280,9 @@ spec:
               new_app_name = gds_app[2] + "-" + env.Version
               echo "${log_info}Creating new app ${new_app_name}"
               if (env.DOCKER_DEPLOY_IMAGE) {
-                sh "cf v3-create-app ${new_app_name} --app-type docker"
+                sh "cf v3-create-app ${new_app_name} --app-type docker || true"
               } else {
-                sh "cf v3-create-app ${new_app_name}"
+                sh "cf v3-create-app ${new_app_name} || true"
               }
               new_app_guid = sh(script: "cf app ${new_app_name} --guid | perl -lne 'print \$& if /(\\{{0,1}([0-9a-fA-F]){8}-([0-9a-fA-F]){4}-([0-9a-fA-F]){4}-([0-9a-fA-F]){4}-([0-9a-fA-F]){12}\\}{0,1})/'", returnStdout: true).trim()
 
