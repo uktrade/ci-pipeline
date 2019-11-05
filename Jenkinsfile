@@ -13,6 +13,7 @@ metadata:
 spec:
   nodeSelector:
     role: worker
+  dnsPolicy: ClusterFirstWithHostNet
   containers:
   - name: deployer
     image: quay.io/uktrade/deployer
