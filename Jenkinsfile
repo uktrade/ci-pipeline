@@ -448,6 +448,11 @@ spec:
                 destinations.each { dest ->
                   sh """
                     cf curl '/v3/routes/${route}/destinations' -X POST -d '{"destinations": [ {"app": {"guid": "${new_app_guid}", "process": {"type": "${dest.app.process.type}"}}} ]}' | jq -C 'del(.links)'
+                  """
+                }
+                sleep 5
+                destinations.each { dest ->
+                  sh """
                     cf curl '/v3/routes/${route}/destinations/${dest.guid}' -X DELETE
                   """
                 }
