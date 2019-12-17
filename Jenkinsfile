@@ -54,7 +54,7 @@ spec:
             timestamps {
               checkout([$class: 'GitSCM', branches: [[name: env.GIT_BRANCH]], doGenerateSubmoduleConfigurations: false, extensions: [[$class: 'RelativeTargetDirectory', relativeTargetDir: '.ci'], [$class: 'SubmoduleOption', disableSubmodules: false, parentCredentials: true, recursiveSubmodules: true, trackingSubmodules: false, shallow: true], [$class: 'WipeWorkspace'], [$class: 'CloneOption', shallow: true, noTags: false]], submoduleCfg: [], userRemoteConfigs: [[credentialsId: env.SCM_CREDENTIAL, url: env.PIPELINE_SCM]]])
               checkout([$class: 'GitSCM', branches: [[name: env.GIT_BRANCH]], doGenerateSubmoduleConfigurations: false, extensions: [[$class: 'SubmoduleOption', disableSubmodules: false, parentCredentials: true, recursiveSubmodules: true, trackingSubmodules: false, shallow: true], [$class: 'RelativeTargetDirectory', relativeTargetDir: '.ci/config'], [$class: 'CloneOption', shallow: true, noTags: false]], submoduleCfg: [], userRemoteConfigs: [[credentialsId: env.SCM_CREDENTIAL, url: env.PIPELINE_CONF_SCM]]])
-              sh "${env.WORKSPACE}/.ci/bootstrap.rb parse-all"
+              sh "${env.WORKSPACE}/.ci/bootstrap.rb validate"
               options_json = readJSON file: "${env.WORKSPACE}/.ci/.option.json"
             }
           }
@@ -116,7 +116,7 @@ spec:
             timestamps {
               withCredentials([string(credentialsId: env.VAULT_TOKEN_ID, variable: 'TOKEN')]) {
                 env.VAULT_SERECT_ID = TOKEN
-                sh "${env.WORKSPACE}/.ci/bootstrap.rb parse ${env.Team}/${env.Project}/${env.Environment}"
+                sh "${env.WORKSPACE}/.ci/bootstrap.rb get ${env.Team}/${env.Project}/${env.Environment}"
               }
               envars = readJSON file: "${env.WORKSPACE}/.ci/env.json"
               config = readJSON file: "${env.WORKSPACE}/.ci/config.json"

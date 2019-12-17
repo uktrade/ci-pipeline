@@ -60,7 +60,7 @@ def main(args)
   ops, params = args
   case ops
 
-  when "parse-all"
+  when "validate"
     puts "Validating config files:"
     config_files = Array.new
     Dir.foreach(CONFIG_DIR) do |file|
@@ -101,7 +101,7 @@ def main(args)
     }
     save_json(OPTION_FILE, option_data)
 
-  when "parse"
+  when "get"
     team, project, env = params.split('/')
     puts "Saving environment variables."
 
