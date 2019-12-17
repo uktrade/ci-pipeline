@@ -208,10 +208,6 @@ spec:
                 """
               }
 
-              cfignore_exist = fileExists "${env.WORKSPACE}/.cfignore"
-              if (!cfignore_exist) {
-                sh "ln -snf ${env.WORKSPACE}/.gitignore ${env.WORKSPACE}/.cfignore"
-              }
               sh "echo .ci\\*/ >> ${env.WORKSPACE}/.cfignore"
 
               gds_app = config.PAAS_APP.split("/")
