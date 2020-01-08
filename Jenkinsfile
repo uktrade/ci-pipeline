@@ -220,9 +220,9 @@ spec:
                   echo "${log_warn}CloudFoundry API V2 manifest.yml support is limited."
                   cf_manifest.applications[0].each { key, value ->
                     switch (key) {
-                      case 'buildpack':
-                        echo "${log_info}Setting application ${gds_app[2]} buildpack to ${value}"
-                        if (cf_manifest.applications[0].buildpack[0].size() == 1) {
+                      case 'buildpacks':
+                        echo "${log_info}Setting application ${gds_app[2]} buildpack(s) to ${value}"
+                        if (cf_manifest.applications[0].buildpacks[0].size() == 1) {
                           buildpack_json.buildpacks[0] = value
                         } else {
                           cf_manifest.applications[0].buildpack.eachWithIndex { build, index ->
