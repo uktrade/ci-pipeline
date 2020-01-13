@@ -9,6 +9,7 @@ The pipeline is designed to deploy apps to multiple PaaS platforms using a unifi
 * Consul
 * Vault
 * Docker
+* Kubernetes
 
 ## Config Syntax
 
@@ -55,9 +56,7 @@ The pipeline allows users to run commands to before deploying, for some project 
 ## Supported PaaS
 
 * GOV.UK PaaS (CloudFoundry)
-* OpenShift
 * AWS S3
-* Heroku (Not implemented)
 
 ### GOV.UK PaaS
 
@@ -99,9 +98,17 @@ App can specify different buildpack other than PaaS natively installed buildpack
 `manifest.yml`:
 ```
 applications:
-  - buildpack:
+  - buildpacks:
     - https://github.com/cloudfoundry/apt-buildpack.git
     - https://github.com/cloudfoundry/python-buildpack.git
+```
+
+### Stack
+
+`manifest.yml`:
+```
+applications:
+  - stack: cflinuxfs3
 ```
 
 #### Health Check
@@ -120,14 +127,16 @@ applications:
   - health-check-http-endpoint: /health
 ```
 
+#### Timeout
+
+`manifest.yml`:
+```
+applications:
+  - timeout: 60
+```
+
+
 For more info: https://docs.cloudfoundry.org/devguide/deploy-apps/manifest.html
-
-
-### OpenShift
-
-OpenShift deployments uses [`oc-pipeline.yml`](oc-pipeline.yml) as template.
-For more info: https://docs.openshift.org/latest/dev_guide/templates.html
-
 
 ### AWS S3
 
