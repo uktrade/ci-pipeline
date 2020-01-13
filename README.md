@@ -103,7 +103,7 @@ applications:
     - https://github.com/cloudfoundry/python-buildpack.git
 ```
 
-### Stack
+#### Stack
 
 `manifest.yml`:
 ```
