@@ -225,6 +225,17 @@ spec:
                         if (cf_manifest.applications[0].buildpacks[0].size() == 1) {
                           buildpack_json.buildpacks[0] = value
                         } else {
+                          cf_manifest.applications[0].buildpacks.eachWithIndex { build, index ->
+                            buildpack_json.buildpacks[index] = build
+                          }
+                        }
+                        writeJSON file: "${env.WORKSPACE}/.ci/buildpacks.json", json: buildpack_json
+                        break
+                      case 'buildpack':
+                        echo "${log_info}Setting application ${gds_app[2]} buildpack(s) to ${value}"
+                        if (cf_manifest.applications[0].buildpack[0].size() == 1) {
+                          buildpack_json.buildpack[0] = value
+                        } else {
                           cf_manifest.applications[0].buildpack.eachWithIndex { build, index ->
                             buildpack_json.buildpacks[index] = build
                           }
@@ -308,6 +319,19 @@ spec:
                   sh """
                     cf curl /v2/service_bindings -X POST -d '{"service_instance_guid": "${it}", "app_guid": "${new_app_guid}"}' | jq -C 'del(.entity.credentials)'
                   """
+                }
+              }
+
+              echo "${log_info}Pre-scale staging app ${new_app_name}"
+              proc_build_json = sh(script: "cf curl '/v3/apps/${new_app_guid}/processes' | jq '.resources | del(.[].links)'", returnStdout: true).trim()
+              proc_build = readJSON text: proc_build_json
+              proc_build.each { build ->
+                app_scale.each {
+                  if (build.type == it.type) {
+                    sh """
+                      cf curl '/v3/apps/${new_app_guid}/processes/${it.type}/actions/scale' -X POST -d '{"memory_in_mb": ${it.memory_in_mb}, "disk_in_mb": ${it.disk_in_mb}}' | jq -C 'del(.links)'
+                    """
+                  }
                 }
               }
 
