@@ -231,17 +231,6 @@ spec:
                         }
                         writeJSON file: "${env.WORKSPACE}/.ci/buildpacks.json", json: buildpack_json
                         break
-                      case 'buildpack':
-                        echo "${log_info}Setting application ${gds_app[2]} buildpack(s) to ${value}"
-                        if (cf_manifest.applications[0].buildpack[0].size() == 1) {
-                          buildpack_json.buildpack[0] = value
-                        } else {
-                          cf_manifest.applications[0].buildpack.eachWithIndex { build, index ->
-                            buildpack_json.buildpacks[index] = build
-                          }
-                        }
-                        writeJSON file: "${env.WORKSPACE}/.ci/buildpacks.json", json: buildpack_json
-                        break
                       case 'stack':
                         echo "${log_info}Setting application ${gds_app[2]} base image to ${value}"
                         buildpack_json['stack'] = value
@@ -320,27 +309,21 @@ spec:
                   package_guid = sh(script: "cf v3-create-package ${gds_app[2]} -p ${config.APP_PATH} | perl -lne 'print \$& if /(\\{{0,1}([0-9a-fA-F]){8}-([0-9a-fA-F]){4}-([0-9a-fA-F]){4}-([0-9a-fA-F]){4}-([0-9a-fA-F]){12}\\}{0,1})/'", returnStdout: true).trim()
                 } else {
                   package_guid = sh(script: "cf v3-create-package ${gds_app[2]} | perl -lne 'print \$& if /(\\{{0,1}([0-9a-fA-F]){8}-([0-9a-fA-F]){4}-([0-9a-fA-F]){4}-([0-9a-fA-F]){4}-([0-9a-fA-F]){12}\\}{0,1})/'", returnStdout: true).trim()
-                  sh """
-                    cf curl '/v3/packages/${package_guid}' -X PATCH -d '{"metadata": {"labels": {"GIT_COMMIT": "${app_git_commit}", "GIT_BRANCH": "${env.Version}"}}}'
-                  """
                 }
               }
 
               echo "${log_info}Creating new build for app ${app_guid}"
               build_guid = sh(script: "cf curl /v3/builds -X POST -d '{\"package\": {\"guid\": \"${package_guid}\"}}' | jq -rc '.guid'", returnStdout: true).trim()
-              try {
+              build_state = sh(script: "cf curl '/v3/builds/${build_guid}' | jq -rc '.state'", returnStdout: true).trim()
+              while (build_state != "STAGED") {
+                sleep 10
                 build_state = sh(script: "cf curl '/v3/builds/${build_guid}' | jq -rc '.state'", returnStdout: true).trim()
-                while (build_state != "STAGED") {
-                  sleep 10
-                  build_state = sh(script: "cf curl '/v3/builds/${build_guid}' | jq -rc '.state'", returnStdout: true).trim()
-                  if (build_state == "FAILED") {
-                    build_err = sh(script: "cf curl '/v3/builds/${build_guid}' | jq -rc '.error'", returnStdout: true).trim()
-                    error build_err
-                  }
+                if (build_state == "FAILED") {
+                  build_err = sh(script: "cf curl '/v3/builds/${build_guid}' | jq -rc '.error'", returnStdout: true).trim()
+                  error build_err
                 }
-              } catch (err) {
-                error "Failed to build the app."
               }
+
               droplet_guid = sh(script: "cf curl /v3/builds -X POST -d '{\"package\": {\"guid\": \"${package_guid}\"}}' | jq -rc '.droplet.guid'", returnStdout: true).trim()
 
               echo "${log_info}Configuring health check for app ${gds_app[2]}"
@@ -374,22 +357,18 @@ spec:
 
               echo "${log_info}Creating new deployement for app ${app_guid}"
               deploy_guid = sh(script: "cf curl '/v3/deployments' -X POST -d '{\"droplet\":{\"guid\":\"${droplet_guid}\"},\"strategy\":\"rolling\",\"relationships\":{\"app\":{\"data\":{\"guid\":\"${app_guid}\"}}}}'", returnStdout: true).trim()
-              try {
-                app_wait_timeout = sh(script: "expr ${env.PAAS_TIMEOUT} \\* 3", returnStdout: true).trim()
-                timeout(time: app_wait_timeout.toInteger(), unit: 'SECONDS') {
+              app_wait_timeout = sh(script: "expr ${env.PAAS_TIMEOUT} \\* 3", returnStdout: true).trim()
+              timeout(time: app_wait_timeout.toInteger(), unit: 'SECONDS') {
+                deploy_state = sh(script: "cf curl '/v3/deployments/${deploy_guid}' | jq -rc '.status.value'", returnStdout: true).trim()
+                while (deploy_state != "FINALIZED") {
+                  sleep 10
                   deploy_state = sh(script: "cf curl '/v3/deployments/${deploy_guid}' | jq -rc '.status.value'", returnStdout: true).trim()
-                  while (deploy_state != "FINALIZED") {
-                    sleep 10
-                    deploy_state = sh(script: "cf curl '/v3/deployments/${deploy_guid}' | jq -rc '.status.value'", returnStdout: true).trim()
-                    deploy_status = sh(script: "cf curl '/v3/deployments/${deploy_guid}' | jq -rc '.status.reason'", returnStdout: true).trim()
-                    if (deploy_state == "CANCELING" || deploy_status == "CANCELED" || deploy_status == "DEGENERATE") {
-                      deploy_err = sh(script: "cf curl '/v3/deployments/${deploy_guid}' | jq -rc '.status.details'", returnStdout: true).trim()
-                      error "${deploy_status}: ${deploy_err}"
-                    }
+                  deploy_status = sh(script: "cf curl '/v3/deployments/${deploy_guid}' | jq -rc '.status.reason'", returnStdout: true).trim()
+                  if (deploy_state == "CANCELING" || deploy_status == "CANCELED" || deploy_status == "DEGENERATE") {
+                    deploy_err = sh(script: "cf curl '/v3/deployments/${deploy_guid}' | jq -rc '.status.details'", returnStdout: true).trim()
+                    error "${deploy_status}: ${deploy_err}"
                   }
                 }
-              } catch (err) {
-                error "Failed to deploy app."
               }
 
             }
@@ -412,7 +391,7 @@ spec:
                 sh """
                   cf target -o ${gds_app[0]} -s ${gds_app[1]}
                   cf logs ${gds_app[2]} --recent || true
-                  cf curl '/v3/deployments/${deploy_guid}/actions/cancel' -X POST
+                  cf curl '/v3/deployments/${deploy_guid}/actions/cancel' -X POST | jq -C 'del(.links)'
                 """
               }
             }
