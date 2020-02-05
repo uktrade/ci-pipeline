@@ -283,7 +283,7 @@ spec:
 
               prev_vars = sh(script: "cf curl '/v3/apps/${app_guid}/environment_variables' | jq -rc '.var | map_values(null)'", returnStdout: true).trim()
               sh """
-                cf curl -X PATCH '/v3/apps/${app_guid}/environment_variables' -X PATCH -d '{"var": {${prev_vars}}}'
+                cf curl -X PATCH '/v3/apps/${app_guid}/environment_variables' -X PATCH -d '{"var": ${prev_vars}}'
               """
               sh "cf v3-set-env ${app_guid} GIT_COMMIT '${app_git_commit}'"
               sh "cf v3-set-env ${app_guid} GIT_BRANCH '${env.Version}'"
