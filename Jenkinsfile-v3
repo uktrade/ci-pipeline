@@ -313,7 +313,7 @@ spec:
               }
 
               echo "${log_info}Creating new build for app ${gds_app[2]}"
-              build_guid = sh(script: "cf curl /v3/builds -X POST -d '{\"package\": {\"guid\": \"${package_guid}\"}}' | jq -rc '.guid'", returnStdout: true).trim()
+              build_guid = sh(script: "cf curl '/v3/builds' -X POST -d '{\"package\": {\"guid\": \"${package_guid}\"}}' | jq -rc '.guid'", returnStdout: true).trim()
               build_state = sh(script: "cf curl '/v3/builds/${build_guid}' | jq -rc '.state'", returnStdout: true).trim()
               while (build_state != "STAGED") {
                 sleep 10
@@ -324,7 +324,7 @@ spec:
                 }
               }
 
-              droplet_guid = sh(script: "cf curl /v3/builds -X POST -d '{\"package\": {\"guid\": \"${package_guid}\"}}' | jq -rc '.droplet.guid'", returnStdout: true).trim()
+              droplet_guid = sh(script: "cf curl '/v3/builds/${build_guid}' | jq -rc '.droplet.guid'", returnStdout: true).trim()
 
               echo "${log_info}Configuring health check for app ${gds_app[2]}"
               if (!env.PAAS_TIMEOUT) {
