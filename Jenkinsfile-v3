@@ -272,21 +272,21 @@ spec:
               space_guid = sh(script: "cf space ${gds_app[1]}  --guid", returnStdout: true).trim()
               app_guid = sh(script: "cf app ${gds_app[2]} --guid | perl -lne 'print \$& if /(\\{{0,1}([0-9a-fA-F]){8}-([0-9a-fA-F]){4}-([0-9a-fA-F]){4}-([0-9a-fA-F]){4}-([0-9a-fA-F]){12}\\}{0,1})/'", returnStdout: true).trim()
 
-              echo "${log_info}Configuring app ${app_guid}"
+              echo "${log_info}Configuring app ${gds_app[2]}"
               if (buildpack_json.buildpacks.size() > 0) {
                 echo "${log_info}Setting buildpack to ${buildpack_json.buildpacks}"
                 env.PAAS_BUILDPACK = readFile file: "${env.WORKSPACE}/.ci/buildpacks.json"
                 sh """
-                  cf curl '/v3/apps/${app_guid}' -X PATCH -d '{"name": "${app_guid}","lifecycle": {"type":"buildpack","data": ${env.PAAS_BUILDPACK}}}' | jq -C 'del(.links, .relationships)'
+                  cf curl '/v3/apps/${app_guid}' -X PATCH -d '{"name": "${gds_app[2]}","lifecycle": {"type":"buildpack","data": ${env.PAAS_BUILDPACK}}}' | jq -C 'del(.links, .relationships)'
                 """
               }
 
               prev_vars = sh(script: "cf curl '/v3/apps/${app_guid}/environment_variables' | jq -rc '.var | map_values(null)'", returnStdout: true).trim()
               sh """
-                cf curl -X PATCH '/v3/apps/${app_guid}/environment_variables' -X PATCH -d '{"var": ${prev_vars}}'
+                cf curl -X PATCH '/v3/apps/${app_guid}/environment_variables' -X PATCH -d '{"var": ${prev_vars}}' | jq -C 'del(.links)'
               """
-              sh "cf v3-set-env ${app_guid} GIT_COMMIT '${app_git_commit}'"
-              sh "cf v3-set-env ${app_guid} GIT_BRANCH '${env.Version}'"
+              sh "cf v3-set-env ${gds_app[2]} GIT_COMMIT '${app_git_commit}'"
+              sh "cf v3-set-env ${gds_app[2]} GIT_BRANCH '${env.Version}'"
               vars_check = readFile file: "${env.WORKSPACE}/.ci/env.json"
               if (vars_check.trim() != '{}') {
                 sh "jq '{\"var\": .}' ${env.WORKSPACE}/.ci/env.json > ${env.WORKSPACE}/.ci/cf_envar.json"
@@ -312,7 +312,7 @@ spec:
                 }
               }
 
-              echo "${log_info}Creating new build for app ${app_guid}"
+              echo "${log_info}Creating new build for app ${gds_app[2]}"
               build_guid = sh(script: "cf curl /v3/builds -X POST -d '{\"package\": {\"guid\": \"${package_guid}\"}}' | jq -rc '.guid'", returnStdout: true).trim()
               build_state = sh(script: "cf curl '/v3/builds/${build_guid}' | jq -rc '.state'", returnStdout: true).trim()
               while (build_state != "STAGED") {
@@ -355,7 +355,7 @@ spec:
                   break
               }
 
-              echo "${log_info}Creating new deployement for app ${app_guid}"
+              echo "${log_info}Creating new deployement for app ${gds_app[2]}"
               deploy_guid = sh(script: "cf curl '/v3/deployments' -X POST -d '{\"droplet\":{\"guid\":\"${droplet_guid}\"},\"strategy\":\"rolling\",\"relationships\":{\"app\":{\"data\":{\"guid\":\"${app_guid}\"}}}}'", returnStdout: true).trim()
               app_wait_timeout = sh(script: "expr ${env.PAAS_TIMEOUT} \\* 3", returnStdout: true).trim()
               timeout(time: app_wait_timeout.toInteger(), unit: 'SECONDS') {
