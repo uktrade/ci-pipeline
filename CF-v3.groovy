@@ -83,6 +83,7 @@ def main() {
     echo "${log_info}Application environment variables updated: ${updated_vars} "
   }
 
+  sh "echo .ci\\*/ >> ${env.WORKSPACE}/.cfignore"
   if (config.USE_NEXUS) {
     echo "${log_info}Downloading artifact ${env.Project}-${env.Version}.${config.JAVA_EXTENSION.toLowerCase()}"
     withCredentials([usernamePassword(credentialsId: env.NEXUS_CREDENTIAL, passwordVariable: 'nexus_pass', usernameVariable: 'nexus_user')]) {
