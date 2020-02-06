@@ -140,6 +140,67 @@ spec:
             timestamps {
               checkout([$class: 'GitSCM', branches: [[name: env.Version]], doGenerateSubmoduleConfigurations: false, extensions: [[$class: 'SubmoduleOption', disableSubmodules: false, parentCredentials: true, recursiveSubmodules: true, trackingSubmodules: false], [$class: 'CloneOption', noTags: false]], submoduleCfg: [], userRemoteConfigs: [[credentialsId: env.SCM_CREDENTIAL, url: config.SCM]]])
 
+              cf_manifest_exist = fileExists "${env.WORKSPACE}/manifest.yml"
+              buildpack_json = readJSON text:  """{"buildpacks": []}"""
+              if (cf_manifest_exist) {
+                cf_manifest = readYaml file: "${env.WORKSPACE}/manifest.yml"
+                if (cf_manifest.applications.size() == 1 && cf_manifest.applications[0].size() > 0) {
+                  echo "${log_warn}CloudFoundry API V2 manifest.yml support is limited."
+                  cf_manifest.applications[0].each { key, value ->
+                    switch (key) {
+                      case 'buildpacks':
+                        echo "${log_info}Setting application ${gds_app[2]} buildpack(s) to ${value}"
+                        if (cf_manifest.applications[0].buildpacks[0].size() == 1) {
+                          buildpack_json.buildpacks[0] = value
+                        } else {
+                          cf_manifest.applications[0].buildpacks.eachWithIndex { build, index ->
+                            buildpack_json.buildpacks[index] = build
+                          }
+                        }
+                        writeJSON file: "${env.WORKSPACE}/.ci/buildpacks.json", json: buildpack_json
+                        break
+                      case 'buildpack':
+                        echo "${log_info}Setting application ${gds_app[2]} buildpack(s) to ${value}"
+                        if (cf_manifest.applications[0].buildpack[0].size() == 1) {
+                          buildpack_json.buildpack[0] = value
+                        } else {
+                          cf_manifest.applications[0].buildpack.eachWithIndex { build, index ->
+                            buildpack_json.buildpacks[index] = build
+                          }
+                        }
+                        writeJSON file: "${env.WORKSPACE}/.ci/buildpacks.json", json: buildpack_json
+                        break
+                      case 'stack':
+                        echo "${log_info}Setting application ${gds_app[2]} base image to ${value}"
+                        buildpack_json['stack'] = value
+                        writeJSON file: "${env.WORKSPACE}/.ci/buildpacks.json", json: buildpack_json
+                        break
+                      case 'health-check-type':
+                        echo "${log_info}Setting application ${gds_app[2]} health-check-type to ${value}"
+                        env.PAAS_HEALTHCHECK_TYPE = value
+                        break
+                      case 'health-check-http-endpoint':
+                        echo "${log_info}Setting application ${gds_app[2]} health-check-http-endpoint to ${value}"
+                        env.PAAS_HEALTHCHECK_ENDPOINT = value
+                        break
+                      case 'timeout':
+                        echo "${log_info}Setting application ${gds_app[2]} timeout to ${value}"
+                        env.PAAS_TIMEOUT = value
+                        break
+                      case 'docker':
+                        echo "${log_info}Detected Docker deployement ${value['image']}"
+                        env.DOCKER_DEPLOY_IMAGE = value['image']
+                        break
+                      default:
+                        echo "${log_warn}CloudFoundry API V2 manifest.yml attribute '${key}' is not supported."
+                        break
+                    }
+                  }
+                } else {
+                  echo "${log_warn}Invalid CloudFoundry API V2 manifest.yml ignored."
+                }
+              }
+
               app_git_commit = sh(script: "git rev-parse HEAD", returnStdout: true).trim()
               node_ver_exist = fileExists "${env.WORKSPACE}/.nvmrc"
               py_ver_exist = fileExists "${env.WORKSPACE}/.python-version"
@@ -207,58 +268,8 @@ spec:
                   cf auth ${gds_user} ${gds_pass}
                 """
               }
-
               gds_app = config.PAAS_APP.split("/")
               sh "cf target -o ${gds_app[0]} -s ${gds_app[1]}"
-              cf_manifest_exist = fileExists "${env.WORKSPACE}/manifest.yml"
-              buildpack_json = readJSON text:  """{"buildpacks": []}"""
-              if (cf_manifest_exist) {
-                cf_manifest = readYaml file: "${env.WORKSPACE}/manifest.yml"
-                if (cf_manifest.applications.size() == 1 && cf_manifest.applications[0].size() > 0) {
-                  echo "${log_warn}CloudFoundry API V2 manifest.yml support is limited."
-                  cf_manifest.applications[0].each { key, value ->
-                    switch (key) {
-                      case 'buildpacks':
-                        echo "${log_info}Setting application ${gds_app[2]} buildpack(s) to ${value}"
-                        if (cf_manifest.applications[0].buildpacks[0].size() == 1) {
-                          buildpack_json.buildpacks[0] = value
-                        } else {
-                          cf_manifest.applications[0].buildpacks.eachWithIndex { build, index ->
-                            buildpack_json.buildpacks[index] = build
-                          }
-                        }
-                        writeJSON file: "${env.WORKSPACE}/.ci/buildpacks.json", json: buildpack_json
-                        break
-                      case 'stack':
-                        echo "${log_info}Setting application ${gds_app[2]} base image to ${value}"
-                        buildpack_json['stack'] = value
-                        writeJSON file: "${env.WORKSPACE}/.ci/buildpacks.json", json: buildpack_json
-                        break
-                      case 'health-check-type':
-                        echo "${log_info}Setting application ${gds_app[2]} health-check-type to ${value}"
-                        env.PAAS_HEALTHCHECK_TYPE = value
-                        break
-                      case 'health-check-http-endpoint':
-                        echo "${log_info}Setting application ${gds_app[2]} health-check-http-endpoint to ${value}"
-                        env.PAAS_HEALTHCHECK_ENDPOINT = value
-                        break
-                      case 'timeout':
-                        echo "${log_info}Setting application ${gds_app[2]} timeout to ${value}"
-                        env.PAAS_TIMEOUT = value
-                        break
-                      case 'docker':
-                        echo "${log_info}Detected Docker deployement ${value['image']}"
-                        env.DOCKER_DEPLOY_IMAGE = value['image']
-                        break
-                      default:
-                        echo "${log_warn}CloudFoundry API V2 manifest.yml attribute '${key}' is not supported."
-                        break
-                    }
-                  }
-                } else {
-                  echo "${log_warn}Invalid CloudFoundry API V2 manifest.yml ignored."
-                }
-              }
 
               echo "${log_info}Creating app ${gds_app[2]}"
               if (env.DOCKER_DEPLOY_IMAGE) {
@@ -417,67 +428,6 @@ spec:
 
               gds_app = config.PAAS_APP.split("/")
               sh "cf target -o ${gds_app[0]} -s ${gds_app[1]}"
-              cf_manifest_exist = fileExists "${env.WORKSPACE}/manifest.yml"
-              buildpack_json = readJSON text:  """{"buildpacks": []}"""
-              if (cf_manifest_exist) {
-                cf_manifest = readYaml file: "${env.WORKSPACE}/manifest.yml"
-                if (cf_manifest.applications.size() == 1 && cf_manifest.applications[0].size() > 0) {
-                  echo "${log_warn}CloudFoundry API V2 manifest.yml support is limited."
-                  cf_manifest.applications[0].each { key, value ->
-                    switch (key) {
-                      case 'buildpacks':
-                        echo "${log_info}Setting application ${gds_app[2]} buildpack(s) to ${value}"
-                        if (cf_manifest.applications[0].buildpacks[0].size() == 1) {
-                          buildpack_json.buildpacks[0] = value
-                        } else {
-                          cf_manifest.applications[0].buildpacks.eachWithIndex { build, index ->
-                            buildpack_json.buildpacks[index] = build
-                          }
-                        }
-                        writeJSON file: "${env.WORKSPACE}/.ci/buildpacks.json", json: buildpack_json
-                        break
-                      case 'buildpack':
-                        echo "${log_info}Setting application ${gds_app[2]} buildpack(s) to ${value}"
-                        if (cf_manifest.applications[0].buildpack[0].size() == 1) {
-                          buildpack_json.buildpack[0] = value
-                        } else {
-                          cf_manifest.applications[0].buildpack.eachWithIndex { build, index ->
-                            buildpack_json.buildpacks[index] = build
-                          }
-                        }
-                        writeJSON file: "${env.WORKSPACE}/.ci/buildpacks.json", json: buildpack_json
-                        break
-                      case 'stack':
-                        echo "${log_info}Setting application ${gds_app[2]} base image to ${value}"
-                        buildpack_json['stack'] = value
-                        writeJSON file: "${env.WORKSPACE}/.ci/buildpacks.json", json: buildpack_json
-                        break
-                      case 'health-check-type':
-                        echo "${log_info}Setting application ${gds_app[2]} health-check-type to ${value}"
-                        env.PAAS_HEALTHCHECK_TYPE = value
-                        break
-                      case 'health-check-http-endpoint':
-                        echo "${log_info}Setting application ${gds_app[2]} health-check-http-endpoint to ${value}"
-                        env.PAAS_HEALTHCHECK_ENDPOINT = value
-                        break
-                      case 'timeout':
-                        echo "${log_info}Setting application ${gds_app[2]} timeout to ${value}"
-                        env.PAAS_TIMEOUT = value
-                        break
-                      case 'docker':
-                        echo "${log_info}Detected Docker deployement ${value['image']}"
-                        env.DOCKER_DEPLOY_IMAGE = value['image']
-                        break
-                      default:
-                        echo "${log_warn}CloudFoundry API V2 manifest.yml attribute '${key}' is not supported."
-                        break
-                    }
-                  }
-                } else {
-                  echo "${log_warn}Invalid CloudFoundry API V2 manifest.yml ignored."
-                }
-              }
-
               new_app_name = gds_app[2] + "-" + env.Version
               echo "${log_info}Creating new app ${new_app_name}"
               if (env.DOCKER_DEPLOY_IMAGE) {
