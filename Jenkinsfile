@@ -221,7 +221,7 @@ spec:
                       case 'buildpack':
                         echo "${log_info}Setting application ${gds_app[2]} buildpack(s) to ${value}"
                         if (cf_manifest.applications[0].buildpack[0].size() == 1) {
-                          buildpack_json.buildpack[0] = value
+                          buildpack_json.buildpacks[0] = value
                         } else {
                           cf_manifest.applications[0].buildpack.eachWithIndex { build, index ->
                             buildpack_json.buildpacks[index] = build
