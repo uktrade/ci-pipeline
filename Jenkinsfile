@@ -383,6 +383,12 @@ spec:
                 if (deploy_guid) {
                   sh "cf curl '/v3/deployments/${deploy_guid}/actions/cancel' -X POST | jq -C 'del(.links)'"
                 }
+                if (droplet_guid) {
+                  sh "cf curl '/v3/droplets/${droplet_guid}' -X DELETE"
+                }
+                if (package_guid) {
+                  sh "cf curl '/v3/packages/${package_guid}' -X DELETE"
+                }
                 sh "cf logs ${gds_app[2]} --recent || true"
               }
             }
