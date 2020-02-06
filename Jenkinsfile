@@ -293,22 +293,10 @@ spec:
               }
 
               sh "echo .ci\\*/ >> ${env.WORKSPACE}/.cfignore"
-              if (config.USE_NEXUS) {
-                echo "${log_info}Downloading artifact ${env.Project}-${env.Version}.${config.JAVA_EXTENSION.toLowerCase()}"
-                withCredentials([usernamePassword(credentialsId: env.NEXUS_CREDENTIAL, passwordVariable: 'nexus_pass', usernameVariable: 'nexus_user')]) {
-                  sh "curl -LOfs 'https://${nexus_user}:${nexus_pass}@${env.NEXUS_URL}/repository/${config.NEXUS_PATH}/${env.Version}/${env.Project}-${env.Version}.${config.JAVA_EXTENSION.toLowerCase()}'"
-                }
-                config.APP_PATH = "${env.Project}-${env.Version}.${config.JAVA_EXTENSION.toLowerCase()}".toString()
-              }
-
               if (env.DOCKER_DEPLOY_IMAGE) {
                 package_guid = sh(script: "cf v3-create-package ${gds_app[2]} --docker-image ${env.DOCKER_DEPLOY_IMAGE.trim()} | perl -lne 'print \$& if /(\\{{0,1}([0-9a-fA-F]){8}-([0-9a-fA-F]){4}-([0-9a-fA-F]){4}-([0-9a-fA-F]){4}-([0-9a-fA-F]){12}\\}{0,1})/'", returnStdout: true).trim()
               } else {
-                if (config.APP_PATH) {
-                  package_guid = sh(script: "cf v3-create-package ${gds_app[2]} -p ${config.APP_PATH} | perl -lne 'print \$& if /(\\{{0,1}([0-9a-fA-F]){8}-([0-9a-fA-F]){4}-([0-9a-fA-F]){4}-([0-9a-fA-F]){4}-([0-9a-fA-F]){12}\\}{0,1})/'", returnStdout: true).trim()
-                } else {
-                  package_guid = sh(script: "cf v3-create-package ${gds_app[2]} | perl -lne 'print \$& if /(\\{{0,1}([0-9a-fA-F]){8}-([0-9a-fA-F]){4}-([0-9a-fA-F]){4}-([0-9a-fA-F]){4}-([0-9a-fA-F]){12}\\}{0,1})/'", returnStdout: true).trim()
-                }
+                package_guid = sh(script: "cf v3-create-package ${gds_app[2]} | perl -lne 'print \$& if /(\\{{0,1}([0-9a-fA-F]){8}-([0-9a-fA-F]){4}-([0-9a-fA-F]){4}-([0-9a-fA-F]){4}-([0-9a-fA-F]){12}\\}{0,1})/'", returnStdout: true).trim()
               }
 
               echo "${log_info}Creating new build for app ${gds_app[2]}"
