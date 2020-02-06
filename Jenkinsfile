@@ -379,11 +379,11 @@ spec:
                   """
                 }
                 echo "${log_warn}Rollback app"
-                sh """
-                  cf target -o ${gds_app[0]} -s ${gds_app[1]}
-                  cf logs ${gds_app[2]} --recent || true
-                  cf curl '/v3/deployments/${deploy_guid}/actions/cancel' -X POST | jq -C 'del(.links)'
-                """
+                sh "cf target -o ${gds_app[0]} -s ${gds_app[1]}"
+                if (deploy_guid) {
+                  sh "cf curl '/v3/deployments/${deploy_guid}/actions/cancel' -X POST | jq -C 'del(.links)'"
+                }
+                sh "cf logs ${gds_app[2]} --recent || true"
               }
             }
           }
