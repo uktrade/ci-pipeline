@@ -478,7 +478,15 @@ spec:
                 }
               }
 
-              sh "cf v3-create-app ${gds_app[2]} || true"
+              new_app_name = gds_app[2] + "-" + env.Version
+              echo "${log_info}Creating new app ${new_app_name}"
+              if (env.DOCKER_DEPLOY_IMAGE) {
+                sh "cf v3-create-app ${gds_app[2]} --app-type docker || true"
+                sh "cf v3-create-app ${new_app_name} --app-type docker || true"
+              } else {
+                sh "cf v3-create-app ${gds_app[2]} || true"
+                sh "cf v3-create-app ${new_app_name} || true"
+              }
               space_guid = sh(script: "cf space ${gds_app[1]}  --guid", returnStdout: true).trim()
               app_guid = sh(script: "cf app ${gds_app[2]} --guid | perl -lne 'print \$& if /(\\{{0,1}([0-9a-fA-F]){8}-([0-9a-fA-F]){4}-([0-9a-fA-F]){4}-([0-9a-fA-F]){4}-([0-9a-fA-F]){12}\\}{0,1})/'", returnStdout: true).trim()
               app_routes_json = sh(script: "cf curl '/v3/apps/${app_guid}/routes' | jq '[.resources[].guid]'", returnStdout: true).trim()
@@ -488,14 +496,6 @@ spec:
               app_scale = readJSON text: app_scale_json
               app_network_policy_json = sh(script: "cf curl '/networking/v1/external/policies?id=${app_guid}' | jq 'del(.total_policies)'", returnStdout: true).trim()
               app_network_policy = readJSON text: app_network_policy_json
-
-              new_app_name = gds_app[2] + "-" + env.Version
-              echo "${log_info}Creating new app ${new_app_name}"
-              if (env.DOCKER_DEPLOY_IMAGE) {
-                sh "cf v3-create-app ${new_app_name} --app-type docker || true"
-              } else {
-                sh "cf v3-create-app ${new_app_name} || true"
-              }
               new_app_guid = sh(script: "cf app ${new_app_name} --guid | perl -lne 'print \$& if /(\\{{0,1}([0-9a-fA-F]){8}-([0-9a-fA-F]){4}-([0-9a-fA-F]){4}-([0-9a-fA-F]){4}-([0-9a-fA-F]){12}\\}{0,1})/'", returnStdout: true).trim()
 
               echo "${log_info}Configuring new app ${new_app_name}"
