@@ -542,6 +542,38 @@ spec:
 
     }
 
+    stage('Deploy S3') {
+      when {
+        expression {
+          config.PAAS_TYPE == 's3'
+        }
+      }
+
+      steps {
+        container('deployer') {
+          script {
+            timestamps {
+              if (envars.S3_WEBSITE_SRC == null) {
+                s3_path = env.WORKSPACE
+              } else {
+                s3_path = "${env.WORKSPACE}/${envars.S3_WEBSITE_SRC}"
+              }
+              sh """
+                set +x
+                export AWS_DEFAULT_REGION=${envars.AWS_DEFAULT_REGION}
+                export AWS_ACCESS_KEY_ID=${envars.AWS_ACCESS_KEY_ID}
+                export AWS_SECRET_ACCESS_KEY=${envars.AWS_SECRET_ACCESS_KEY}
+                aws s3 sync --sse --acl public-read --delete --exclude '.*' ${s3_path} s3://${config.PAAS_APP}
+                if [ -f ${env.WORKSPACE}/${envars.S3_WEBSITE_REDIRECT} ]; then
+                  aws s3api put-bucket-website --bucket ${config.PAAS_APP} --website-configuration file://${env.WORKSPACE}/${envars.S3_WEBSITE_REDIRECT}
+                fi
+              """
+            }
+          }
+        }
+      }
+    }
+
   }
 
   post {
