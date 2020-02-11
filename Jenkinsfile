@@ -354,6 +354,7 @@ spec:
                 deploy_json = sh(script: "cf curl '/v3/deployments' -X POST -d '{\"droplet\":{\"guid\":\"${droplet_guid}\"},\"strategy\":\"rolling\",\"relationships\":{\"app\":{\"data\":{\"guid\":\"${app_guid}\"}}}}'", returnStdout: true).trim()
                 deploy = readJSON text: deploy_json
                 if (deploy.errors) {
+                  deploy_guid = null
                   error deploy.errors[0].detail
                 }
                 deploy_guid = deploy.guid
@@ -366,13 +367,13 @@ spec:
                     deploy_status = sh(script: "cf curl '/v3/deployments/${deploy_guid}' | jq -rc '.status.reason'", returnStdout: true).trim()
                     if (deploy_state == "CANCELING" || deploy_status == "CANCELED" || deploy_status == "DEGENERATE") {
                       deploy_err = sh(script: "cf curl '/v3/deployments/${deploy_guid}' | jq -rc '.status.details'", returnStdout: true).trim()
-                      sh "cf curl '/v3/deployments/${deploy_guid}/actions/cancel' -X POST | jq -C 'del(.links)'"
                       error "${deploy_status}: ${deploy_err}"
                     }
                   }
                 }
               } catch (err) {
                 sh """
+                  cf curl '/v3/deployments/${deploy_guid}/actions/cancel' -X POST | jq -C 'del(.links)'
                   cf curl '/v3/droplets/${droplet_guid}' -X DELETE
                   cf curl '/v3/packages/${package_guid}' -X DELETE
                   cf logs ${gds_app[2]} --recent || true
