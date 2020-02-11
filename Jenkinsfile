@@ -308,7 +308,8 @@ spec:
               try {
                 build = readJSON text: build_json
                 if (build.errors) {
-                  error build.errors[0].detail
+                  build_err = build.errors[0].detail
+                  error build_err
                 }
                 build_guid = build.guid
                 build_state = sh(script: "cf curl '/v3/builds/${build_guid}' | jq -rc '.state'", returnStdout: true).trim()
@@ -323,6 +324,7 @@ spec:
                 }
               } catch (err) {
                 sh "cf curl '/v3/packages/${package_guid}' -X DELETE"
+                error build_err
               }
 
               droplet_guid = sh(script: "cf curl '/v3/builds/${build_guid}' | jq -rc '.droplet.guid'", returnStdout: true).trim()
@@ -362,7 +364,8 @@ spec:
                 deploy = readJSON text: deploy_json
                 if (deploy.errors) {
                   deploy_guid = null
-                  error deploy.errors[0].detail
+                  deploy_err = deploy.errors[0].detail
+                  error deploy_err
                 }
                 deploy_guid = deploy.guid
                 app_wait_timeout = sh(script: "expr ${env.PAAS_TIMEOUT} \\* 3", returnStdout: true).trim()
@@ -385,6 +388,7 @@ spec:
                   cf curl '/v3/packages/${package_guid}' -X DELETE
                   cf logs ${gds_app[2]} --recent || true
                 """
+                error deploy_err
               }
 
             }
