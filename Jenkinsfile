@@ -388,7 +388,7 @@ spec:
                   cf curl '/v3/packages/${package_guid}' -X DELETE
                   cf logs ${gds_app[2]} --recent || true
                 """
-                error deploy_err
+                error "App failed to deploy."
               }
 
             }
