@@ -46,6 +46,7 @@ spec:
             validateDeclarativePipeline("${env.WORKSPACE}/Jenkinsfile")
             log_info = "\033[32mINFO: "
             log_warn = "\033[31mWARNING: "
+            lock = "false"
           }
         }
         container('deployer') {
@@ -119,6 +120,13 @@ spec:
               }
               envars = readJSON file: "${env.WORKSPACE}/.ci/env.json"
               config = readJSON file: "${env.WORKSPACE}/.ci/config.json"
+
+              lock = sh(script: "${env.WORKSPACE}/.ci/bootstrap.rb get-lock ${env.Team}/${env.Project}/${env.Environment}", returnStdout: true).trim()
+              if (lock == 'true') {
+                error 'Parallel job of the same project is not allow.'
+              } else {
+                sh "${env.WORKSPACE}/.ci/bootstrap.rb lock ${env.Team}/${env.Project}/${env.Environment}"
+              }
             }
           }
         }
@@ -432,6 +440,12 @@ spec:
     always {
       script {
         container('deployer') {
+          timestamps {
+            if (lock == 'false') {
+              sh "${env.WORKSPACE}/.ci/bootstrap.rb unlock ${env.Team}/${env.Project}/${env.Environment}"
+            }
+          }
+
           timestamps {
             message_colour_map = readJSON text: '{"SUCCESS": "good", "FAILURE": "danger", "UNSTABLE": "warning"}'
             message_colour = message_colour_map."${currentBuild.currentResult}".toString()
