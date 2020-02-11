@@ -309,6 +309,8 @@ spec:
                 build_state = sh(script: "cf curl '/v3/builds/${build_guid}' | jq -rc '.state'", returnStdout: true).trim()
                 if (build_state == "FAILED") {
                   build_err = sh(script: "cf curl '/v3/builds/${build_guid}' | jq -rc '.error'", returnStdout: true).trim()
+                  sh "cf curl '/v3/droplets/${droplet_guid}' -X DELETE"
+                  sh "cf curl '/v3/packages/${package_guid}' -X DELETE"
                   error "Error: ${build_err}"
                 }
               }
@@ -362,11 +364,17 @@ spec:
                     deploy_status = sh(script: "cf curl '/v3/deployments/${deploy_guid}' | jq -rc '.status.reason'", returnStdout: true).trim()
                     if (deploy_state == "CANCELING" || deploy_status == "CANCELED" || deploy_status == "DEGENERATE") {
                       deploy_err = sh(script: "cf curl '/v3/deployments/${deploy_guid}' | jq -rc '.status.details'", returnStdout: true).trim()
+                      sh "cf curl '/v3/deployments/${deploy_guid}/actions/cancel' -X POST | jq -C 'del(.links)'"
+                      sh "cf curl '/v3/droplets/${droplet_guid}' -X DELETE"
+                      sh "cf curl '/v3/packages/${package_guid}' -X DELETE"
                       error "Error: ${deploy_status}: ${deploy_err}"
                     }
                   }
                 }
               } catch (err) {
+                sh "cf curl '/v3/deployments/${deploy_guid}/actions/cancel' -X POST | jq -C 'del(.links)'"
+                sh "cf curl '/v3/droplets/${droplet_guid}' -X DELETE"
+                sh "cf curl '/v3/packages/${package_guid}' -X DELETE"
                 error "Error: App failed to start."
               }
 
@@ -386,17 +394,7 @@ spec:
                     cf auth ${gds_user} ${gds_pass}
                   """
                 }
-                echo "${log_warn}Rollback app"
                 sh "cf target -o ${gds_app[0]} -s ${gds_app[1]}"
-                if (deploy_err & deploy_guid) {
-                  sh "cf curl '/v3/deployments/${deploy_guid}/actions/cancel' -X POST | jq -C 'del(.links)'"
-                }
-                if (build_err & droplet_guid) {
-                  sh "cf curl '/v3/droplets/${droplet_guid}' -X DELETE"
-                }
-                if (package_guid) {
-                  sh "cf curl '/v3/packages/${package_guid}' -X DELETE"
-                }
                 sh "cf logs ${gds_app[2]} --recent || true"
               }
             }
