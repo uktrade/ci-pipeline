@@ -309,12 +309,13 @@ spec:
                   build_state = sh(script: "cf curl '/v3/builds/${build_guid}' | jq -rc '.state'", returnStdout: true).trim()
                   if (build_state == "FAILED") {
                     build_err = sh(script: "cf curl '/v3/builds/${build_guid}' | jq -rc '.error'", returnStdout: true).trim()
+                    sh "cf logs ${gds_app[2]} --recent || true"
                     error build_err
                   }
                 }
               } catch (err) {
                 sh "cf curl '/v3/packages/${package_guid}' -X DELETE"
-                error err
+                error "App failed to build."
               }
 
               droplet_guid = sh(script: "cf curl '/v3/builds/${build_guid}' | jq -rc '.droplet.guid'", returnStdout: true).trim()
