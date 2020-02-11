@@ -300,8 +300,7 @@ spec:
               try {
                 build = readJSON text: build_json
                 if (build.errors) {
-                  build_err = build.errors[0].detail
-                  error "Error: ${build_err}"
+                  error build.errors[0].detail
                 }
                 build_guid = build.guid
                 build_state = sh(script: "cf curl '/v3/builds/${build_guid}' | jq -rc '.state'", returnStdout: true).trim()
@@ -310,12 +309,12 @@ spec:
                   build_state = sh(script: "cf curl '/v3/builds/${build_guid}' | jq -rc '.state'", returnStdout: true).trim()
                   if (build_state == "FAILED") {
                     build_err = sh(script: "cf curl '/v3/builds/${build_guid}' | jq -rc '.error'", returnStdout: true).trim()
-                    error "Error: ${build_err}"
+                    error build_err
                   }
                 }
               } catch (err) {
                 sh "cf curl '/v3/packages/${package_guid}' -X DELETE"
-                error "Error: ${err}"
+                error err
               }
 
               droplet_guid = sh(script: "cf curl '/v3/builds/${build_guid}' | jq -rc '.droplet.guid'", returnStdout: true).trim()
@@ -354,8 +353,7 @@ spec:
                 deploy_json = sh(script: "cf curl '/v3/deployments' -X POST -d '{\"droplet\":{\"guid\":\"${droplet_guid}\"},\"strategy\":\"rolling\",\"relationships\":{\"app\":{\"data\":{\"guid\":\"${app_guid}\"}}}}'", returnStdout: true).trim()
                 deploy = readJSON text: deploy_json
                 if (deploy.errors) {
-                  deploy_err = deploy.errors[0].detail
-                  error "Error: ${deploy_err}"
+                  error deploy.errors[0].detail
                 }
                 deploy_guid = deploy.guid
                 app_wait_timeout = sh(script: "expr ${env.PAAS_TIMEOUT} \\* 3", returnStdout: true).trim()
@@ -368,7 +366,7 @@ spec:
                     if (deploy_state == "CANCELING" || deploy_status == "CANCELED" || deploy_status == "DEGENERATE") {
                       deploy_err = sh(script: "cf curl '/v3/deployments/${deploy_guid}' | jq -rc '.status.details'", returnStdout: true).trim()
                       sh "cf curl '/v3/deployments/${deploy_guid}/actions/cancel' -X POST | jq -C 'del(.links)'"
-                      error "Error: ${deploy_status}: ${deploy_err}"
+                      error "${deploy_status}: ${deploy_err}"
                     }
                   }
                 }
@@ -378,7 +376,7 @@ spec:
                   cf curl '/v3/packages/${package_guid}' -X DELETE
                   cf logs ${gds_app[2]} --recent || true
                 """
-                error "Error: App failed to start."
+                error "App failed to start."
               }
 
             }
