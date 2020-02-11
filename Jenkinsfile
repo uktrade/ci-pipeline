@@ -299,7 +299,8 @@ spec:
               build_json = sh(script: "cf curl '/v3/builds' -X POST -d '{\"package\": {\"guid\": \"${package_guid}\"}}'", returnStdout: true).trim()
               build = readJSON text: build_json
               if (build.errors) {
-                error "Error: ${build.errors[0].detail}"
+                build_err = build.errors[0].detail
+                error "Error: ${build_err}"
               }
               build_guid = build.guid
               build_state = sh(script: "cf curl '/v3/builds/${build_guid}' | jq -rc '.state'", returnStdout: true).trim()
@@ -308,7 +309,7 @@ spec:
                 build_state = sh(script: "cf curl '/v3/builds/${build_guid}' | jq -rc '.state'", returnStdout: true).trim()
                 if (build_state == "FAILED") {
                   build_err = sh(script: "cf curl '/v3/builds/${build_guid}' | jq -rc '.error'", returnStdout: true).trim()
-                  error build_err
+                  error "Error: ${build_err}"
                 }
               }
 
@@ -345,7 +346,13 @@ spec:
 
               echo "${log_info}Creating new deployement for app ${gds_app[2]}"
               try {
-                deploy_guid = sh(script: "cf curl '/v3/deployments' -X POST -d '{\"droplet\":{\"guid\":\"${droplet_guid}\"},\"strategy\":\"rolling\",\"relationships\":{\"app\":{\"data\":{\"guid\":\"${app_guid}\"}}}}' | jq -rc '.guid'", returnStdout: true).trim()
+                deploy_json = sh(script: "cf curl '/v3/deployments' -X POST -d '{\"droplet\":{\"guid\":\"${droplet_guid}\"},\"strategy\":\"rolling\",\"relationships\":{\"app\":{\"data\":{\"guid\":\"${app_guid}\"}}}}'", returnStdout: true).trim()
+                deploy = readJSON text: deploy_json
+                if (deploy.errors) {
+                  deploy_err = deploy.errors[0].detail
+                  error "Error: ${deploy_err}"
+                }
+                deploy_guid = deploy.guid
                 app_wait_timeout = sh(script: "expr ${env.PAAS_TIMEOUT} \\* 3", returnStdout: true).trim()
                 timeout(time: app_wait_timeout.toInteger(), unit: 'SECONDS') {
                   deploy_state = sh(script: "cf curl '/v3/deployments/${deploy_guid}' | jq -rc '.status.value'", returnStdout: true).trim()
@@ -355,12 +362,12 @@ spec:
                     deploy_status = sh(script: "cf curl '/v3/deployments/${deploy_guid}' | jq -rc '.status.reason'", returnStdout: true).trim()
                     if (deploy_state == "CANCELING" || deploy_status == "CANCELED" || deploy_status == "DEGENERATE") {
                       deploy_err = sh(script: "cf curl '/v3/deployments/${deploy_guid}' | jq -rc '.status.details'", returnStdout: true).trim()
-                      error "${deploy_status}: ${deploy_err}"
+                      error "Error: ${deploy_status}: ${deploy_err}"
                     }
                   }
                 }
               } catch (err) {
-                error "App failed to start."
+                error "Error: App failed to start."
               }
 
             }
@@ -381,10 +388,10 @@ spec:
                 }
                 echo "${log_warn}Rollback app"
                 sh "cf target -o ${gds_app[0]} -s ${gds_app[1]}"
-                if (deploy_guid) {
+                if (deploy_err & deploy_guid) {
                   sh "cf curl '/v3/deployments/${deploy_guid}/actions/cancel' -X POST | jq -C 'del(.links)'"
                 }
-                if (droplet_guid) {
+                if (build_err & droplet_guid) {
                   sh "cf curl '/v3/droplets/${droplet_guid}' -X DELETE"
                 }
                 if (package_guid) {
