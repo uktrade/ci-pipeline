@@ -296,7 +296,12 @@ spec:
               }
 
               echo "${log_info}Creating new build for app ${gds_app[2]}"
-              build_guid = sh(script: "cf curl '/v3/builds' -X POST -d '{\"package\": {\"guid\": \"${package_guid}\"}}' | jq -rc '.guid'", returnStdout: true).trim()
+              build_json = sh(script: "cf curl '/v3/builds' -X POST -d '{\"package\": {\"guid\": \"${package_guid}\"}}'", returnStdout: true).trim()
+              build = readJSON text: build_json
+              if (build.errors) {
+                error "Error: ${build.errors[0].detail}"
+              }
+              build_guid = build.guid
               build_state = sh(script: "cf curl '/v3/builds/${build_guid}' | jq -rc '.state'", returnStdout: true).trim()
               while (build_state != "STAGED") {
                 sleep 10
