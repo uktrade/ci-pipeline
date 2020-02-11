@@ -297,22 +297,25 @@ spec:
 
               echo "${log_info}Creating new build for app ${gds_app[2]}"
               build_json = sh(script: "cf curl '/v3/builds' -X POST -d '{\"package\": {\"guid\": \"${package_guid}\"}}'", returnStdout: true).trim()
-              build = readJSON text: build_json
-              if (build.errors) {
-                build_err = build.errors[0].detail
-                sh "cf curl '/v3/packages/${package_guid}' -X DELETE"
-                error "Error: ${build_err}"
-              }
-              build_guid = build.guid
-              build_state = sh(script: "cf curl '/v3/builds/${build_guid}' | jq -rc '.state'", returnStdout: true).trim()
-              while (build_state != "STAGED") {
-                sleep 10
-                build_state = sh(script: "cf curl '/v3/builds/${build_guid}' | jq -rc '.state'", returnStdout: true).trim()
-                if (build_state == "FAILED") {
-                  build_err = sh(script: "cf curl '/v3/builds/${build_guid}' | jq -rc '.error'", returnStdout: true).trim()
-                  sh "cf curl '/v3/packages/${package_guid}' -X DELETE"
+              try {
+                build = readJSON text: build_json
+                if (build.errors) {
+                  build_err = build.errors[0].detail
                   error "Error: ${build_err}"
                 }
+                build_guid = build.guid
+                build_state = sh(script: "cf curl '/v3/builds/${build_guid}' | jq -rc '.state'", returnStdout: true).trim()
+                while (build_state != "STAGED") {
+                  sleep 10
+                  build_state = sh(script: "cf curl '/v3/builds/${build_guid}' | jq -rc '.state'", returnStdout: true).trim()
+                  if (build_state == "FAILED") {
+                    build_err = sh(script: "cf curl '/v3/builds/${build_guid}' | jq -rc '.error'", returnStdout: true).trim()
+                    error "Error: ${build_err}"
+                  }
+                }
+              } catch (err) {
+                sh "cf curl '/v3/packages/${package_guid}' -X DELETE"
+                error "Error: ${err}"
               }
 
               droplet_guid = sh(script: "cf curl '/v3/builds/${build_guid}' | jq -rc '.droplet.guid'", returnStdout: true).trim()
@@ -352,10 +355,6 @@ spec:
                 deploy = readJSON text: deploy_json
                 if (deploy.errors) {
                   deploy_err = deploy.errors[0].detail
-                  sh """
-                    cf curl '/v3/droplets/${droplet_guid}' -X DELETE
-                    cf curl '/v3/packages/${package_guid}' -X DELETE
-                  """
                   error "Error: ${deploy_err}"
                 }
                 deploy_guid = deploy.guid
@@ -368,19 +367,13 @@ spec:
                     deploy_status = sh(script: "cf curl '/v3/deployments/${deploy_guid}' | jq -rc '.status.reason'", returnStdout: true).trim()
                     if (deploy_state == "CANCELING" || deploy_status == "CANCELED" || deploy_status == "DEGENERATE") {
                       deploy_err = sh(script: "cf curl '/v3/deployments/${deploy_guid}' | jq -rc '.status.details'", returnStdout: true).trim()
-                      sh """
-                        cf curl '/v3/deployments/${deploy_guid}/actions/cancel' -X POST | jq -C 'del(.links)'
-                        cf curl '/v3/droplets/${droplet_guid}' -X DELETE
-                        cf curl '/v3/packages/${package_guid}' -X DELETE
-                        cf logs ${gds_app[2]} --recent || true
-                      """
+                      sh "cf curl '/v3/deployments/${deploy_guid}/actions/cancel' -X POST | jq -C 'del(.links)'"
                       error "Error: ${deploy_status}: ${deploy_err}"
                     }
                   }
                 }
               } catch (err) {
                 sh """
-                  cf curl '/v3/deployments/${deploy_guid}/actions/cancel' -X POST | jq -C 'del(.links)'
                   cf curl '/v3/droplets/${droplet_guid}' -X DELETE
                   cf curl '/v3/packages/${package_guid}' -X DELETE
                   cf logs ${gds_app[2]} --recent || true
