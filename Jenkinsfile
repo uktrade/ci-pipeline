@@ -315,7 +315,6 @@ spec:
                 }
               } catch (err) {
                 sh "cf curl '/v3/packages/${package_guid}' -X DELETE"
-                error "App failed to build."
               }
 
               droplet_guid = sh(script: "cf curl '/v3/builds/${build_guid}' | jq -rc '.droplet.guid'", returnStdout: true).trim()
@@ -378,7 +377,6 @@ spec:
                   cf curl '/v3/packages/${package_guid}' -X DELETE
                   cf logs ${gds_app[2]} --recent || true
                 """
-                error "App failed to start."
               }
 
             }
