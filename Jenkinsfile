@@ -47,6 +47,7 @@ spec:
             log_info = "\033[32mINFO: "
             log_warn = "\033[31mWARNING: "
             lock = "false"
+            error_msg = ""
           }
         }
         container('deployer') {
@@ -308,8 +309,8 @@ spec:
               try {
                 build = readJSON text: build_json
                 if (build.errors) {
-                  build_err = build.errors[0].detail
-                  error build_err
+                  error_msg = build.errors[0].detail
+                  error error_msg
                 }
                 build_guid = build.guid
                 build_state = sh(script: "cf curl '/v3/builds/${build_guid}' | jq -rc '.state'", returnStdout: true).trim()
@@ -317,14 +318,14 @@ spec:
                   sleep 10
                   build_state = sh(script: "cf curl '/v3/builds/${build_guid}' | jq -rc '.state'", returnStdout: true).trim()
                   if (build_state == "FAILED") {
-                    build_err = sh(script: "cf curl '/v3/builds/${build_guid}' | jq -rc '.error'", returnStdout: true).trim()
+                    error_msg = sh(script: "cf curl '/v3/builds/${build_guid}' | jq -rc '.error'", returnStdout: true).trim()
                     sh "cf logs ${gds_app[2]} --recent || true"
-                    error build_err
+                    error error_msg
                   }
                 }
               } catch (err) {
                 sh "cf curl '/v3/packages/${package_guid}' -X DELETE"
-                error build_err
+                error error_msg
               }
 
               droplet_guid = sh(script: "cf curl '/v3/builds/${build_guid}' | jq -rc '.droplet.guid'", returnStdout: true).trim()
@@ -364,8 +365,8 @@ spec:
                 deploy = readJSON text: deploy_json
                 if (deploy.errors) {
                   deploy_guid = null
-                  deploy_err = deploy.errors[0].detail
-                  error deploy_err
+                  error_msg = deploy.errors[0].detail
+                  error error_msg
                 }
                 deploy_guid = deploy.guid
                 app_wait_timeout = sh(script: "expr ${env.PAAS_TIMEOUT} \\* 3", returnStdout: true).trim()
@@ -373,11 +374,13 @@ spec:
                   deploy_state = sh(script: "cf curl '/v3/deployments/${deploy_guid}' | jq -rc '.status.value'", returnStdout: true).trim()
                   while (deploy_state != "FINALIZED") {
                     sleep 10
+                    error_msg = "App failed to deploy."
                     deploy_state = sh(script: "cf curl '/v3/deployments/${deploy_guid}' | jq -rc '.status.value'", returnStdout: true).trim()
                     deploy_status = sh(script: "cf curl '/v3/deployments/${deploy_guid}' | jq -rc '.status.reason'", returnStdout: true).trim()
                     if (deploy_state == "CANCELING" || deploy_status == "CANCELED" || deploy_status == "DEGENERATE") {
                       deploy_err = sh(script: "cf curl '/v3/deployments/${deploy_guid}' | jq -rc '.status.details'", returnStdout: true).trim()
-                      error "${deploy_status}: ${deploy_err}"
+                      error_msg = "${deploy_status}: ${deploy_err}"
+                      error error_msg
                     }
                   }
                 }
@@ -388,7 +391,7 @@ spec:
                   cf curl '/v3/packages/${package_guid}' -X DELETE
                   cf logs ${gds_app[2]} --recent || true
                 """
-                error "App failed to deploy."
+                error error_msg
               }
 
             }
