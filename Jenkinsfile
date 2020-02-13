@@ -371,10 +371,10 @@ spec:
                 deploy_guid = deploy.guid
                 app_wait_timeout = sh(script: "expr ${env.PAAS_TIMEOUT} \\* 3", returnStdout: true).trim()
                 timeout(time: app_wait_timeout.toInteger(), unit: 'SECONDS') {
+                  error_msg = "App failed to deploy."
                   deploy_state = sh(script: "cf curl '/v3/deployments/${deploy_guid}' | jq -rc '.status.value'", returnStdout: true).trim()
                   while (deploy_state != "FINALIZED") {
                     sleep 10
-                    error_msg = "App failed to deploy."
                     deploy_state = sh(script: "cf curl '/v3/deployments/${deploy_guid}' | jq -rc '.status.value'", returnStdout: true).trim()
                     deploy_status = sh(script: "cf curl '/v3/deployments/${deploy_guid}' | jq -rc '.status.reason'", returnStdout: true).trim()
                     if (deploy_state == "CANCELING" || deploy_status == "CANCELED" || deploy_status == "DEGENERATE") {
