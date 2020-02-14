@@ -270,6 +270,7 @@ spec:
 
               space_guid = sh(script: "cf space ${gds_app[1]}  --guid", returnStdout: true).trim()
               app_guid = sh(script: "cf app ${gds_app[2]} --guid | perl -lne 'print \$& if /(\\{{0,1}([0-9a-fA-F]){8}-([0-9a-fA-F]){4}-([0-9a-fA-F]){4}-([0-9a-fA-F]){4}-([0-9a-fA-F]){12}\\}{0,1})/'", returnStdout: true).trim()
+              // app_revision = sh(script:"cf curl '/v3/apps/${app_guid}/revisions/deployed' | jq -rc '.resources[].guid'", returnStdout: true).trim()
 
               echo "${log_info}Configuring app ${gds_app[2]}"
               sh "cf curl '/v3/apps/${app_guid}/features/revisions' -X PATCH -d '{ \"enabled\": false }' | jq -C '.'"
@@ -390,8 +391,12 @@ spec:
                   cf curl '/v3/deployments/${deploy_guid}/actions/cancel' -X POST | jq -C 'del(.links)'
                   cf curl '/v3/droplets/${droplet_guid}' -X DELETE
                   cf curl '/v3/packages/${package_guid}' -X DELETE
-                  cf logs ${gds_app[2]} --recent || true
                 """
+                // new_app_revision = sh(script:"cf curl '/v3/apps/${app_guid}/revisions/deployed' | jq -rc '.resources[].guid'", returnStdout: true).trim()
+                // if (new_app_revision != app_revision) {
+                //   sh "cf curl '/v3/deployments' -X POST -d '{\"revision\":{\"guid\":\"${app_revision}\"},\"strategy\":\"rolling\",\"relationships\":{\"app\":{\"data\":{\"guid\":\"${app_guid}\"}}}}'"
+                // }
+                sh "cf logs ${gds_app[2]} --recent || true"
                 error error_msg
               }
 
