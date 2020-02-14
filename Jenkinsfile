@@ -272,6 +272,7 @@ spec:
               app_guid = sh(script: "cf app ${gds_app[2]} --guid | perl -lne 'print \$& if /(\\{{0,1}([0-9a-fA-F]){8}-([0-9a-fA-F]){4}-([0-9a-fA-F]){4}-([0-9a-fA-F]){4}-([0-9a-fA-F]){12}\\}{0,1})/'", returnStdout: true).trim()
 
               echo "${log_info}Configuring app ${gds_app[2]}"
+              sh "cf curl '/v3/apps/${new_app_guid}/features/revisions' -X PATCH -d '{ \"enabled\": false }' | jq -C '.'"
               if (buildpack_json.buildpacks.size() > 0) {
                 echo "${log_info}Setting buildpack to ${buildpack_json.buildpacks}"
                 env.PAAS_BUILDPACK = readFile file: "${env.WORKSPACE}/.ci/buildpacks.json"
