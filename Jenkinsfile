@@ -407,7 +407,7 @@ spec:
                   sh "cf curl '/v3/deployments' -X POST -d '{\"revision\":{\"guid\":\"${app_revision}\"},\"strategy\":\"rolling\",\"relationships\":{\"app\":{\"data\":{\"guid\":\"${app_guid}\"}}}}' | jq -C 'del(.links)'"
                 }
                 */
-                sh "cf logs ${gds_app[2]} --recent || true"
+                sh "cf logs ${gds_app[2]} --recent | tail -n 200 || true"
                 error error_msg
               }
 
