@@ -292,7 +292,7 @@ spec:
               """
               vars_check = readFile file: "${env.WORKSPACE}/.ci/env.json"
               if (vars_check.trim() != '{}') {
-                sh "jq '{\"var\": .} * {\"var\": \"GIT_COMMIT\": \"${app_git_commit}\", \"GIT_BRANCH\": \"${env.Version}\"}' ${env.WORKSPACE}/.ci/env.json > ${env.WORKSPACE}/.ci/cf_envar.json"
+                sh "jq '{\"var\": .} * {\"var\": {\"GIT_COMMIT\": \"${app_git_commit}\", \"GIT_BRANCH\": \"${env.Version}\"}}' ${env.WORKSPACE}/.ci/env.json > ${env.WORKSPACE}/.ci/cf_envar.json"
                 updated_vars = sh(script: "cf curl '/v3/apps/${app_guid}/environment_variables' -X PATCH -d @${env.WORKSPACE}/.ci/cf_envar.json | jq -r '.var | keys'", returnStdout: true).trim()
                 echo "${log_info}Application environment variables updated: ${updated_vars} "
               }
