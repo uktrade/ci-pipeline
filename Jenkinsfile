@@ -293,13 +293,9 @@ spec:
               sh "cf v3-set-env ${gds_app[2]} GIT_BRANCH '${env.Version}'"
               vars_check = readFile file: "${env.WORKSPACE}/.ci/env.json"
               if (vars_check.trim() != '{}') {
-                echo "${log_info}Application environment variables updated: "
-                sh """
-                  jq '{"var": .}' ${env.WORKSPACE}/.ci/env.json > ${env.WORKSPACE}/.ci/cf_envar.json
-                  cf curl '/v3/apps/${app_guid}/environment_variables' -X PATCH -d @${env.WORKSPACE}/.ci/cf_envar.json | jq -r '.var | keys'
-                """
-                // sh "jq '{\"var\": .}' ${env.WORKSPACE}/.ci/env.json > ${env.WORKSPACE}/.ci/cf_envar.json"
-                // updated_vars = sh(script: "cf curl '/v3/apps/${app_guid}/environment_variables' -X PATCH -d @${env.WORKSPACE}/.ci/cf_envar.json | jq -r '.var | keys'", returnStdout: true).trim()
+                sh "jq '{\"var\": .}' ${env.WORKSPACE}/.ci/env.json > ${env.WORKSPACE}/.ci/cf_envar.json"
+                updated_vars = sh(script: "cf curl '/v3/apps/${app_guid}/environment_variables' -X PATCH -d @${env.WORKSPACE}/.ci/cf_envar.json | jq -r '.var | keys'", returnStdout: true).trim()
+                echo "${log_info}Application environment variables updated: ${updated_vars} "
               }
 
               sh "echo .ci\\*/ >> ${env.WORKSPACE}/.cfignore"
