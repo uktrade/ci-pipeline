@@ -285,6 +285,7 @@ spec:
               }
 
               prev_vars = sh(script: "cf curl '/v3/apps/${app_guid}/environment_variables' | jq -rc '.var'", returnStdout: true).trim()
+              writeFile file: "${env.WORKSPACE}/.ci/cf_envar_prev.json", text: prev_vars
               clear_vars = sh(script: "cf curl '/v3/apps/${app_guid}/environment_variables' | jq -rc '.var | map_values(null)'", returnStdout: true).trim()
               sh """
                 cf curl -X PATCH '/v3/apps/${app_guid}/environment_variables' -X PATCH -d '{"var": ${clear_vars}}' | jq -C 'del(.links)'
@@ -395,10 +396,11 @@ spec:
                   cf curl '/v3/droplets/${droplet_guid}' -X DELETE
                   cf curl '/v3/packages/${package_guid}' -X DELETE
                 """
-                echo "${log_info}Rollback environment variables for app ${gds_app[2]}"
-                sh """
-                  cf curl -X PATCH '/v3/apps/${app_guid}/environment_variables' -X PATCH -d '{"var": ${prev_vars}}' | jq -C '.var | keys'
-                """
+
+                sh "jq '{\"var\": .}' ${env.WORKSPACE}/.ci/cf_envar_prev.json > ${env.WORKSPACE}/.ci/cf_envar.json"
+                updated_vars = sh(script: "cf curl '/v3/apps/${app_guid}/environment_variables' -X PATCH -d @${env.WORKSPACE}/.ci/cf_envar.json | jq -r '.var | keys'", returnStdout: true).trim()
+                echo "${log_warn}Rollback application environment variables: ${updated_vars} "
+
                 /* TODO: enable revision based rollback
                 new_app_revision = sh(script:"cf curl '/v3/apps/${app_guid}/revisions/deployed' | jq -rc '.resources[].guid'", returnStdout: true).trim()
                 if (new_app_revision != app_revision && app_revision != '') {
