@@ -284,9 +284,10 @@ spec:
                 """
               }
 
-              prev_vars = sh(script: "cf curl '/v3/apps/${app_guid}/environment_variables' | jq -rc '.var | map_values(null)'", returnStdout: true).trim()
+              prev_vars = sh(script: "cf curl '/v3/apps/${app_guid}/environment_variables' | jq -rc '.var'", returnStdout: true).trim()
+              clear_vars = sh(script: "cf curl '/v3/apps/${app_guid}/environment_variables' | jq -rc '.var | map_values(null)'", returnStdout: true).trim()
               sh """
-                cf curl -X PATCH '/v3/apps/${app_guid}/environment_variables' -X PATCH -d '{"var": ${prev_vars}}' | jq -C 'del(.links)'
+                cf curl -X PATCH '/v3/apps/${app_guid}/environment_variables' -X PATCH -d '{"var": ${clear_vars}}' | jq -C 'del(.links)'
               """
               sh "cf v3-set-env ${gds_app[2]} GIT_COMMIT '${app_git_commit}'"
               sh "cf v3-set-env ${gds_app[2]} GIT_BRANCH '${env.Version}'"
@@ -393,6 +394,7 @@ spec:
                   cf curl '/v3/deployments/${deploy_guid}/actions/cancel' -X POST | jq -C 'del(.links)'
                   cf curl '/v3/droplets/${droplet_guid}' -X DELETE
                   cf curl '/v3/packages/${package_guid}' -X DELETE
+                  cf curl -X PATCH '/v3/apps/${app_guid}/environment_variables' -X PATCH -d '{"var": ${prev_vars}}' | jq -C 'del(.links)'
                 """
                 /* TODO: enable revision based rollback
                 new_app_revision = sh(script:"cf curl '/v3/apps/${app_guid}/revisions/deployed' | jq -rc '.resources[].guid'", returnStdout: true).trim()
