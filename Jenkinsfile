@@ -391,6 +391,7 @@ spec:
                   }
                 }
               } catch (err) {
+                echo "${log_warn}Cancelling application deployment for app ${gds_app[2]}"
                 sh """
                   cf curl '/v3/deployments/${deploy_guid}/actions/cancel' -X POST | jq -C 'del(.links)'
                   cf curl '/v3/droplets/${droplet_guid}' -X DELETE
