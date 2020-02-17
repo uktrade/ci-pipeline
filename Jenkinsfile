@@ -397,7 +397,7 @@ spec:
                 """
                 echo "${log_info}Rollback environment variables for app ${gds_app[2]}"
                 sh """
-                  cf curl -X PATCH '/v3/apps/${app_guid}/environment_variables' -X PATCH -d '{"var": ${prev_vars}}' | jq -C 'del(.links) | .var | keys'
+                  cf curl -X PATCH '/v3/apps/${app_guid}/environment_variables' -X PATCH -d '{"var": ${prev_vars}}' | jq -C '.var | keys'
                 """
                 /* TODO: enable revision based rollback
                 new_app_revision = sh(script:"cf curl '/v3/apps/${app_guid}/revisions/deployed' | jq -rc '.resources[].guid'", returnStdout: true).trim()
