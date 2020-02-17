@@ -394,7 +394,10 @@ spec:
                   cf curl '/v3/deployments/${deploy_guid}/actions/cancel' -X POST | jq -C 'del(.links)'
                   cf curl '/v3/droplets/${droplet_guid}' -X DELETE
                   cf curl '/v3/packages/${package_guid}' -X DELETE
-                  cf curl -X PATCH '/v3/apps/${app_guid}/environment_variables' -X PATCH -d '{"var": ${prev_vars}}' | jq -C 'del(.links)'
+                """
+                echo "${log_info}Rollback environment variables for app ${gds_app[2]}"
+                sh """
+                  cf curl -X PATCH '/v3/apps/${app_guid}/environment_variables' -X PATCH -d '{"var": ${prev_vars}}' | jq -C 'del(.links) | .var | keys'
                 """
                 /* TODO: enable revision based rollback
                 new_app_revision = sh(script:"cf curl '/v3/apps/${app_guid}/revisions/deployed' | jq -rc '.resources[].guid'", returnStdout: true).trim()
