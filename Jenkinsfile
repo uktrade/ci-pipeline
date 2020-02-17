@@ -290,11 +290,9 @@ spec:
               sh """
                 cf curl -X PATCH '/v3/apps/${app_guid}/environment_variables' -X PATCH -d '{"var": ${clear_vars}}' | jq -C 'del(.links)'
               """
-              sh "cf v3-set-env ${gds_app[2]} GIT_COMMIT '${app_git_commit}'"
-              sh "cf v3-set-env ${gds_app[2]} GIT_BRANCH '${env.Version}'"
               vars_check = readFile file: "${env.WORKSPACE}/.ci/env.json"
               if (vars_check.trim() != '{}') {
-                sh "jq '{\"var\": .}' ${env.WORKSPACE}/.ci/env.json > ${env.WORKSPACE}/.ci/cf_envar.json"
+                sh "jq '{\"var\": .} * {\"var\": \"GIT_COMMIT\": \"${app_git_commit}\", \"GIT_BRANCH\": \"${env.Version}\"}' ${env.WORKSPACE}/.ci/env.json > ${env.WORKSPACE}/.ci/cf_envar.json"
                 updated_vars = sh(script: "cf curl '/v3/apps/${app_guid}/environment_variables' -X PATCH -d @${env.WORKSPACE}/.ci/cf_envar.json | jq -r '.var | keys'", returnStdout: true).trim()
                 echo "${log_info}Application environment variables updated: ${updated_vars} "
               }
