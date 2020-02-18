@@ -421,6 +421,11 @@ spec:
                   echo "${log_warn}Cancelling application deployment for app ${gds_app[2]}"
                   sh "cf curl '/v3/deployments/${deploy_guid}/actions/cancel' -X POST | jq -C 'del(.links)'"
                 }
+                new_app_revision = sh(script:"cf curl '/v3/apps/${app_guid}/revisions/deployed' | jq -rc '.resources[].guid'", returnStdout: true).trim()
+                if (new_app_revision != app_revision && app_revision != '') {
+                  echo "${log_warn}Rollback app ${gds_app[2]} to previous revision ${app_revision}."
+                  sh "cf curl '/v3/deployments' -X POST -d '{\"revision\":{\"guid\":\"${app_revision}\"},\"strategy\":\"rolling\",\"relationships\":{\"app\":{\"data\":{\"guid\":\"${app_guid}\"}}}}' | jq -C 'del(.links)'"
+                }
                 if (droplet_guid != null) {
                   echo "${log_warn}Remove droplet for app ${gds_app[2]}"
                   sh "cf curl '/v3/droplets/${droplet_guid}' -X DELETE"
@@ -428,11 +433,6 @@ spec:
                 if (package_guid != null) {
                   echo "${log_warn}Remove package for app ${gds_app[2]}"
                   sh "cf curl '/v3/packages/${package_guid}' -X DELETE"
-                }
-                new_app_revision = sh(script:"cf curl '/v3/apps/${app_guid}/revisions/deployed' | jq -rc '.resources[].guid'", returnStdout: true).trim()
-                if (new_app_revision != app_revision && app_revision != '') {
-                  echo "${log_warn}Rollback app ${gds_app[2]} to previous revision ${app_revision}."
-                  sh "cf curl '/v3/deployments' -X POST -d '{\"revision\":{\"guid\":\"${app_revision}\"},\"strategy\":\"rolling\",\"relationships\":{\"app\":{\"data\":{\"guid\":\"${app_guid}\"}}}}' | jq -C 'del(.links)'"
                 }
                 sh "cf logs ${gds_app[2]} --recent | tail -n 200 || true"
               }
