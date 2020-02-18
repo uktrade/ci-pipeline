@@ -370,7 +370,6 @@ spec:
                 deploy_json = sh(script: "cf curl '/v3/deployments' -X POST -d '{\"droplet\":{\"guid\":\"${droplet_guid}\"},\"strategy\":\"rolling\",\"relationships\":{\"app\":{\"data\":{\"guid\":\"${app_guid}\"}}}}'", returnStdout: true).trim()
                 deploy = readJSON text: deploy_json
                 if (deploy.errors) {
-                  deploy_guid = null
                   error_msg = deploy.errors[0].detail
                   error error_msg
                 }
