@@ -427,6 +427,7 @@ spec:
                   """
                 }
                 echo "${log_warn}Rollback app"
+                sh "cf target -o ${gds_app[0]} -s ${gds_app[1]}"
                 new_app_revision = sh(script:"cf curl '/v3/apps/${app_guid}/revisions/deployed' | jq -rc '.resources[].guid'", returnStdout: true).trim()
                 if (new_app_revision != app_revision && app_revision != '') {
                   echo "${log_warn}Rollback app ${gds_app[2]} to previous revision ${app_revision}."
