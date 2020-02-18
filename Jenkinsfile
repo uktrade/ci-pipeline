@@ -270,9 +270,7 @@ spec:
 
               space_guid = sh(script: "cf space ${gds_app[1]}  --guid", returnStdout: true).trim()
               app_guid = sh(script: "cf app ${gds_app[2]} --guid | perl -lne 'print \$& if /(\\{{0,1}([0-9a-fA-F]){8}-([0-9a-fA-F]){4}-([0-9a-fA-F]){4}-([0-9a-fA-F]){4}-([0-9a-fA-F]){12}\\}{0,1})/'", returnStdout: true).trim()
-              /* TODO: enable revision based rollback
               app_revision = sh(script:"cf curl '/v3/apps/${app_guid}/revisions/deployed' | jq -rc '.resources[].guid'", returnStdout: true).trim()
-              */
 
               echo "${log_info}Configuring app ${gds_app[2]}"
               sh "cf curl '/v3/apps/${app_guid}/features/revisions' -X PATCH -d '{ \"enabled\": false }' | jq -C '.'"
@@ -407,17 +405,33 @@ spec:
                 updated_vars = sh(script: "cf curl '/v3/apps/${app_guid}/environment_variables' -X PATCH -d @${env.WORKSPACE}/.ci/cf_envar.json | jq -r '.var | keys'", returnStdout: true).trim()
                 echo "${log_warn}Rollback application environment variables: ${updated_vars} "
 
-                /* TODO: enable revision based rollback
+                error error_msg
+              }
+
+            }
+          }
+        }
+      }
+
+      post {
+        failure {
+          script {
+            container('deployer') {
+              timestamps {
+                withCredentials([usernamePassword(credentialsId: paas_region.credential, passwordVariable: 'gds_pass', usernameVariable: 'gds_user')]) {
+                  sh """
+                    cf api ${paas_region.api}
+                    cf auth ${gds_user} ${gds_pass}
+                  """
+                }
+                echo "${log_warn}Rollback app"
                 new_app_revision = sh(script:"cf curl '/v3/apps/${app_guid}/revisions/deployed' | jq -rc '.resources[].guid'", returnStdout: true).trim()
                 if (new_app_revision != app_revision && app_revision != '') {
                   echo "${log_warn}Rollback app ${gds_app[2]} to previous revision ${app_revision}."
                   sh "cf curl '/v3/deployments' -X POST -d '{\"revision\":{\"guid\":\"${app_revision}\"},\"strategy\":\"rolling\",\"relationships\":{\"app\":{\"data\":{\"guid\":\"${app_guid}\"}}}}' | jq -C 'del(.links)'"
                 }
-                */
                 sh "cf logs ${gds_app[2]} --recent | tail -n 200 || true"
-                error error_msg
               }
-
             }
           }
         }
