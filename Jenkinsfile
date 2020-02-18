@@ -329,6 +329,12 @@ spec:
                 }
               } catch (err) {
                 sh "cf curl '/v3/packages/${package_guid}' -X DELETE"
+
+                // TODO: remove once app revision enabled
+                sh "jq '{\"var\": .}' ${env.WORKSPACE}/.ci/cf_envar_prev.json > ${env.WORKSPACE}/.ci/cf_envar.json"
+                updated_vars = sh(script: "cf curl '/v3/apps/${app_guid}/environment_variables' -X PATCH -d @${env.WORKSPACE}/.ci/cf_envar.json | jq -r '.var | keys'", returnStdout: true).trim()
+                echo "${log_warn}Rollback application environment variables: ${updated_vars} "
+
                 error error_msg
               }
 
@@ -396,6 +402,7 @@ spec:
                   cf curl '/v3/packages/${package_guid}' -X DELETE
                 """
 
+                // TODO: remove once app revision enabled
                 sh "jq '{\"var\": .}' ${env.WORKSPACE}/.ci/cf_envar_prev.json > ${env.WORKSPACE}/.ci/cf_envar.json"
                 updated_vars = sh(script: "cf curl '/v3/apps/${app_guid}/environment_variables' -X PATCH -d @${env.WORKSPACE}/.ci/cf_envar.json | jq -r '.var | keys'", returnStdout: true).trim()
                 echo "${log_warn}Rollback application environment variables: ${updated_vars} "
