@@ -211,6 +211,10 @@ spec:
 
               gds_app = config.PAAS_APP.split("/")
               sh "cf target -o ${gds_app[0]} -s ${gds_app[1]}"
+              package_guid = null
+              droplet_guid = null
+              deploy_guid = null
+
               cf_manifest_exist = fileExists "${env.WORKSPACE}/manifest.yml"
               buildpack_json = readJSON text:  """{"buildpacks": []}"""
               if (cf_manifest_exist) {
@@ -328,13 +332,6 @@ spec:
                   }
                 }
               } catch (err) {
-                sh "cf curl '/v3/packages/${package_guid}' -X DELETE"
-
-                // TODO: remove once app revision enabled
-                sh "jq '{\"var\": .}' ${env.WORKSPACE}/.ci/cf_envar_prev.json > ${env.WORKSPACE}/.ci/cf_envar.json"
-                updated_vars = sh(script: "cf curl '/v3/apps/${app_guid}/environment_variables' -X PATCH -d @${env.WORKSPACE}/.ci/cf_envar.json | jq -r '.var | keys'", returnStdout: true).trim()
-                echo "${log_warn}Rollback application environment variables: ${updated_vars} "
-
                 error error_msg
               }
 
@@ -395,18 +392,6 @@ spec:
                   }
                 }
               } catch (err) {
-                echo "${log_warn}Cancelling application deployment for app ${gds_app[2]}"
-                sh """
-                  cf curl '/v3/deployments/${deploy_guid}/actions/cancel' -X POST | jq -C 'del(.links)'
-                  cf curl '/v3/droplets/${droplet_guid}' -X DELETE
-                  cf curl '/v3/packages/${package_guid}' -X DELETE
-                """
-
-                // TODO: remove once app revision enabled
-                sh "jq '{\"var\": .}' ${env.WORKSPACE}/.ci/cf_envar_prev.json > ${env.WORKSPACE}/.ci/cf_envar.json"
-                updated_vars = sh(script: "cf curl '/v3/apps/${app_guid}/environment_variables' -X PATCH -d @${env.WORKSPACE}/.ci/cf_envar.json | jq -r '.var | keys'", returnStdout: true).trim()
-                echo "${log_warn}Rollback application environment variables: ${updated_vars} "
-
                 error error_msg
               }
 
@@ -428,6 +413,24 @@ spec:
                 }
                 echo "${log_warn}Rollback app"
                 sh "cf target -o ${gds_app[0]} -s ${gds_app[1]}"
+
+                // TODO: remove once app revision enabled
+                sh "jq '{\"var\": .}' ${env.WORKSPACE}/.ci/cf_envar_prev.json > ${env.WORKSPACE}/.ci/cf_envar.json"
+                updated_vars = sh(script: "cf curl '/v3/apps/${app_guid}/environment_variables' -X PATCH -d @${env.WORKSPACE}/.ci/cf_envar.json | jq -r '.var | keys'", returnStdout: true).trim()
+                echo "${log_warn}Rollback application environment variables: ${updated_vars} "
+
+                if (deploy_guid != null) {
+                  echo "${log_warn}Cancelling application deployment for app ${gds_app[2]}"
+                  sh "cf curl '/v3/deployments/${deploy_guid}/actions/cancel' -X POST | jq -C 'del(.links)'"
+                }
+                if (droplet_guid != null) {
+                  echo "${log_warn}Remove droplet for app ${gds_app[2]}"
+                  sh "cf curl '/v3/droplets/${droplet_guid}' -X DELETE"
+                }
+                if (package_guid != null) {
+                  echo "${log_warn}Remove package for app ${gds_app[2]}"
+                  sh "cf curl '/v3/packages/${package_guid}' -X DELETE"
+                }
                 new_app_revision = sh(script:"cf curl '/v3/apps/${app_guid}/revisions/deployed' | jq -rc '.resources[].guid'", returnStdout: true).trim()
                 if (new_app_revision != app_revision && app_revision != '') {
                   echo "${log_warn}Rollback app ${gds_app[2]} to previous revision ${app_revision}."
