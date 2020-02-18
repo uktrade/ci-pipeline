@@ -327,7 +327,6 @@ spec:
                   build_state = sh(script: "cf curl '/v3/builds/${build_guid}' | jq -rc '.state'", returnStdout: true).trim()
                   if (build_state == "FAILED") {
                     error_msg = sh(script: "cf curl '/v3/builds/${build_guid}' | jq -rc '.error'", returnStdout: true).trim()
-                    sh "cf logs ${gds_app[2]} --recent || true"
                     error error_msg
                   }
                 }
