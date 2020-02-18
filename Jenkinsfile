@@ -282,8 +282,10 @@ spec:
                 """
               }
 
+              // TODO: remove once app revision enabled
               prev_vars = sh(script: "cf curl '/v3/apps/${app_guid}/environment_variables' | jq -rc '.var'", returnStdout: true).trim()
               writeFile file: "${env.WORKSPACE}/.ci/cf_envar_prev.json", text: prev_vars
+
               clear_vars = sh(script: "cf curl '/v3/apps/${app_guid}/environment_variables' | jq -rc '.var | map_values(null)'", returnStdout: true).trim()
               sh """
                 cf curl -X PATCH '/v3/apps/${app_guid}/environment_variables' -X PATCH -d '{"var": ${clear_vars}}' | jq -C 'del(.links)'
