@@ -289,10 +289,9 @@ spec:
               prev_vars = sh(script: "cf curl '/v3/apps/${app_guid}/environment_variables' | jq -rc '.var'", returnStdout: true).trim()
               writeFile file: "${env.WORKSPACE}/.ci/cf_envar_prev.json", text: prev_vars
 
-              clear_vars = sh(script: "cf curl '/v3/apps/${app_guid}/environment_variables' | jq -rc '.var | map_values(null)'", returnStdout: true).trim()
-              sh """
-                cf curl -X PATCH '/v3/apps/${app_guid}/environment_variables' -X PATCH -d '{"var": ${clear_vars}}' | jq -C 'del(.links)'
-              """
+              clear_vars = sh(script: "cf curl '/v3/apps/${app_guid}/environment_variables' | jq -rc '.var | map_values(null) | {\"var\": .}'", returnStdout: true).trim()
+              writeFile file: "${env.WORKSPACE}/.ci/cf_clear_vars.json", text: clear_vars
+              sh "cf curl -X PATCH '/v3/apps/${app_guid}/environment_variables' -X PATCH -d @${env.WORKSPACE}/.ci/cf_clear_vars.json | jq -C 'del(.links)'"
               vars_check = readFile file: "${env.WORKSPACE}/.ci/env.json"
               if (vars_check.trim() != '{}') {
                 sh "jq '{\"var\": .} * {\"var\": {\"GIT_COMMIT\": \"${app_git_commit}\", \"GIT_BRANCH\": \"${env.Version}\"}}' ${env.WORKSPACE}/.ci/env.json > ${env.WORKSPACE}/.ci/cf_envar.json"
