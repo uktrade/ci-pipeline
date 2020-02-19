@@ -1,7 +1,7 @@
 FROM ubuntu:18.04
 
-ENV CF_CLI_VER 6.47.2
-ENV NVM_VER 0.35.1
+ENV CF_CLI_VER 6.49.0
+ENV NVM_VER 0.35.2
 ENV JABBA_VER 0.11.2
 ENV RVM_VER 1.29.9
 ENV CF_CONDUIT_VER 0.0.8
@@ -26,7 +26,6 @@ RUN curl -Lfs https://packages.cloudfoundry.org/debian/cli.cloudfoundry.org.key 
     rm -rf /var/lib/apt/lists/*
 
 RUN pip3 install --upgrade awscli virtualenv pip
-RUN curl -Lfs https://cli-assets.heroku.com/install-ubuntu.sh | bash
 
 COPY Gemfile* /tmp/
 RUN gem install bundler && \
