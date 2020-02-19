@@ -26,7 +26,6 @@ RUN curl -Lfs https://packages.cloudfoundry.org/debian/cli.cloudfoundry.org.key 
     rm -rf /var/lib/apt/lists/*
 
 RUN pip3 install --upgrade awscli virtualenv pip
-RUN curl -Lfs https://cli-assets.heroku.com/install-ubuntu.sh | bash
 
 COPY Gemfile* /tmp/
 RUN gem install bundler && \
