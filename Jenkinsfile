@@ -446,14 +446,6 @@ spec:
   }
 
   post {
-    failure {
-      script {
-        timestamps {
-          emailext body: '${DEFAULT_CONTENT}', recipientProviders: [[$class: 'CulpritsRecipientProvider'], [$class: 'DevelopersRecipientProvider'], [$class: 'RequesterRecipientProvider'], [$class: 'UpstreamComitterRecipientProvider']], subject: "${currentBuild.result}: ${env.Project} ${env.Environment}", to: '${DEFAULT_RECIPIENTS}'
-        }
-      }
-    }
-
     always {
       script {
         container('deployer') {
