@@ -146,7 +146,7 @@ def main(args)
     consul_add(params, JSON.pretty_generate(consul_get(params).deep_merge!({'lock' => false})))
 
   else
-    abort("Usage: bootstrap.rb [parse-all|parse|get-lock|lock|unlock] [APP_PATH|Team/Porject/Environment]")
+    abort("Usage: bootstrap.rb [update|list|get|get-lock|lock|unlock] [APP_PATH|Team/Porject/Environment]")
   end
 
 end
