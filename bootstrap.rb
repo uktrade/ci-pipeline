@@ -60,7 +60,7 @@ def main(args)
   ops, params = args
   case ops
 
-  when "validate"
+  when "update"
     puts "Validating config files:"
     config_files = Array.new
     Dir.foreach(CONFIG_DIR) do |file|
@@ -99,7 +99,11 @@ def main(args)
       consul_add("#{file_data['namespace']}/#{file_data['name']}/_", JSON.pretty_generate(path_data))
       option_data.deep_merge!({ file_data['namespace'] => { file_data['name'] => env_data }})
     }
-    save_json(OPTION_FILE, option_data)
+    consul_add("_", JSON.pretty_generate(option_data))
+
+  when "list"
+    puts "Saving project list."
+    save_json(OPTION_FILE, consul_get("_"))
 
   when "get"
     team, project, env = params.split('/')
