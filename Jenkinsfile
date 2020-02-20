@@ -116,7 +116,7 @@ spec:
             timestamps {
               withCredentials([string(credentialsId: env.VAULT_TOKEN_ID, variable: 'TOKEN')]) {
                 env.VAULT_SERECT_ID = TOKEN
-                sh "${env.WORKSPACE}/.ci/bootstrap.rb parse ${env.Team}/${env.Project}/${env.Environment}"
+                sh "${env.WORKSPACE}/.ci/bootstrap.rb get ${env.Team}/${env.Project}/${env.Environment}"
               }
               envars = readJSON file: "${env.WORKSPACE}/.ci/env.json"
               config = readJSON file: "${env.WORKSPACE}/.ci/config.json"
