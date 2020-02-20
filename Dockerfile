@@ -1,6 +1,7 @@
 FROM ubuntu:18.04
 
 ENV CF_CLI_VER 6.49.0
+ENV CF_CLI7_VER 7.0.0-beta.29
 ENV NVM_VER 0.35.2
 ENV JABBA_VER 0.11.2
 ENV RVM_VER 1.29.9
@@ -22,7 +23,7 @@ RUN apt-get update && \
 RUN curl -Lfs https://packages.cloudfoundry.org/debian/cli.cloudfoundry.org.key | apt-key add - && \
     echo "deb https://packages.cloudfoundry.org/debian stable main" > /etc/apt/sources.list.d/cloudfoundry-cli.list && \
     apt-get update && \
-    apt-get install -y --allow-unauthenticated cf-cli=$CF_CLI_VER && \
+    apt-get install -y --allow-unauthenticated cf-cli=$CF_CLI_VER cf7-cli=$CF_CLI7_VER && \
     rm -rf /var/lib/apt/lists/*
 
 RUN pip3 install --upgrade awscli virtualenv pip
