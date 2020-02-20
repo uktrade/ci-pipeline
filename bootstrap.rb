@@ -60,7 +60,7 @@ def main(args)
   ops, params = args
   case ops
 
-  when "parse-all"
+  when "update"
     puts "Validating config files:"
     config_files = Array.new
     Dir.foreach(CONFIG_DIR) do |file|
@@ -99,9 +99,13 @@ def main(args)
       consul_add("#{file_data['namespace']}/#{file_data['name']}/_", JSON.pretty_generate(path_data))
       option_data.deep_merge!({ file_data['namespace'] => { file_data['name'] => env_data }})
     }
-    save_json(OPTION_FILE, option_data)
+    consul_add("_", JSON.pretty_generate(option_data))
 
-  when "parse"
+  when "list"
+    puts "Saving project list."
+    save_json(OPTION_FILE, consul_get("_"))
+
+  when "get"
     team, project, env = params.split('/')
     puts "Saving environment variables."
 
@@ -142,7 +146,7 @@ def main(args)
     consul_add(params, JSON.pretty_generate(consul_get(params).deep_merge!({'lock' => false})))
 
   else
-    abort("Usage: bootstrap.rb [parse-all|parse|get-lock|lock|unlock] [APP_PATH|Team/Porject/Environment]")
+    abort("Usage: bootstrap.rb [update|list|get|get-lock|lock|unlock] [APP_PATH|Team/Porject/Environment]")
   end
 
 end
