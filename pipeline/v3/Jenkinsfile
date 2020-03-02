@@ -269,10 +269,10 @@ spec:
               }
 
               app_guid = sh(script: "cf app ${gds_app[2]} --guid | perl -lne 'print \$& if /(\\{{0,1}([0-9a-fA-F]){8}-([0-9a-fA-F]){4}-([0-9a-fA-F]){4}-([0-9a-fA-F]){4}-([0-9a-fA-F]){12}\\}{0,1})/'", returnStdout: true).trim()
-              app_revision = sh(script:"cf curl '/v3/apps/${app_guid}/revisions/deployed' | jq -rc '.resources[].guid'", returnStdout: true).trim()
+              app_revision = sh(script:"cf curl '/v3/deployments?app_guids=${app_guid}&status_reasons=DEPLOYED&order_by=-updated_at&per_page=1' | jq -rc '.resources[].revision.guid'", returnStdout: true).trim()
 
               echo "${log_info}Configuring app ${gds_app[2]}"
-              sh "cf curl '/v3/apps/${app_guid}/features/revisions' -X PATCH -d '{ \"enabled\": false }' | jq -C '.'"
+              sh "cf curl '/v3/apps/${app_guid}/features/revisions' -X PATCH -d '{ \"enabled\": true }' | jq -C '.'"
               if (buildpack_json.buildpacks.size() > 0) {
                 echo "${log_info}Setting buildpack to ${buildpack_json.buildpacks}"
                 env.PAAS_BUILDPACK = readFile file: "${env.WORKSPACE}/.ci/buildpacks.json"
@@ -280,10 +280,6 @@ spec:
                   cf curl '/v3/apps/${app_guid}' -X PATCH -d '{"name": "${gds_app[2]}", "lifecycle": {"type": "buildpack", "data": ${env.PAAS_BUILDPACK}}}' | jq -C 'del(.links, .relationships)'
                 """
               }
-
-              // TODO: remove once app revision enabled
-              prev_vars = sh(script: "cf curl '/v3/apps/${app_guid}/environment_variables' | jq -rc '.var'", returnStdout: true).trim()
-              writeFile file: "${env.WORKSPACE}/.ci/cf_envar_prev.json", text: prev_vars
 
               clear_vars = sh(script: "cf curl '/v3/apps/${app_guid}/environment_variables' | jq -rc '.var | map_values(null) | {\"var\": .}'", returnStdout: true).trim()
               writeFile file: "${env.WORKSPACE}/.ci/cf_clear_vars.json", text: clear_vars
@@ -402,14 +398,6 @@ spec:
                 }
                 echo "${log_warn}Rollback app"
                 sh "cf target -o ${gds_app[0]} -s ${gds_app[1]}"
-
-                // TODO: remove once app revision enabled
-                clear_vars = sh(script: "cf curl '/v3/apps/${app_guid}/environment_variables' | jq -rc '.var | map_values(null) | {\"var\": .}'", returnStdout: true).trim()
-                writeFile file: "${env.WORKSPACE}/.ci/cf_clear_vars.json", text: clear_vars
-                sh "cf curl -X PATCH '/v3/apps/${app_guid}/environment_variables' -X PATCH -d @${env.WORKSPACE}/.ci/cf_clear_vars.json | jq -Cc 'del(.links)'"
-                sh "jq '{\"var\": .}' ${env.WORKSPACE}/.ci/cf_envar_prev.json > ${env.WORKSPACE}/.ci/cf_envar.json"
-                updated_vars = sh(script: "cf curl '/v3/apps/${app_guid}/environment_variables' -X PATCH -d @${env.WORKSPACE}/.ci/cf_envar.json | jq -r '.var | keys'", returnStdout: true).trim()
-                echo "${log_warn}Rollback application environment variables: ${updated_vars} "
 
                 if (deploy_guid != null) {
                   echo "${log_warn}Cancelling application deployment for app ${gds_app[2]}"
