@@ -317,6 +317,7 @@ spec:
                     error error_msg
                   }
                 }
+                sh "cf tail --json -t log --lines 5000 --start-time `cf curl '/v3/builds/${build_guid}' | jq -rc '.created_at | fromdate * 1000'` ${app_guid} | jq -rC '.batch[] | select(.tags.source_type|(test(\"(API|CELL|STG)\"))).log.payload | @base64d'"
               } catch (err) {
                 error error_msg
               }
@@ -416,7 +417,7 @@ spec:
                   echo "${log_warn}Remove package for app ${gds_app[2]}"
                   sh "cf curl '/v3/packages/${package_guid}' -X DELETE"
                 }
-                sh "cf logs ${gds_app[2]} --recent | tail -n 200 || true"
+                sh "cf tail --json -t log --lines 5000 --start-time `cf curl '/v3/builds/${build_guid}' | jq -rc '.created_at | fromdate * 1000'` ${app_guid} | jq -rC '.batch[].log | select(.type == \"ERR\").payload | @base64d'"
               }
             }
           }
