@@ -36,7 +36,7 @@ USER ubuntu:ubuntu
 ENV HOME /home/ubuntu
 
 RUN cf install-plugin -f https://github.com/alphagov/paas-cf-conduit/releases/download/v$CF_CONDUIT_VER/cf-conduit.linux.amd64 && \
-    cf install-plugin -r CF-Community "log-cache"
+    cf install-plugin -f -r CF-Community "log-cache"
 RUN curl -Lfs https://github.com/pyenv/pyenv-installer/raw/master/bin/pyenv-installer | bash
 RUN curl -Lfs https://github.com/creationix/nvm/raw/v$NVM_VER/install.sh | bash
 RUN curl -Lfs https://rvm.io/mpapis.asc | gpg2 --import - && \
