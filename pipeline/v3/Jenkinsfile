@@ -424,7 +424,7 @@ spec:
                 }
                 sh """
                   eval \$(~/.linuxbrew/bin/brew shellenv)
-                  cf tail --json -t log --lines 1000 --start-time ${cf_log_ts} ${app_guid} | jq -rC '.batch[] | select(.tags.source_type|(test("(API|CELL|APP/PROC/WEB|PROXY|CELL/SSHD)"))).log.payload | @base64d'
+                  cf tail --json -t log --lines 1000 --start-time ${cf_log_ts} ${app_guid} | jq -rC '.batch[] | select(.tags.source_type|(test("(API|CELL|STG|PROXY|CELL/SSHD|APP/PROC/WEB)"))).log.payload | @base64d'
                 """
               }
             }
