@@ -49,7 +49,7 @@ RUN curl -Lfs https://rvm.io/mpapis.asc | gpg2 --import - && \
 RUN curl -Lfs https://github.com/shyiko/jabba/raw/$JABBA_VER/install.sh | bash
 RUN git clone https://github.com/syndbg/goenv.git ~/.goenv
 
-RUN echo 'eval "$($HOME/.linuxbrew/bin/brew shellenv)"' >> $HOME/.profile && \
+RUN echo 'eval "$($HOME/.linuxbrew/bin/brew shellenv)"' >> $HOME/.bashrc && \
     echo 'export PATH="$HOME/.pyenv/bin:$PATH"' >> $HOME/.profile && \
     echo 'eval "$(pyenv init -)"\neval "$(pyenv virtualenv-init -)"' >> $HOME/.profile && \
     echo 'export NVM_DIR="$HOME/.nvm"\n[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"' >> $HOME/.profile && \
