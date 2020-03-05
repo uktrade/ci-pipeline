@@ -301,7 +301,7 @@ spec:
               }
 
               echo "${log_info}Creating new build for app ${gds_app[2]}"
-              cf_log_ts = sh(script: "echo \$((\$(date +%s%N)/1000000))", returnStdout: true).trim()
+              cf_log_ts = sh(script: "date +%s%N", returnStdout: true).trim()
               build_json = sh(script: "cf curl '/v3/builds' -X POST -d '{\"package\": {\"guid\": \"${package_guid}\"}}'", returnStdout: true).trim()
               try {
                 build = readJSON text: build_json
