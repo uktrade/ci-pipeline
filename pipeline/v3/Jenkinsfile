@@ -319,7 +319,7 @@ spec:
                     error error_msg
                   }
                 }
-                sh "cf tail --json -t log --lines 1000 --start-time ${cf_log_ts} ${app_guid} | jq -rC '.batch[] | select(.tags.source_type|(test(\"(API|CELL|STG)\"))).log.payload | @base64d'"
+                // sh "cf tail --json -t log --lines 1000 --start-time ${cf_log_ts} ${app_guid} | jq -rC '.batch[] | select(.tags.source_type|(test(\"(API|CELL|STG)\"))).log.payload | @base64d'"
               } catch (err) {
                 error error_msg
               }
@@ -420,7 +420,7 @@ spec:
                   sh "cf curl '/v3/packages/${package_guid}' -X DELETE"
                 }
                 sh "cf logs ${gds_app[2]} --recent | tail -n 200 || true"
-                sh "cf tail --json -t log --lines 1000 --start-time ${cf_log_ts} ${app_guid} | jq -rC '.batch[].log | select(.type == \"ERR\").payload | @base64d'"
+                // sh "cf tail --json -t log --lines 1000 --start-time ${cf_log_ts} ${app_guid} | jq -rC '.batch[].log | select(.type == \"ERR\").payload | @base64d'"
               }
             }
           }
