@@ -17,7 +17,7 @@ RUN echo "force-unsafe-io" > /etc/dpkg/dpkg.cfg.d/02apt-speedup && \
     rm -rf /var/lib/apt/lists/*
 
 RUN apt-get update && \
-    apt-get install -y python3 python3-pip ruby-full rubygems bundler && \
+    apt-get install -y python3 python3-pip ruby-full rubygems bundler jq && \
     rm -rf /var/lib/apt/lists/*
 
 RUN curl -Lfs https://packages.cloudfoundry.org/debian/cli.cloudfoundry.org.key | apt-key add - && \
