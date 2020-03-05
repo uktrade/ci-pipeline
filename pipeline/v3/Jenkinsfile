@@ -422,10 +422,7 @@ spec:
                   echo "${log_warn}Remove package for app ${gds_app[2]}"
                   sh "cf curl '/v3/packages/${package_guid}' -X DELETE"
                 }
-                sh """
-                  eval \$(~/.linuxbrew/bin/brew shellenv)
-                  cf tail --json -t log --lines 1000 --start-time ${cf_log_ts} ${app_guid} | jq -rC '.batch[] | select(.tags.source_type|(test("(API|CELL|STG|PROXY|CELL/SSHD|APP/PROC/WEB)"))).log.payload | @base64d'
-                """
+                sh "cf logs ${gds_app[2]} --recent | tail -n 200 || true"
               }
             }
           }
