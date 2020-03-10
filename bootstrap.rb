@@ -48,7 +48,7 @@ def vault_get(path)
   rescue RestClient::ExceptionWithResponse => e
     return e.http_code
   else
-    return JSON.parse(resp)['data']['data']
+    return JSON.parse(resp)['data']
   end
 end
 
@@ -116,7 +116,7 @@ def main(args)
     } unless data['run'].empty?
     file_content = Hash.new
     data['vars'].each { |var| file_content.deep_merge!(var) } unless data['vars'].empty?
-    secrets = vault_get("#{team}/data/#{project}/#{env}") if data['secrets']
+    secrets = vault_get("#{team}/#{project}/#{env}") if data['secrets']
     file_content.deep_merge!(secrets) unless !defined?(secrets) && secrets.empty?
     file_content.each { |key, value| file_content.deep_merge!({key => value.to_s}) } unless file_content.empty?
 
