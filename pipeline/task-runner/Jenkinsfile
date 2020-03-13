@@ -41,16 +41,6 @@ spec:
 
   stages {
 
-    stage('Init') {
-      steps {
-        script {
-          timestamps {
-            validateDeclarativePipeline("${env.WORKSPACE}/Jenkinsfile")
-          }
-        }
-      }
-    }
-
     stage('Task') {
       steps {
         container('deployer') {
