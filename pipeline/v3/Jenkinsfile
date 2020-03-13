@@ -43,7 +43,6 @@ spec:
       steps {
         script {
           timestamps {
-            validateDeclarativePipeline("${env.WORKSPACE}/Jenkinsfile")
             log_info = "\033[32mINFO: "
             log_warn = "\033[31mWARNING: "
             lock = "false"
