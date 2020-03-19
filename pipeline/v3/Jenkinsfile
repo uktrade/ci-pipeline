@@ -251,6 +251,14 @@ spec:
                         echo "${log_info}Detected Docker deployement ${value['image']}"
                         config.DOCKER_DEPLOY_IMAGE = value['image']
                         break
+                      case 'memory':
+                        echo "${log_info}Setting application ${gds_app[2]} memory to ${value}"
+                        config.MEMORY = value
+                        break
+                      case 'disk_quota':
+                        echo "${log_info}Setting application ${gds_app[2]} disk to ${value}"
+                        config.DISK_QUOTA = value
+                        break
                       default:
                         echo "${log_warn}CloudFoundry API V2 manifest.yml attribute '${key}' is not supported."
                         break
@@ -328,34 +336,40 @@ spec:
 
               droplet_guid = sh(script: "cf curl '/v3/builds/${build_guid}' | jq -rc '.droplet.guid'", returnStdout: true).trim()
 
-              echo "${log_info}Configuring health check for app ${gds_app[2]}"
-              if (!config.PAAS_TIMEOUT) {
+              echo "${log_info}Configuring app ${gds_app[2]}"
+              app_manifest = readJSON text: "{\"applications\": [{\"name\": \"${gds_app[2]}\", \"processes\": [{\"type\": \"web\"}]}]}"
+              if (config.MEMORY) {
+                app_manifest.applications[0].processes[0].memory = config.MEMORY
+              }
+              if (config.DISK_QUOTA) {
+                app_manifest.applications[0].processes[0].disk_quota = config.DISK_QUOTA
+              }
+              if (config.PAAS_TIMEOUT) {
+                app_manifest.applications[0].processes[0].timeout = config.PAAS_TIMEOUT
+              } else {
                 config.PAAS_TIMEOUT = 60
               }
-              if (!config.PAAS_HEALTHCHECK_TYPE) {
-                config.PAAS_HEALTHCHECK_TYPE = "port"
-              }
               switch(config.PAAS_HEALTHCHECK_TYPE) {
-                case "port":
-                  sh """
-                    cf curl '/v3/apps/${app_guid}/processes/web' -X PATCH -d '{"health_check": {"type": "port", "data": {"timeout": ${config.PAAS_TIMEOUT}}}}' | jq -C 'del(.links)'
-                  """
-                  break
                 case "process":
-                  sh """
-                    cf curl '/v3/apps/${app_guid}/processes/web' -X PATCH -d '{"health_check": {"type": "process", "data": {"timeout": ${config.PAAS_TIMEOUT}}}}' | jq -C 'del(.links)'
-                  """
+                  app_manifest.applications[0].processes[0]['health-check-type'] = "process"
                   break
                 case "http":
                   if (config.PAAS_HEALTHCHECK_ENDPOINT) {
-                    sh """
-                      cf curl '/v3/apps/${app_guid}/processes/web' -X PATCH -d '{"health_check": {"type": "http", "data": {"timeout": ${config.PAAS_TIMEOUT}, "endpoint": "${config.PAAS_HEALTHCHECK_ENDPOINT}"}}}' | jq -C 'del(.links)'
-                    """
+                    app_manifest.applications[0].processes[0]['health-check-type'] = "http"
+                    app_manifest.applications[0].processes[0]['health-check-http-endpoint'] = config.PAAS_HEALTHCHECK_ENDPOINT
                   } else {
                     echo "${log_warn}'health-check-http-endpoint' not configured for 'http' health check."
                   }
                   break
+                default:
+                  app_manifest.applications[0].processes[0]['health-check-type'] = "port"
+                  break
               }
+              writeYaml file: "manifest.yml", data: app_manifest, overwrite: true
+              sh """
+                cf curl '/v3/apps/${app_guid}/actions/apply_manifest' -X POST -d @manifest.yml -H 'Content-type: application/x-yaml'
+                cf curl '/v3/apps/${app_guid}/processes/web' | jq -rC 'del(.relationships, .metadata, .links)'
+              """
 
               echo "${log_info}Creating new deployement for app ${gds_app[2]}"
               try {
