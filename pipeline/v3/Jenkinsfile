@@ -304,7 +304,7 @@ pipeline {
                 echo "${log_info}Setting buildpack to ${buildpack_json.buildpacks}"
                 buildpacks = readFile file: "${env.WORKSPACE}/.ci/buildpacks.json"
                 sh """
-                  cf curl '/v3/apps/${app_guid}' -X PATCH -d '{"name": "${gds_app[2]}", "lifecycle": {"type": "buildpack", "data": ${buildpacks}}}' | jq -C 'del(.links, .relationships)'
+                  cf curl '/v3/apps/${app_guid}' -X PATCH -d '{"name": "${gds_app[2]}", "lifecycle": {"type": "buildpack", "data": ${buildpacks}}}' | jq -C 'del(.links, .relationships, .metadata)'
                 """
               }
 
@@ -371,8 +371,7 @@ pipeline {
                   error error_msg
                 }
                 deploy_guid = deploy.guid
-                app_wait_timeout = sh(script: "expr ${app_manifest.applications[0].processes[0].timeout} \\* 3", returnStdout: true).trim()
-                timeout(time: app_wait_timeout.toInteger(), unit: 'SECONDS') {
+                timeout(time: app_manifest.applications[0].processes[0].timeout * 3, unit: 'SECONDS') {
                   error_msg = "App failed to deploy."
                   deploy_state = sh(script: "cf curl '/v3/deployments/${deploy_guid}' | jq -rc '.status.value'", returnStdout: true).trim()
                   while (deploy_state != "FINALIZED") {
