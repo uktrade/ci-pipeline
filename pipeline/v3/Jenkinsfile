@@ -413,6 +413,7 @@ pipeline {
                 if (deploy_guid != null) {
                   echo "${log_warn}Cancelling application deployment for app ${gds_app[2]}"
                   sh "cf curl '/v3/deployments/${deploy_guid}/actions/cancel' -X POST | jq -C 'del(.links)'"
+                  sleep 5
                 }
                 new_app_revision = sh(script:"cf curl '/v3/apps/${app_guid}/revisions/deployed' | jq -rc '.resources[].guid'", returnStdout: true).trim()
                 if (new_app_revision != app_revision && app_revision != '') {
