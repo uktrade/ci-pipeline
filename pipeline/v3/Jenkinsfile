@@ -172,6 +172,7 @@ pipeline {
                 sh "bash -l -c 'goenv install ${go_ver.trim()} && goenv global ${go_ver.trim()}'"
               }
 
+              echo "${log_info}Running build script"
               if (config.PAAS_RUN) {
                 sh """bash -l -c "${config.PAAS_RUN}" """
               }
