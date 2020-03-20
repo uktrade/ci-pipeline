@@ -4,23 +4,23 @@ pipeline {
     kubernetes {
       defaultContainer 'jnlp'
       yaml """
-apiVersion: v1
-kind: Pod
-metadata:
-  labels:
-    job: ${env.JOB_NAME}
-    job_id: ${env.BUILD_NUMBER}
-spec:
-  nodeSelector:
-    role: worker
-  containers:
-  - name: deployer
-    image: quay.io/uktrade/deployer
-    imagePullPolicy: Always
-    command:
-    - cat
-    tty: true
-"""
+        apiVersion: v1
+        kind: Pod
+        metadata:
+          labels:
+            job: ${env.JOB_NAME}
+            job_id: ${env.BUILD_NUMBER}
+        spec:
+          nodeSelector:
+            role: worker
+          containers:
+          - name: deployer
+            image: quay.io/uktrade/deployer
+            imagePullPolicy: Always
+            command:
+            - cat
+            tty: true
+      """
     }
   }
 
@@ -172,8 +172,9 @@ spec:
                 sh "bash -l -c 'goenv install ${go_ver.trim()} && goenv global ${go_ver.trim()}'"
               }
 
+              echo "${log_info}Running build script"
               if (config.PAAS_RUN) {
-                sh "bash -l -c \"${config.PAAS_RUN}\""
+                sh """bash -l -c "${config.PAAS_RUN}" """
               }
             }
           }
@@ -215,12 +216,15 @@ spec:
               deploy_guid = null
               cf_log_ts = null
 
+              app_manifest = readJSON text: """{"applications": [{"name": "${gds_app[2]}", "processes": [{"type": "web"}]}]}"""
+              app_manifest.applications[0].processes[0].timeout = 60
+
               cf_manifest_exist = fileExists "${env.WORKSPACE}/manifest.yml"
               buildpack_json = readJSON text:  """{"buildpacks": []}"""
               if (cf_manifest_exist) {
                 cf_manifest = readYaml file: "${env.WORKSPACE}/manifest.yml"
                 if (cf_manifest.applications.size() == 1 && cf_manifest.applications[0].size() > 0) {
-                  echo "${log_warn}CloudFoundry API V2 manifest.yml support is limited."
+                  echo "${log_warn}CloudFoundry API V3 manifest.yml support is limited."
                   cf_manifest.applications[0].each { key, value ->
                     switch (key) {
                       case 'buildpacks':
@@ -237,32 +241,56 @@ spec:
                         break
                       case 'health-check-type':
                         echo "${log_info}Setting application ${gds_app[2]} health-check-type to ${value}"
-                        env.PAAS_HEALTHCHECK_TYPE = value
+                        switch(value) {
+                          case "process":
+                            app_manifest.applications[0].processes[0]['health-check-type'] = "process"
+                            break
+                          case "http":
+                            if (cf_manifest.applications[0]['health-check-http-endpoint']) {
+                              app_manifest.applications[0].processes[0]['health-check-type'] = "http"
+                            } else {
+                              echo "${log_warn}'health-check-http-endpoint' not configured for 'http' health check."
+                            }
+                            break
+                          default:
+                            app_manifest.applications[0].processes[0]['health-check-type'] = "port"
+                            break
+                          }
                         break
                       case 'health-check-http-endpoint':
                         echo "${log_info}Setting application ${gds_app[2]} health-check-http-endpoint to ${value}"
-                        env.PAAS_HEALTHCHECK_ENDPOINT = value
+                        if (app_manifest.applications[0].processes[0]['health-check-type'] == "http") {
+                          app_manifest.applications[0].processes[0]['health-check-http-endpoint'] = value
+                        }
                         break
                       case 'timeout':
                         echo "${log_info}Setting application ${gds_app[2]} timeout to ${value}"
-                        env.PAAS_TIMEOUT = value
+                        app_manifest.applications[0].processes[0].timeout = value
                         break
                       case 'docker':
                         echo "${log_info}Detected Docker deployement ${value['image']}"
-                        env.DOCKER_DEPLOY_IMAGE = value['image']
+                        config.DOCKER_DEPLOY_IMAGE = value['image']
+                        break
+                      case 'memory':
+                        echo "${log_info}Setting application ${gds_app[2]} memory to ${value}"
+                        app_manifest.applications[0].processes[0].memory = value
+                        break
+                      case 'disk_quota':
+                        echo "${log_info}Setting application ${gds_app[2]} disk to ${value}"
+                        app_manifest.applications[0].processes[0].disk_quota = value
                         break
                       default:
-                        echo "${log_warn}CloudFoundry API V2 manifest.yml attribute '${key}' is not supported."
+                        echo "${log_warn}CloudFoundry API V3 manifest.yml attribute '${key}' is not supported."
                         break
                     }
                   }
                 } else {
-                  echo "${log_warn}Invalid CloudFoundry API V2 manifest.yml ignored."
+                  echo "${log_warn}Invalid CloudFoundry API V3 manifest.yml ignored."
                 }
               }
 
               echo "${log_info}Creating app ${gds_app[2]}"
-              if (env.DOCKER_DEPLOY_IMAGE) {
+              if (config.DOCKER_DEPLOY_IMAGE) {
                 sh "cf v3-create-app ${gds_app[2]} --app-type docker || true"
               } else {
                 sh "cf v3-create-app ${gds_app[2]} || true"
@@ -272,25 +300,25 @@ spec:
               app_revision = sh(script:"cf curl '/v3/deployments?app_guids=${app_guid}&status_reasons=DEPLOYED&order_by=-updated_at&per_page=1' | jq -rc '.resources[].revision.guid'", returnStdout: true).trim()
 
               echo "${log_info}Configuring app ${gds_app[2]}"
-              sh "cf curl '/v3/apps/${app_guid}/features/revisions' -X PATCH -d '{ \"enabled\": true }' | jq -C '.'"
+              sh """cf curl '/v3/apps/${app_guid}/features/revisions' -X PATCH -d '{ "enabled": true }' | jq -C '.'"""
               if (buildpack_json.buildpacks.size() > 0) {
                 echo "${log_info}Setting buildpack to ${buildpack_json.buildpacks}"
-                env.PAAS_BUILDPACK = readFile file: "${env.WORKSPACE}/.ci/buildpacks.json"
+                buildpacks = readFile file: "${env.WORKSPACE}/.ci/buildpacks.json"
                 sh """
-                  cf curl '/v3/apps/${app_guid}' -X PATCH -d '{"name": "${gds_app[2]}", "lifecycle": {"type": "buildpack", "data": ${env.PAAS_BUILDPACK}}}' | jq -C 'del(.links, .relationships)'
+                  cf curl '/v3/apps/${app_guid}' -X PATCH -d '{"name": "${gds_app[2]}", "lifecycle": {"type": "buildpack", "data": ${buildpacks}}}' | jq -C 'del(.links, .relationships, .metadata)'
                 """
               }
 
-              clear_vars = sh(script: "cf curl '/v3/apps/${app_guid}/environment_variables' | jq -rc '.var | map_values(null) | {\"var\": .}'", returnStdout: true).trim()
+              clear_vars = sh(script: """cf curl '/v3/apps/${app_guid}/environment_variables' | jq -rc '.var | map_values(null) | {"var": .}'""", returnStdout: true).trim()
               writeFile file: "${env.WORKSPACE}/.ci/cf_clear_vars.json", text: clear_vars
               sh "cf curl -X PATCH '/v3/apps/${app_guid}/environment_variables' -X PATCH -d @${env.WORKSPACE}/.ci/cf_clear_vars.json | jq -Cc 'del(.links)'"
-              sh "jq '{\"var\": .} * {\"var\": {\"GIT_COMMIT\": \"${app_git_commit}\", \"GIT_BRANCH\": \"${env.Version}\"}}' ${env.WORKSPACE}/.ci/env.json > ${env.WORKSPACE}/.ci/cf_envar.json"
+              sh """jq '{"var": .} * {"var": {"GIT_COMMIT": "${app_git_commit}", "GIT_BRANCH": "${env.Version}"}}' ${env.WORKSPACE}/.ci/env.json > ${env.WORKSPACE}/.ci/cf_envar.json"""
               updated_vars = sh(script: "cf curl '/v3/apps/${app_guid}/environment_variables' -X PATCH -d @${env.WORKSPACE}/.ci/cf_envar.json | jq -r '.var | keys'", returnStdout: true).trim()
               echo "${log_info}Application environment variables updated: ${updated_vars} "
 
               sh "echo .ci\\*/ >> ${env.WORKSPACE}/.cfignore"
-              if (env.DOCKER_DEPLOY_IMAGE) {
-                package_guid = sh(script: "cf v3-create-package ${gds_app[2]} --docker-image ${env.DOCKER_DEPLOY_IMAGE.trim()} | perl -lne 'print \$& if /(\\{{0,1}([0-9a-fA-F]){8}-([0-9a-fA-F]){4}-([0-9a-fA-F]){4}-([0-9a-fA-F]){4}-([0-9a-fA-F]){12}\\}{0,1})/'", returnStdout: true).trim()
+              if (config.DOCKER_DEPLOY_IMAGE) {
+                package_guid = sh(script: "cf v3-create-package ${gds_app[2]} --docker-image ${config.DOCKER_DEPLOY_IMAGE.trim()} | perl -lne 'print \$& if /(\\{{0,1}([0-9a-fA-F]){8}-([0-9a-fA-F]){4}-([0-9a-fA-F]){4}-([0-9a-fA-F]){4}-([0-9a-fA-F]){12}\\}{0,1})/'", returnStdout: true).trim()
               } else {
                 if (config.APP_PATH) {
                   package_guid = sh(script: "cf v3-create-package ${gds_app[2]} -p ${config.APP_PATH} | perl -lne 'print \$& if /(\\{{0,1}([0-9a-fA-F]){8}-([0-9a-fA-F]){4}-([0-9a-fA-F]){4}-([0-9a-fA-F]){4}-([0-9a-fA-F]){12}\\}{0,1})/'", returnStdout: true).trim()
@@ -301,7 +329,7 @@ spec:
 
               echo "${log_info}Creating new build for app ${gds_app[2]}"
               cf_log_ts = sh(script: "date +%s%N", returnStdout: true).trim()
-              build_json = sh(script: "cf curl '/v3/builds' -X POST -d '{\"package\": {\"guid\": \"${package_guid}\"}}'", returnStdout: true).trim()
+              build_json = sh(script: """cf curl '/v3/builds' -X POST -d '{"package": {"guid": "${package_guid}"}}'""", returnStdout: true).trim()
               try {
                 build = readJSON text: build_json
                 if (build.errors) {
@@ -328,46 +356,23 @@ spec:
 
               droplet_guid = sh(script: "cf curl '/v3/builds/${build_guid}' | jq -rc '.droplet.guid'", returnStdout: true).trim()
 
-              echo "${log_info}Configuring health check for app ${gds_app[2]}"
-              if (!env.PAAS_TIMEOUT) {
-                env.PAAS_TIMEOUT = 60
-              }
-              if (!env.PAAS_HEALTHCHECK_TYPE) {
-                env.PAAS_HEALTHCHECK_TYPE = "port"
-              }
-              switch(env.PAAS_HEALTHCHECK_TYPE) {
-                case "port":
-                  sh """
-                    cf curl '/v3/apps/${app_guid}/processes/web' -X PATCH -d '{"health_check": {"type": "port", "data": {"timeout": ${env.PAAS_TIMEOUT}}}}' | jq -C 'del(.links)'
-                  """
-                  break
-                case "process":
-                  sh """
-                    cf curl '/v3/apps/${app_guid}/processes/web' -X PATCH -d '{"health_check": {"type": "process", "data": {"timeout": ${env.PAAS_TIMEOUT}}}}' | jq -C 'del(.links)'
-                  """
-                  break
-                case "http":
-                  if (env.PAAS_HEALTHCHECK_ENDPOINT) {
-                    sh """
-                      cf curl '/v3/apps/${app_guid}/processes/web' -X PATCH -d '{"health_check": {"type": "http", "data": {"timeout": ${env.PAAS_TIMEOUT}, "endpoint": "${env.PAAS_HEALTHCHECK_ENDPOINT}"}}}' | jq -C 'del(.links)'
-                    """
-                  } else {
-                    echo "${log_warn}'health-check-http-endpoint' not configured for 'http' health check."
-                  }
-                  break
-              }
+              echo "${log_info}Configuring app ${gds_app[2]}"
+              writeYaml file: "manifest.yml", data: app_manifest, overwrite: true
+              sh """
+                cf curl '/v3/apps/${app_guid}/actions/apply_manifest' -X POST -d @manifest.yml -H 'Content-type: application/x-yaml'
+                cf curl '/v3/apps/${app_guid}/processes/web' | jq -rC 'del(.relationships, .metadata, .links)'
+              """
 
               echo "${log_info}Creating new deployement for app ${gds_app[2]}"
               try {
-                deploy_json = sh(script: "cf curl '/v3/deployments' -X POST -d '{\"droplet\":{\"guid\":\"${droplet_guid}\"},\"strategy\":\"rolling\",\"relationships\":{\"app\":{\"data\":{\"guid\":\"${app_guid}\"}}}}'", returnStdout: true).trim()
+                deploy_json = sh(script: """cf curl '/v3/deployments' -X POST -d '{"droplet": {"guid": "${droplet_guid}"}, "strategy": "rolling", "relationships": {"app": {"data": {"guid": "${app_guid}"}}}}'""", returnStdout: true).trim()
                 deploy = readJSON text: deploy_json
                 if (deploy.errors) {
                   error_msg = deploy.errors[0].detail
                   error error_msg
                 }
                 deploy_guid = deploy.guid
-                app_wait_timeout = sh(script: "expr ${env.PAAS_TIMEOUT} \\* 3", returnStdout: true).trim()
-                timeout(time: app_wait_timeout.toInteger(), unit: 'SECONDS') {
+                timeout(time: app_manifest.applications[0].processes[0].timeout * 3, unit: 'SECONDS') {
                   error_msg = "App failed to deploy."
                   deploy_state = sh(script: "cf curl '/v3/deployments/${deploy_guid}' | jq -rc '.status.value'", returnStdout: true).trim()
                   while (deploy_state != "FINALIZED") {
@@ -384,6 +389,7 @@ spec:
               } catch (err) {
                 error error_msg
               }
+              echo "${log_info}App ${gds_app[2]} started."
 
             }
           }
@@ -407,11 +413,12 @@ spec:
                 if (deploy_guid != null) {
                   echo "${log_warn}Cancelling application deployment for app ${gds_app[2]}"
                   sh "cf curl '/v3/deployments/${deploy_guid}/actions/cancel' -X POST | jq -C 'del(.links)'"
+                  sleep 5
                 }
                 new_app_revision = sh(script:"cf curl '/v3/apps/${app_guid}/revisions/deployed' | jq -rc '.resources[].guid'", returnStdout: true).trim()
                 if (new_app_revision != app_revision && app_revision != '') {
                   echo "${log_warn}Rollback app ${gds_app[2]} to previous revision ${app_revision}."
-                  sh "cf curl '/v3/deployments' -X POST -d '{\"revision\":{\"guid\":\"${app_revision}\"},\"strategy\":\"rolling\",\"relationships\":{\"app\":{\"data\":{\"guid\":\"${app_guid}\"}}}}' | jq -C 'del(.links)'"
+                  sh """cf curl '/v3/deployments' -X POST -d '{"revision": {"guid": "${app_revision}"}, "strategy": "rolling", "relationships": {"app": {"data": {"guid": "${app_guid}"}}}}' | jq -C 'del(.links)'"""
                 }
                 if (droplet_guid != null) {
                   echo "${log_warn}Remove droplet for app ${gds_app[2]}"
