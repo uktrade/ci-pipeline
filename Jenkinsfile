@@ -358,10 +358,7 @@ pipeline {
 
               echo "${log_info}Configuring app ${gds_app[2]}"
               writeYaml file: "manifest.yml", data: app_manifest, overwrite: true
-              sh """
-                cf curl '/v3/apps/${app_guid}/actions/apply_manifest' -X POST -d @manifest.yml -H 'Content-type: application/x-yaml'
-                cf curl '/v3/apps/${app_guid}/processes/web' | jq -rC 'del(.relationships, .metadata, .links)'
-              """
+              sh """cf curl '/v3/apps/${app_guid}/actions/apply_manifest' -X POST -d @manifest.yml -H 'Content-type: application/x-yaml' -i"""
 
               echo "${log_info}Creating new deployement for app ${gds_app[2]}"
               try {
