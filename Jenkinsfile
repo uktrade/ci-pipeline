@@ -346,6 +346,7 @@ pipeline {
                     error error_msg
                   }
                 }
+                echo "${log_info}Staging app and tracing logs..."
                 sh """
                   eval \$(~/.linuxbrew/bin/brew shellenv)
                   cf tail --json -t log --lines 1000 --start-time ${cf_log_ts} ${app_guid} | jq -rC '.batch[] | select(.tags.source_type|(test("(API|CELL|STG)"))).log.payload | @base64d'
