@@ -1,11 +1,11 @@
 FROM ubuntu:18.04
 
-ENV CF_CLI_VER 6.50.0
+ENV CF_CLI_VER 6.51.0
 ENV CF_CLI7_VER 7.0.0-beta.30
 ENV NVM_VER 0.35.3
 ENV JABBA_VER 0.11.2
-ENV RVM_VER 1.29.9
-ENV CF_CONDUIT_VER 0.0.8
+ENV RVM_VER 1.29.10
+ENV CF_CONDUIT_VER 0.0.9
 
 ENV DEBIAN_FRONTEND noninteractive
 RUN groupadd -g 1000 ubuntu && \
@@ -38,6 +38,8 @@ ENV HOME /home/ubuntu
 
 RUN cf install-plugin -f https://github.com/alphagov/paas-cf-conduit/releases/download/v$CF_CONDUIT_VER/cf-conduit.linux.amd64 && \
     cf install-plugin -f -r CF-Community "log-cache"
+RUN cf7 install-plugin -f https://github.com/alphagov/paas-cf-conduit/releases/download/v$CF_CONDUIT_VER/cf-conduit.linux.amd64 && \
+    cf7 install-plugin -f -r CF-Community "log-cache"
 RUN curl -Lfs https://github.com/pyenv/pyenv-installer/raw/master/bin/pyenv-installer | bash
 RUN curl -Lfs https://github.com/creationix/nvm/raw/v$NVM_VER/install.sh | bash
 RUN curl -Lfs https://rvm.io/mpapis.asc | gpg2 --import - && \
