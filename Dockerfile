@@ -13,12 +13,12 @@ RUN groupadd -g 1000 ubuntu && \
 
 RUN echo "force-unsafe-io" > /etc/dpkg/dpkg.cfg.d/02apt-speedup && \
     apt-get update && \
-    apt-get install -y locales curl wget git apt-transport-https ca-certificates gnupg2 software-properties-common build-essential libssl-dev zlib1g-dev libbz2-dev libreadline-dev libsqlite3-dev llvm libncurses5-dev libncursesw5-dev xz-utils tk-dev libffi-dev liblzma-dev python-openssl gettext postgresql-client && \
+    apt-get install -y locales curl wget git apt-transport-https ca-certificates gnupg2 software-properties-common build-essential libssl-dev zlib1g-dev libbz2-dev libreadline-dev libsqlite3-dev llvm libncurses5-dev libncursesw5-dev xz-utils tk-dev libffi-dev liblzma-dev gettext postgresql-client && \
     localedef -i en_US -f UTF-8 en_US.UTF-8 && \
     rm -rf /var/lib/apt/lists/*
 
 RUN apt-get update && \
-    apt-get install -y python3 python3-pip ruby-full rubygems bundler jq && \
+    apt-get install -y python3 python3-pip python-openssl ruby-full rubygems bundler jq && \
     rm -rf /var/lib/apt/lists/*
 
 RUN curl -Lfs https://packages.cloudfoundry.org/debian/cli.cloudfoundry.org.key | apt-key add - && \
