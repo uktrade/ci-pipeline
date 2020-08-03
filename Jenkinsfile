@@ -15,7 +15,7 @@ pipeline {
             role: worker
           containers:
           - name: deployer
-            image: quay.io/uktrade/deployer
+            image: gcr.io/sre-docker-registry/github.com/uktrade/ci-deployer
             imagePullPolicy: Always
             command:
             - cat
