@@ -205,7 +205,7 @@ pipeline {
               withCredentials([usernamePassword(credentialsId: paas_region.credential, passwordVariable: 'gds_pass', usernameVariable: 'gds_user')]) {
                 sh """
                   cf api ${paas_region.api}
-                  cf auth ${gds_user} ${gds_pass}
+                  cf auth $gds_user $gds_pass
                 """
               }
 
@@ -402,7 +402,7 @@ pipeline {
                 withCredentials([usernamePassword(credentialsId: paas_region.credential, passwordVariable: 'gds_pass', usernameVariable: 'gds_user')]) {
                   sh """
                     cf api ${paas_region.api}
-                    cf auth ${gds_user} ${gds_pass}
+                    cf auth $gds_user $gds_pass
                   """
                 }
                 echo "${log_warn}Rollback app"
