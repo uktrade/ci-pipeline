@@ -203,10 +203,8 @@ pipeline {
               echo "${log_info}Setting PaaS region to ${paas_region.name}."
 
               withCredentials([usernamePassword(credentialsId: paas_region.credential, passwordVariable: 'gds_pass', usernameVariable: 'gds_user')]) {
-                sh """
-                  cf api ${paas_region.api}
-                  cf auth $gds_user $gds_pass
-                """
+                sh "cf api ${paas_region.api}"
+                sh 'cf auth $gds_user $gds_pass'
               }
 
               gds_app = config.PAAS_APP.split("/")
@@ -400,10 +398,8 @@ pipeline {
             container('deployer') {
               timestamps {
                 withCredentials([usernamePassword(credentialsId: paas_region.credential, passwordVariable: 'gds_pass', usernameVariable: 'gds_user')]) {
-                  sh """
-                    cf api ${paas_region.api}
-                    cf auth $gds_user $gds_pass
-                  """
+                  sh "cf api ${paas_region.api}"
+                  sh 'cf auth $gds_user $gds_pass'
                 }
                 echo "${log_warn}Rollback app"
                 sh "cf target -o ${gds_app[0]} -s ${gds_app[1]}"
