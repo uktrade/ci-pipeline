@@ -297,6 +297,9 @@ pipeline {
               app_guid = sh(script: "cf app ${gds_app[2]} --guid | perl -lne 'print \$& if /(\\{{0,1}([0-9a-fA-F]){8}-([0-9a-fA-F]){4}-([0-9a-fA-F]){4}-([0-9a-fA-F]){4}-([0-9a-fA-F]){12}\\}{0,1})/'", returnStdout: true).trim()
               app_revision = sh(script:"cf curl '/v3/deployments?app_guids=${app_guid}&status_reasons=DEPLOYED&order_by=-updated_at&per_page=1' | jq -rc '.resources[].revision.guid'", returnStdout: true).trim()
 
+              app_proc_web_json = sh(script: "cf curl '/v3/apps/${app_guid}/processes/web'", returnStdout: true).trim()
+              app_proc_web = readJSON text: app_proc_web_json
+
               echo "${log_info}Configuring app ${gds_app[2]}"
               sh """cf curl '/v3/apps/${app_guid}/features/revisions' -X PATCH -d '{ "enabled": true }' | jq -C '.'"""
               if (buildpack_json.buildpacks.size() > 0) {
@@ -368,9 +371,6 @@ pipeline {
                   error error_msg
                 }
                 deploy_guid = deploy.guid
-
-                app_proc_web_json = sh(script: "cf curl '/v3/apps/${app_guid}/processes/web'", returnStdout: true).trim()
-                app_proc_web = readJSON text: app_proc_web_json
 
                 timeout(time: app_manifest.applications[0].processes[0].timeout * app_proc_web.instances * 3, unit: 'SECONDS') {
                   error_msg = "App failed to deploy."
