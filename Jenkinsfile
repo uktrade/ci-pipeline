@@ -368,8 +368,11 @@ pipeline {
                   error error_msg
                 }
                 deploy_guid = deploy.guid
-                app_proc_web = sh(script: "cf curl '/v3/apps/${app_guid}/processes/web' | jq -rc '.instances'", returnStdout: true).trim()
-                timeout(time: app_manifest.applications[0].processes[0].timeout * app_proc_web * 3, unit: 'SECONDS') {
+
+                app_proc_web_json = sh(script: "cf curl '/v3/apps/${app_guid}/processes/web'", returnStdout: true).trim()
+                app_proc_web = readJSON text: app_proc_web_json
+
+                timeout(time: app_manifest.applications[0].processes[0].timeout * app_proc_web.instances * 3, unit: 'SECONDS') {
                   error_msg = "App failed to deploy."
                   deploy_state = sh(script: "cf curl '/v3/deployments/${deploy_guid}' | jq -rc '.status.value'", returnStdout: true).trim()
                   while (deploy_state != "FINALIZED") {
