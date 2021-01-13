@@ -65,9 +65,4 @@ RUN echo 'export PATH="$HOME/.pyenv/bin:$PATH"' >> $HOME/.profile && \
     echo 'export PATH="$GOROOT/bin:$PATH"' >> $HOME/.profile && \
     echo 'export PATH="$GOPATH/bin:$PATH"' >> $HOME/.profile
 
-RUN /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install.sh)" && \
-    eval $(~/.linuxbrew/bin/brew shellenv) && \
-    brew install jq
-RUN echo 'eval "$($HOME/.linuxbrew/bin/brew shellenv)"' >> $HOME/.bashrc
-
 ENTRYPOINT ["bash", "-c"]
