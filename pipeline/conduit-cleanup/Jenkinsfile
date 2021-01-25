@@ -41,6 +41,10 @@ spec:
         container('deployer') {
           script {
             timestamps {
+              log_info = "\033[32mINFO: "
+              log_warn = "\033[31mWARNING: "
+              log_end = "\033[0m"
+
               withCredentials([string(credentialsId: env.GDS_PAAS_CONFIG, variable: 'paas_config_raw')]) {
                 paas_config = readJSON text: paas_config_raw
               }
@@ -48,7 +52,7 @@ spec:
                 cf_region = paas_config.default
               }
               paas_region = paas_config.regions."${cf_region}"
-              echo "\u001B[32mINFO: Setting PaaS region to ${paas_region.name}.\u001B[m"
+              echo "${log_info}INFO: Setting PaaS region to ${paas_region.name}. ${log_end}"
 
               withCredentials([usernamePassword(credentialsId: paas_region.credential, passwordVariable: 'gds_pass', usernameVariable: 'gds_user')]) {
                 sh """
