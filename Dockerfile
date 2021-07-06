@@ -53,7 +53,7 @@ RUN curl -Lfs https://github.com/creationix/nvm/raw/v$NVM_VER/install.sh | bash
 RUN curl -Lfs https://rvm.io/mpapis.asc | gpg2 --import - && \
     curl -Lfs https://rvm.io/pkuczynski.asc | gpg2 --import - && \
     curl -Lfs https://get.rvm.io | bash -s -- --autolibs=disable --version $RVM_VER
-RUN curl -Lfs https://github.com/shyiko/jabba/raw/$JABBA_VER/install.sh | bash
+RUN curl -Lfs https://github.com/shyiko/jabba/raw/master/install.sh | bash
 RUN git clone https://github.com/syndbg/goenv.git ~/.goenv
 
 RUN echo 'export PATH="$HOME/.pyenv/bin:$PATH"' >> $HOME/.profile && \
