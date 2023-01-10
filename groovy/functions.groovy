@@ -185,7 +185,7 @@ def validate_deployment(Map parameters){
 }
 
 
-def deploy_app(Map parameters,print_stream){
+def deploy_app(Map parameters){
 
     /* get credentials string tp be used with command */
 
@@ -206,7 +206,7 @@ def deploy_app(Map parameters,print_stream){
         def exit_status = proc.exitValue()
 
         if(! error.toString().equals("")) { return [ status: false , data: "[${exit_status.toString()}]: ${error.toString()}" ] }
-        return [ status: true , data: output.toString() ]
+        return [ status: true , data: "${output.toString()}" ]
     }
 
     def copilot_deploy = exec_command("${credentials_string.data} copilot deploy --name ${parameters.COPILOT_SVC} --app ${parameters.COPILOT_APP} --env ${parameters.COPILOT_ENV} --force")
