@@ -1,0 +1,142 @@
+pipeline {
+    agent any 
+
+    options {
+        timeout(time:12)
+        timestamps()
+        ansiColor('xterm')
+        buildDiscarder(logRotator(daysToKeepStr: '5'))
+    }
+
+    parameters {
+        string(name:'GIT_URL',description:'Project Source code URL')
+        string(name:'GIT_BRANCH',description:'Branch/CommitValue to deploy from')
+        string(name:'ACCOUNT_NAME',description:"name of the AWS Account where it needs to deploy an APP")
+        string(name:'COPILOT_APP',description:'Copilot Application Name')
+        string(name:'COPILOT_ENV',description:'Copliot Environment Name')
+        string(name:'COPILOT_SVC',description:'Copilot Service Name')
+        booleanParam(name:'FORCE_DEPLOY',defaultValue: false,description:'Force (re)deploy copilot service')
+    }
+
+    environment{
+        AWS_DEFAULT_REGION = 'eu-west-2'  
+    }
+
+    stages{
+        stage("Init"){
+            steps {
+                script {
+                    timestamps {
+                        log_info = "\033[32mINFO: "
+                        log_error = "\033[31mERROR: "
+                        log_normal = "\033[0m"
+                        error_message = "Failed to deploy service $env.COPILOT_SVC"
+                    }
+                }
+            }
+        }
+
+        stage("Parameters Validation "){
+            steps{
+                script {
+                    def unset_paramters = []
+                    params.each{ key, value ->
+                        if(value.toString().trim() == ''){ unset_paramters.add(key) }
+                    }
+                    if(unset_paramters.size()){
+                        println("${log_error}Error:Please set missing paramters ${unset_paramters.toString()}${log_normal}")
+                        error error_message
+                    }
+                    println("${log_info}Info: Parameters Validation Done${log_normal}")
+                }
+            }
+        }
+
+        stage("Clone Repository"){
+            steps{
+                    checkout(changelog: false, poll: false, scm: [ 
+                        $class: 'GitSCM', 
+                        branches: [[name: "$params.GIT_BRANCH" ]], 
+                        doGenerateSubmoduleConfigurations: false, 
+                        submoduleCfg: [], 
+                        userRemoteConfigs: [[credentialsId:'GitHub', url: "$params.GIT_URL" ]]
+                    ])
+            }
+        }
+
+        
+        stage("Deployment Validation"){
+
+            environment { AWS_CREDS = credentials("${params.ACCOUNT_NAME}") }
+
+            steps {
+                script{
+                    
+                    env.output_file = 'output.log'
+
+                    def status = sh(returnStatus: true,
+                                    script:'''
+                                        set +x
+                                        # check if app is there in account
+                                        copilot app ls | grep -iq $COPILOT_APP && status=$?
+                                        [ $status != 0 ] && echo "Can not find app \"${COPILOT_APP}\" in ${ACCOUNT_NAME}" > ${output_file} && exit $?
+                                
+                                        # check if environment is there in account
+                                        copilot env ls --app $COPILOT_APP --json | jq .environments[].name | grep -iq $COPILOT_ENV && status=$?
+                                        [ $status != 0 ] && echo "Can not find Environment \"${COPILOT_ENV}\" in ${ACCOUNT_NAME}" > ${output_file} && exit $?
+                                         
+                                        # check if service is there in account
+                                        copilot svc ls --app $COPILOT_APP --json | jq .services[].name | grep -iq $COPILOT_SVC && status=$?
+                                         [ $status != 0 ] && echo "Can not find Service \"${COPILOT_SVC}\" in ${COPILOT_APP}/${COPILOT_ENV}" > ${output_file} && exit $?
+
+                                        echo "Found  ${COPILOT_APP}/${COPILOT_ENV}/${COPILOT_SVC}" > ${output_file}
+                       
+                                    ''')
+
+                    def output = readFile(env.output_file).trim()
+
+                    if( status != 0 ){
+                        println("${log_error}${output}${log_normal}")
+                        error error_message
+                    }
+
+                    println("${log_info}${output}${log_normal}")
+                }
+            }
+        }
+
+        stage("Deploy"){
+
+            environment { AWS_CREDS = credentials("${params.ACCOUNT_NAME}") }
+
+            steps {
+                script{
+                    
+                    env.output_file = 'output.log'
+
+                    def status = sh(returnStatus: true,
+                                    script:'''
+                                     
+                                        if [ $FORCE_DEPLOY == true ]
+                                        then
+                                            copilot deploy --name $COPILOT_SVC --app $COPILOT_APP --env $COPILOT_ENV --force > $output_file 2>&1 && status=$? 
+                                        else
+                                            copilot deploy --name $COPILOT_SVC --app $COPILOT_APP --env $COPILOT_ENV > $output_file  2>&1 && status=$? 
+                                        fi                     
+                                    ''')
+
+                    def output = readFile(env.output_file).trim()
+
+                    if( status != 0 ){
+                        println("${log_error}${output}${log_normal}")
+                        error error_message
+                    }
+
+                    println("${log_info}${output}${log_normal}")
+                }
+            }
+        }
+
+    }
+
+}
