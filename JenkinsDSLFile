@@ -1,6 +1,5 @@
 pipeline {
-
-    agent { label 'docker-agent' }
+    agent { label 'docker-agent' } 
 
     options {
         timeout(time:12)
@@ -20,7 +19,10 @@ pipeline {
     }
 
     environment{
-        AWS_DEFAULT_REGION = 'eu-west-2'  
+        AWS_DEFAULT_REGION = 'eu-west-2'
+        OUTPUT_FILE = 'output'
+        IMAGE_FILE = 'image'
+        TAGS_FILE = 'tags'
     }
 
     stages{
@@ -73,67 +75,113 @@ pipeline {
             steps {
                 script{
                     
-                    env.output_file = 'output.log'
-
                     def status = sh(returnStatus: true,
                                     script:'''
                                         set +x
                                         # check if app is there in account
                                         copilot app ls | grep -iq $COPILOT_APP && status=$?
-                                        [ $status != 0 ] && echo "Can not find app \"${COPILOT_APP}\" in ${ACCOUNT_NAME}" > ${output_file} && exit $?
+                                        [ $status != 0 ] && echo "Can not find app \"${COPILOT_APP}\" in ${ACCOUNT_NAME}" > ${OUTPUT_FILE} && exit $?
                                 
                                         # check if environment is there in account
                                         copilot env ls --app $COPILOT_APP --json | jq .environments[].name | grep -iq $COPILOT_ENV && status=$?
-                                        [ $status != 0 ] && echo "Can not find Environment \"${COPILOT_ENV}\" in ${ACCOUNT_NAME}" > ${output_file} && exit $?
+                                        [ $status != 0 ] && echo "Can not find Environment \"${COPILOT_ENV}\" in ${ACCOUNT_NAME}" > ${OUTPUT_FILE} && exit $?
                                          
                                         # check if service is there in account
                                         copilot svc ls --app $COPILOT_APP --json | jq .services[].name | grep -iq $COPILOT_SVC && status=$?
-                                         [ $status != 0 ] && echo "Can not find Service \"${COPILOT_SVC}\" in ${COPILOT_APP}/${COPILOT_ENV}" > ${output_file} && exit $?
+                                         [ $status != 0 ] && echo "Can not find Service \"${COPILOT_SVC}\" in ${COPILOT_APP}/${COPILOT_ENV}" > ${OUTPUT_FILE} && exit $?
 
-                                        echo "Found  ${COPILOT_APP}/${COPILOT_ENV}/${COPILOT_SVC}" > ${output_file}
+                                        echo "Found  ${COPILOT_APP}/${COPILOT_ENV}/${COPILOT_SVC}" > ${OUTPUT_FILE}
                        
                                     ''')
 
-                    def output = readFile(env.output_file).trim()
+                    def message = readFile(env.OUTPUT_FILE).trim()
 
                     if( status != 0 ){
-                        println("${log_error}${output}${log_normal}")
+                        println("${log_error}${message}${log_normal}")
                         error error_message
                     }
 
-                    println("${log_info}${output}${log_normal}")
+                    println("${log_info}${message}${log_normal}")
                 }
             }
         }
 
-        stage("Deploy"){
+        stage("Prepare Deployment"){
 
             environment { AWS_CREDS = credentials("${params.ACCOUNT_NAME}") }
 
             steps {
                 script{
                     
-                    env.output_file = 'output.log'
-
                     def status = sh(returnStatus: true,
-                                    script:'''
-                                     
-                                        if [ $FORCE_DEPLOY == true ]
-                                        then
-                                            copilot deploy --name $COPILOT_SVC --app $COPILOT_APP --env $COPILOT_ENV --force > $output_file 2>&1 && status=$? 
-                                        else
-                                            copilot deploy --name $COPILOT_SVC --app $COPILOT_APP --env $COPILOT_ENV > $output_file  2>&1 && status=$? 
-                                        fi                     
-                                    ''')
+                        script: '''
+                                    set +x
+                                    grep location copilot/${COPILOT_SVC}/manifest.yml | grep -v '#' | awk -F':' '{print $2"/"$3}' | tr -d ' ' > ${IMAGE_FILE} && status=$?
+                                    [ ${status} != 0 ] && echo "Failed to find the location" && cat ${IMAGE_FILE} > ${OUTPUT_FILE} && exit ${status}
 
-                    def output = readFile(env.output_file).trim()
+                                    IFS=/ read -r DOCKER_REGISTRY REGISTRY_ACCOUNT IMAGE_NAME IMAGE_TAG<<< $(<${IMAGE_FILE})
+                                    
+                                    echo "${DOCKER_REGISTRY}/${REGISTRY_ACCOUNT}/${IMAGE_NAME}:${IMAGE_TAG}" > ${IMAGE_FILE}
+
+                                    aws ecr list-images --repository-name ${REGISTRY_ACCOUNT}/${IMAGE_NAME} | jq .imageIds[].imageTag | tr -d '"' > ${TAGS_FILE} && status=$?
+                                    [ ${status} != 0 ] && echo "Failed to find the location" && cat ${TAGS_FILE} > ${OUTPUT_FILE} && exit ${status}
+
+                                    echo "Retrived Tags successfully" > ${OUTPUT_FILE}
+                                ''')
+                    
+                    def message = readFile(env.OUTPUT_FILE).trim()
 
                     if( status != 0 ){
-                        println("${log_error}${output}${log_normal}")
+                        println("${log_error}${message}${log_normal}")
                         error error_message
                     }
 
-                    println("${log_info}${output}${log_normal}")
+                    println("${log_info}${message}${log_normal}")
+
+                }
+            }
+        }
+
+        stage("Deployment"){
+            environment { AWS_CREDS = credentials("${params.ACCOUNT_NAME}") }
+
+            steps{
+                script{
+
+                    def tags = readFile(env.TAGS_FILE).split("\n").collect { it as String }
+
+                    env.DEPLOY_TAG = input message: 'Select Docker image Tag', ok: 'Deploy!',
+                            parameters: [choice(name: 'Tag', choices: tags , description: 'Which Tag you want to deploy?')]
+
+
+                    println("${log_info}Deploying ${params.COPILOT_SVC}${log_normal}")
+
+
+                    def status = sh(returnStatus: true,
+                                    script:'''
+                                        set +x
+                                        CURRENT_DOCKER_IMAGE=$(<${IMAGE_FILE})
+                                        FINAL_DOCKER_IMAGE="$(echo ${CURRENT_DOCKER_IMAGE} | awk -F':' '{print $1}' | tr -d ' '):${DEPLOY_TAG}"
+                                        sed -i "s|${CURRENT_DOCKER_IMAGE}|${FINAL_DOCKER_IMAGE}|g" copilot/$COPILOT_SVC/manifest.yml
+
+                                        if [ ${FORCE_DEPLOY} == true ]
+                                        then
+                                            copilot deploy --name ${COPILOT_SVC} --app ${COPILOT_APP} --env ${COPILOT_ENV} --force > ${OUTPUT_FILE}
+                                        else
+                                            copilot deploy --name ${COPILOT_SVC} --app ${COPILOT_APP} --env ${COPILOT_ENV} > ${OUTPUT_FILE}
+                                        fi
+
+                                        status=$?
+                                    ''')
+
+                    def message = readFile(env.OUTPUT_FILE).trim()
+
+                    if( status != 0 ){
+                        println("${log_error}${error_message}${log_normal}")
+                        error error_message
+                    }
+
+                    println("${log_info}${params.COPILOT_SVC} Service deployed successfully${log_normal}")
                 }
             }
         }
