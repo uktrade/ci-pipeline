@@ -166,20 +166,17 @@ pipeline {
 
                                         if [ ${FORCE_DEPLOY} == true ]
                                         then
-                                            copilot deploy --name ${COPILOT_SVC} --app ${COPILOT_APP} --env ${COPILOT_ENV} --force > ${OUTPUT_FILE}
+                                            copilot deploy --name ${COPILOT_SVC} --app ${COPILOT_APP} --env ${COPILOT_ENV} --force 
                                         else
-                                            copilot deploy --name ${COPILOT_SVC} --app ${COPILOT_APP} --env ${COPILOT_ENV} > ${OUTPUT_FILE}
+                                            copilot deploy --name ${COPILOT_SVC} --app ${COPILOT_APP} --env ${COPILOT_ENV}
                                         fi
 
                                         status=$?
                                     ''')
 
-                    def message = readFile(env.OUTPUT_FILE).trim()
+                    
 
-                    if( status != 0 ){
-                        println("${log_error}${error_message}${log_normal}")
-                        error error_message
-                    }
+                    if( status != 0 ){ error error_message }
 
                     println("${log_info}${params.COPILOT_SVC} Service deployed successfully${log_normal}")
                 }
