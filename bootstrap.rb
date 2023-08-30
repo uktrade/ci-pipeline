@@ -59,7 +59,15 @@ end
 def vault_get(path)
   begin
     login = {'role_id' => VAULT_ROLE_ID, 'secret_id' => VAULT_SERECT_ID}
-    token = JSON.parse(RestClient.post("#{VAULT_API}/auth/approle/login", login.to_json))['auth']['client_token']
+    # token = JSON.parse(RestClient.post("#{VAULT_API}/auth/approle/login", login.to_json))['auth']['client_token']
+    resp = RestClient::Request.execute(
+      method: :post,
+      url: "#{VAULT_API}/auth/approle/login",
+      payload: login.to_json,
+      verify_ssl: OpenSSL::SSL::VERIFY_NONE
+    )
+    token = JSON.parse(resp)['auth']['client_token']
+
     # resp = RestClient.get("#{VAULT_API}/#{VAULT_PREFIX}/#{path}", headers = {'X-Vault-Token': token})
     resp = RestClient::Request.execute(
       method: :get,
