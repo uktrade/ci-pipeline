@@ -30,13 +30,30 @@ def consul_delete(path)
   return RestClient.delete("#{CONSUL}/#{path}")
 end
 
+# def consul_get(path)
+#   begin
+#     resp = RestClient.get("#{CONSUL}/#{path}")
+#   rescue RestClient::ExceptionWithResponse => e
+#     return e.http_code
+#   else
+#     return JSON.parse(Base64.decode64(JSON.parse(resp).pop['Value']))
+#   end
+# end
+
 def consul_get(path)
-  begin
-    resp = RestClient.get("#{CONSUL}/#{path}")
-  rescue RestClient::ExceptionWithResponse => e
-    return e.http_code
-  else
-    return JSON.parse(Base64.decode64(JSON.parse(resp).pop['Value']))
+  max_attempts = 5
+  
+  until max_attempts == 0 
+    begin
+      resp = RestClient.get("#{CONSUL}/#{path}")
+      return JSON.parse(Base64.decode64(JSON.parse(resp).pop['Value']))
+    rescue RestClient::ServerBrokeConnection
+      puts "Server connnection fail, retrying"
+    rescue RestClient::ExceptionWithResponse => e
+      return e.http_code      
+    end
+
+    max_attempts -= 1
   end
 end
 
