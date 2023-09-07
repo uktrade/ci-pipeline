@@ -23,22 +23,30 @@ def validate(schema, data)
 end
 
 def consul_add(path, data = nil)
-  return RestClient.put("#{CONSUL}/#{path}", data)
+  max_attempts = 5
+
+  until max_attempts == 0
+    begin
+      return RestClient.put("#{CONSUL}/#{path}", data)
+    rescue RestClient::ServerBrokeConnection
+      puts "Server connnection fail, retrying"
+    end
+    max_attempts -= 1 
+  end
 end
 
 def consul_delete(path)
-  return RestClient.delete("#{CONSUL}/#{path}")
-end
+  max_attempts = 5
 
-# def consul_get(path)
-#   begin
-#     resp = RestClient.get("#{CONSUL}/#{path}")
-#   rescue RestClient::ExceptionWithResponse => e
-#     return e.http_code
-#   else
-#     return JSON.parse(Base64.decode64(JSON.parse(resp).pop['Value']))
-#   end
-# end
+  until max_attempts == 0
+    begin
+      return RestClient.delete("#{CONSUL}/#{path}")
+    rescue RestClient::ServerBrokeConnection
+      puts "Server connnection fail, retrying"
+    end
+    max_attempts -= 1 
+  end
+end
 
 def consul_get(path)
   max_attempts = 5
@@ -52,20 +60,25 @@ def consul_get(path)
     rescue RestClient::ExceptionWithResponse => e
       return e.http_code      
     end
-
     max_attempts -= 1
   end
 end
 
 def vault_get(path)
-  begin
-    login = {'role_id' => VAULT_ROLE_ID, 'secret_id' => VAULT_SERECT_ID}
-    token = JSON.parse(RestClient.post("#{VAULT_API}/auth/approle/login", login.to_json))['auth']['client_token']
-    resp = RestClient.get("#{VAULT_API}/#{VAULT_PREFIX}/#{path}", headers = {'X-Vault-Token': token})
-  rescue RestClient::ExceptionWithResponse => e
-    return e.http_code
-  else
-    return JSON.parse(resp)['data']['data']
+  max_attempts = 5
+
+  until max_attempts == 0
+    begin
+      login = {'role_id' => VAULT_ROLE_ID, 'secret_id' => VAULT_SERECT_ID}
+      token = JSON.parse(RestClient.post("#{VAULT_API}/auth/approle/login", login.to_json))['auth']['client_token']
+      resp = RestClient.get("#{VAULT_API}/#{VAULT_PREFIX}/#{path}", headers = {'X-Vault-Token': token})
+      return JSON.parse(resp)['data']['data']
+    rescue RestClient::ServerBrokeConnection
+      puts "Server connnection fail, retrying"      
+    rescue RestClient::ExceptionWithResponse => e
+      return e.http_code
+    end
+    max_attempts -= 1
   end
 end
 
@@ -169,4 +182,3 @@ def main(args)
 end
 
 main(ARGV)
-
