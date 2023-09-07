@@ -23,32 +23,16 @@ def validate(schema, data)
 end
 
 def consul_add(path, data = nil)
-  # return RestClient.put("#{CONSUL}/#{path}", data)
-  return RestClient::Request.execute(
-    method: :put,
-    url: "#{CONSUL}/#{path}",
-    payload: data,
-    verify_ssl: OpenSSL::SSL::VERIFY_NONE
-  )
+  return RestClient.put("#{CONSUL}/#{path}", data)
 end
 
 def consul_delete(path)
-  # return RestClient.delete("#{CONSUL}/#{path}")
-  return RestClient::Request.execute(
-    method: :delete,
-    url: "#{CONSUL}/#{path}",
-    verify_ssl: OpenSSL::SSL::VERIFY_NONE
-  )
+  return RestClient.delete("#{CONSUL}/#{path}")
 end
 
 def consul_get(path)
   begin
-    # resp = RestClient.get("#{CONSUL}/#{path}")
-    resp = RestClient::Request.execute(
-      method: :get,
-      url: "#{CONSUL}/#{path}",
-      verify_ssl: OpenSSL::SSL::VERIFY_NONE
-    )
+    resp = RestClient.get("#{CONSUL}/#{path}")
   rescue RestClient::ExceptionWithResponse => e
     return e.http_code
   else
@@ -59,22 +43,8 @@ end
 def vault_get(path)
   begin
     login = {'role_id' => VAULT_ROLE_ID, 'secret_id' => VAULT_SERECT_ID}
-    # token = JSON.parse(RestClient.post("#{VAULT_API}/auth/approle/login", login.to_json))['auth']['client_token']
-    resp = RestClient::Request.execute(
-      method: :post,
-      url: "#{VAULT_API}/auth/approle/login",
-      payload: login.to_json,
-      verify_ssl: OpenSSL::SSL::VERIFY_NONE
-    )
-    token = JSON.parse(resp)['auth']['client_token']
-
-    # resp = RestClient.get("#{VAULT_API}/#{VAULT_PREFIX}/#{path}", headers = {'X-Vault-Token': token})
-    resp = RestClient::Request.execute(
-      method: :get,
-      url: "#{VAULT_API}/#{VAULT_PREFIX}/#{path}",
-      :headers => {'X-Vault-Token': token},
-      verify_ssl: OpenSSL::SSL::VERIFY_NONE
-    )
+    token = JSON.parse(RestClient.post("#{VAULT_API}/auth/approle/login", login.to_json))['auth']['client_token']
+    resp = RestClient.get("#{VAULT_API}/#{VAULT_PREFIX}/#{path}", headers = {'X-Vault-Token': token})
   rescue RestClient::ExceptionWithResponse => e
     return e.http_code
   else
@@ -182,3 +152,4 @@ def main(args)
 end
 
 main(ARGV)
+
