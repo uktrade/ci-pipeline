@@ -53,7 +53,9 @@ def consul_get(path)
   
   until max_attempts == 0 
     begin
+      puts "consul= #{CONSUL} path= #{path}"
       resp = RestClient.get("#{CONSUL}/#{path}")
+      puts "resp= #{resp}"
       return JSON.parse(Base64.decode64(JSON.parse(resp).pop['Value']))
     rescue RestClient::ServerBrokeConnection
       puts "Server connnection fail, retrying"
@@ -66,16 +68,26 @@ end
 
 def vault_get(path)
   max_attempts = 5
-
+  puts "Now in vault_get"
+  puts "#{max_attempts}"
   until max_attempts == 0
     begin
       login = {'role_id' => VAULT_ROLE_ID, 'secret_id' => VAULT_SERECT_ID}
-      token = JSON.parse(RestClient.post("#{VAULT_API}/auth/approle/login", login.to_json))['auth']['client_token']
+      puts "#{login}"
+      response = RestClient.post("#{VAULT_API}/auth/approle/login", login.to_json)
+      puts "#{response}"
+      token = JSON.parse(response)['auth']['client_token']
+      #token = JSON.parse(RestClient.post("#{VAULT_API}/auth/approle/login", login.to_json))['auth']['client_token']
+      puts "#{token}"
+      puts "#{VAULT_PREFIX}/#{path}"
       resp = RestClient.get("#{VAULT_API}/#{VAULT_PREFIX}/#{path}", headers = {'X-Vault-Token': token})
+      puts "vault resp= #{resp}"
       return JSON.parse(resp)['data']['data']
     rescue RestClient::ServerBrokeConnection
       puts "Server connnection fail, retrying"      
     rescue RestClient::ExceptionWithResponse => e
+      puts "#{e.http_code}"
+      puts e.http_code
       return e.http_code
     end
     max_attempts -= 1
@@ -138,14 +150,16 @@ def main(args)
   when "get"
     team, project, env = params.split('/')
     puts "Saving environment variables."
-
+    puts "t: #{team}/#{project}/#{env}"
     data = consul_get("#{team}/#{project}/#{env}")
     run = String.new
+    puts "data: #{data}"
     data['run'].each_with_index { |cmd, index|
       (index + 1) < data['run'].length ? run += "#{cmd} && " : run += cmd
     } unless data['run'].empty?
     file_content = Hash.new
     data['vars'].each { |var| file_content.deep_merge!(var) } unless data['vars'].empty?
+    puts "Getting secrets from vault"
     secrets = vault_get("#{team}/data/#{project}/#{env}") if data['secrets']
     file_content.deep_merge!(secrets) unless !defined?(secrets) && secrets.empty?
     file_content.each { |key, value| file_content.deep_merge!({key => value.to_s}) } unless file_content.empty?
