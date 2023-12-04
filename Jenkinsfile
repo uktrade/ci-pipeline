@@ -35,7 +35,7 @@ pipeline {
     string(defaultValue: '', description:'Please choose your project: ', name: 'Project')
     string(defaultValue: '', description:'Please choose your environment: ', name: 'Environment')
     string(defaultValue: '', description:'Please choose your git branch/tag/commit: ', name: 'Version')
-    string(defaultValue: 'rolling', description:'Please choose your deployment strategy: ', name: 'rolling')
+    string(defaultValue: 'rolling', description:'Please choose your deployment strategy, rolling or non-rolling: ', name: 'rolling')
   }
 
   stages {
@@ -105,6 +105,17 @@ pipeline {
                 [$class: 'StringParameterDefinition', name: 'Git Commit', description: 'GitCommit']
               ])
               env.Version = git_commit
+            }
+
+            if (!env.Strategy) {
+              strategy = input(
+                id: 'strategy', message: 'Please enter your deployment strategy, rolling or non-rolling: ', parameters: [
+                [$class: 'StringParameterDefinition', name: 'Strategy', description: 'Strategy']
+              ])
+              env.Strategy = Strategy
+            }
+            if (env.Strategy != 'rolling' && env.Strategy != 'non-rolling') {
+              error 'Invalid Strategy!'
             }
           }
         }
@@ -365,7 +376,6 @@ pipeline {
 
               echo "${log_info}Creating new deployement for app ${gds_app[2]} ${log_end}"
 
-              
               try {
                 // Rolling deployments only work if there is a web process, so backend-only apps, say that those that
                 // only run background processes or run tasks, we do a simpler strategy
@@ -392,15 +402,16 @@ pipeline {
                     }
                   }
                 } else {
-                  // Patch application with current droplet
+                  // Patch application with new droplet
                   sh(script: """cf curl '/v3/apps/${app_guid}/relationships/current_droplet' -X PATCH -d '{"data": {"guid": "${droplet_guid}"}}'""")
-                  // Restart the app
+                  // Restart the app, so it starts at the new droplet
                   sh(script: """cf curl '/v3/apps/${app_guid}/actions/restart' -X POST""")
-                  // Wait until all processes are not starting
+                  // Wait until all processes have been created and finished starting
                   timeout(time: 60, unit: 'SECONDS') {
                     while (True) {
                       sleep 5
-                      process_stats = readJSON text: (sh(script: """cf curl '/v3/processes/${app_guid}/stats' -X GET""", returnStdout: true).trim())
+                      process_stats_json = sh(script: """cf curl '/v3/processes/${app_guid}/stats' -X GET""", returnStdout: true).trim()
+                      process_stats = readJSON text: process_stats_json
                       if (process_stats.resources.size() == 0) {
                         // No processes have yet been created
                         continue
@@ -412,7 +423,8 @@ pipeline {
                     }
                   }
                   // If any processes are not running, error
-                  process_stats = readJSON text: (sh(script: """cf curl '/v3/processes/${app_guid}/stats' -X GET""", returnStdout: true).trim())
+                  process_stats_json = sh(script: """cf curl '/v3/processes/${app_guid}/stats' -X GET""", returnStdout: true).trim()
+                  process_stats = readJSON text: process_stats_json
                   if (process_stats.resources.any { it.state != 'RUNNING' }) {
                     error "Not all processes running"
                   }
