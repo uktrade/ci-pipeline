@@ -365,6 +365,7 @@ pipeline {
               echo "${log_info}Creating new deployement for app ${gds_app[2]} ${log_end}"
               try {
                 deploy_json = sh(script: """cf curl '/v3/deployments' -X POST -d '{"droplet": {"guid": "${droplet_guid}"}, "strategy": null, "relationships": {"app": {"data": {"guid": "${app_guid}"}}}}'""", returnStdout: true).trim()
+                echo deploy_json
                 deploy = readJSON text: deploy_json
                 if (deploy.errors) {
                   error_msg = deploy.errors[0].detail
