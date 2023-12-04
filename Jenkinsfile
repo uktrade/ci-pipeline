@@ -376,10 +376,10 @@ pipeline {
               writeYaml file: "manifest.yml", data: app_manifest, overwrite: true
               sh """cf curl '/v3/apps/${app_guid}/actions/apply_manifest' -X POST -d @manifest.yml -H 'Content-type: application/x-yaml' -i"""
 
-              echo "${log_info}Creating new deployement for app ${gds_app[2]} ${log_end}"
-
               // Rolling deployments don't have downtime of the web process, but only work if there _is_ a web process
               if (env.Strategy == "rolling") {
+                echo "${log_info}Creating new deployement for app ${gds_app[2]} ${log_end}"
+
                 deploy_json = sh(script: """cf curl '/v3/deployments' -X POST -d '{"droplet": {"guid": "${droplet_guid}"}, "strategy": "rolling", "relationships": {"app": {"data": {"guid": "${app_guid}"}}}}'""", returnStdout: true).trim()
                 deploy = readJSON text: deploy_json
                 if (deploy.errors) {
@@ -403,13 +403,13 @@ pipeline {
                 }
               // Non-rolling deployments, suitable for apps that don't have a web process
               } else {
-                // Patch application with new droplet
+                echo "${log_info}Patching app ${gds_app[2]} with new droplet${log_end}"
                 sh(script: """cf curl '/v3/apps/${app_guid}/relationships/current_droplet' -X PATCH -d '{"data": {"guid": "${droplet_guid}"}}'""")
 
-                // Restart the app, so it starts at the new droplet
+                echo "${log_info}Restarting app ${gds_app[2]} ${log_end}"
                 sh(script: """cf curl '/v3/apps/${app_guid}/actions/restart' -X POST""")
 
-                // Wait until all processes have been created and finished starting
+                echo "${log_info}Waiting until all processes of ${gds_app[2]} have been created and running${log_end}"
                 timeout(time: 60, unit: 'SECONDS') {
                   while (true) {
                     sleep 5
@@ -426,7 +426,7 @@ pipeline {
                     // If processes exist, and they've all finished starting...
                     if (process_states.size() > 0 && process_states.every { it != 'STARTING' }) {
                       // ... but any of them are not running, error
-                      if (process_states.any { it.state != 'RUNNING' }) {
+                      if (process_states.any { it != 'RUNNING' }) {
                         error "Not all processes running"
                       }
                       // ... and otherwise we're succesful
