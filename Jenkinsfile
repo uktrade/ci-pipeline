@@ -378,78 +378,73 @@ pipeline {
 
               echo "${log_info}Creating new deployement for app ${gds_app[2]} ${log_end}"
 
-              try {
-                // Rolling deployments don't have downtime of the web process, but only work if there _is_ a web process
-                if (env.Strategy == "rolling") {
-                  deploy_json = sh(script: """cf curl '/v3/deployments' -X POST -d '{"droplet": {"guid": "${droplet_guid}"}, "strategy": "rolling", "relationships": {"app": {"data": {"guid": "${app_guid}"}}}}'""", returnStdout: true).trim()
-                  deploy = readJSON text: deploy_json
-                  if (deploy.errors) {
-                    error_msg = deploy.errors[0].detail
-                    error error_msg
-                  }
-                  deploy_guid = deploy.guid
-                  timeout(time: app_manifest.applications[0].processes[0].timeout * app_proc_web.instances * 3, unit: 'SECONDS') {
-                    error_msg = "App failed to deploy."
-                    deploy_state = sh(script: "cf curl '/v3/deployments/${deploy_guid}' | jq -rc '.status.value'", returnStdout: true).trim()
-                    while (deploy_state != "FINALIZED") {
-                      sleep 10
-                      deploy_state = sh(script: "cf curl '/v3/deployments/${deploy_guid}' | jq -rc '.status.value'", returnStdout: true).trim()
-                      deploy_status = sh(script: "cf curl '/v3/deployments/${deploy_guid}' | jq -rc '.status.reason'", returnStdout: true).trim()
-                      if (deploy_state == "CANCELING" || deploy_status == "CANCELED" || deploy_status == "DEGENERATE") {
-                        deploy_err = sh(script: "cf curl '/v3/deployments/${deploy_guid}' | jq -rc '.status.details'", returnStdout: true).trim()
-                        error_msg = "${deploy_status}: ${deploy_err}"
-                        error error_msg
-                      }
-                    }
-                  }
-                // Non-rolling deployments, suitable for apps that don't have a web process
-                } else {
-                  // Patch application with new droplet
-                  sh(script: """cf curl '/v3/apps/${app_guid}/relationships/current_droplet' -X PATCH -d '{"data": {"guid": "${droplet_guid}"}}'""")
-
-                  // Restart the app, so it starts at the new droplet
-                  sh(script: """cf curl '/v3/apps/${app_guid}/actions/restart' -X POST""")
-
-                  // Wait until all processes have been created and finished starting
-                  timeout(time: 60, unit: 'SECONDS') {
-                    while (true) {
-                      sleep 5
-                      echo "Getting processes"
-                      processes_json = sh(script: """cf curl '/v3/apps/${app_guid}/processes' -X GET""", returnStdout: true).trim()
-                      processes = readJSON text: processes_json
-                      echo processes_json
-                      process_states = processes.resources
-                        .collect { 
-                          process_stats_json = sh(script: """cf curl '/v3/processes/${it.guid}/stats' -X GET""", returnStdout: true).trim()
-                          process_stats = readJSON text: process_stats_json
-                          echo process_stats_json
-                          process_stats.resources.collect { it.state }
-                        }
-                        .flatten()
-                      echo process_states
-
-                      // If no processes have yet been created, wait
-                      if (process_states.size() == 0) {
-                        continue
-                      }
-
-                      // If all processes have finished starting...
-                      if (process_states.every { it != 'STARTING' }) {
-                        // ... but any of them are not running, error
-                        if (process_states.any { it.state != 'RUNNING' }) {
-                          error "Not all processes running"
-                        }
-                        // ... and otherwise we're succesful
-                        break
-                      }
-                    }
-                  }  
+              // Rolling deployments don't have downtime of the web process, but only work if there _is_ a web process
+              if (env.Strategy == "rolling") {
+                deploy_json = sh(script: """cf curl '/v3/deployments' -X POST -d '{"droplet": {"guid": "${droplet_guid}"}, "strategy": "rolling", "relationships": {"app": {"data": {"guid": "${app_guid}"}}}}'""", returnStdout: true).trim()
+                deploy = readJSON text: deploy_json
+                if (deploy.errors) {
+                  error_msg = deploy.errors[0].detail
+                  error error_msg
                 }
-              } catch (err) {
-                error error_msg
+                deploy_guid = deploy.guid
+                timeout(time: app_manifest.applications[0].processes[0].timeout * app_proc_web.instances * 3, unit: 'SECONDS') {
+                  error_msg = "App failed to deploy."
+                  deploy_state = sh(script: "cf curl '/v3/deployments/${deploy_guid}' | jq -rc '.status.value'", returnStdout: true).trim()
+                  while (deploy_state != "FINALIZED") {
+                    sleep 10
+                    deploy_state = sh(script: "cf curl '/v3/deployments/${deploy_guid}' | jq -rc '.status.value'", returnStdout: true).trim()
+                    deploy_status = sh(script: "cf curl '/v3/deployments/${deploy_guid}' | jq -rc '.status.reason'", returnStdout: true).trim()
+                    if (deploy_state == "CANCELING" || deploy_status == "CANCELED" || deploy_status == "DEGENERATE") {
+                      deploy_err = sh(script: "cf curl '/v3/deployments/${deploy_guid}' | jq -rc '.status.details'", returnStdout: true).trim()
+                      error_msg = "${deploy_status}: ${deploy_err}"
+                      error error_msg
+                    }
+                  }
+                }
+              // Non-rolling deployments, suitable for apps that don't have a web process
+              } else {
+                // Patch application with new droplet
+                sh(script: """cf curl '/v3/apps/${app_guid}/relationships/current_droplet' -X PATCH -d '{"data": {"guid": "${droplet_guid}"}}'""")
+
+                // Restart the app, so it starts at the new droplet
+                sh(script: """cf curl '/v3/apps/${app_guid}/actions/restart' -X POST""")
+
+                // Wait until all processes have been created and finished starting
+                timeout(time: 60, unit: 'SECONDS') {
+                  while (true) {
+                    sleep 5
+                    echo "Getting processes"
+                    processes_json = sh(script: """cf curl '/v3/apps/${app_guid}/processes' -X GET""", returnStdout: true).trim()
+                    processes = readJSON text: processes_json
+                    echo processes_json
+                    process_states = processes.resources
+                      .collect { 
+                        process_stats_json = sh(script: """cf curl '/v3/processes/${it.guid}/stats' -X GET""", returnStdout: true).trim()
+                        process_stats = readJSON text: process_stats_json
+                        echo process_stats_json
+                        process_stats.resources.collect { it.state }
+                      }
+                      .flatten()
+                    echo process_states
+
+                    // If no processes have yet been created, wait
+                    if (process_states.size() == 0) {
+                      continue
+                    }
+
+                    // If all processes have finished starting...
+                    if (process_states.every { it != 'STARTING' }) {
+                      // ... but any of them are not running, error
+                      if (process_states.any { it.state != 'RUNNING' }) {
+                        error "Not all processes running"
+                      }
+                      // ... and otherwise we're succesful
+                      break
+                    }
+                  }
+                }  
               }
               echo "${log_info}App ${gds_app[2]} started. ${log_end}"
-
             }
           }
         }
