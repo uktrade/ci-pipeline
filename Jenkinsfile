@@ -413,27 +413,18 @@ pipeline {
                 timeout(time: 60, unit: 'SECONDS') {
                   while (true) {
                     sleep 5
-                    echo "Getting processes"
                     processes_json = sh(script: """cf curl '/v3/apps/${app_guid}/processes' -X GET""", returnStdout: true).trim()
                     processes = readJSON text: processes_json
-                    echo processes_json
                     process_states = processes.resources
                       .collect { 
                         process_stats_json = sh(script: """cf curl '/v3/processes/${it.guid}/stats' -X GET""", returnStdout: true).trim()
                         process_stats = readJSON text: process_stats_json
-                        echo process_stats_json
                         process_stats.resources.collect { it.state }
                       }
                       .flatten()
-                    echo process_states
 
-                    // If no processes have yet been created, wait
-                    if (process_states.size() == 0) {
-                      continue
-                    }
-
-                    // If all processes have finished starting...
-                    if (process_states.every { it != 'STARTING' }) {
+                    // If processes exist, and they've all finished starting...
+                    if (process_states.size() > 0 && process_states.every { it != 'STARTING' }) {
                       // ... but any of them are not running, error
                       if (process_states.any { it.state != 'RUNNING' }) {
                         error "Not all processes running"
