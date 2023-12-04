@@ -35,6 +35,7 @@ pipeline {
     string(defaultValue: '', description:'Please choose your project: ', name: 'Project')
     string(defaultValue: '', description:'Please choose your environment: ', name: 'Environment')
     string(defaultValue: '', description:'Please choose your git branch/tag/commit: ', name: 'Version')
+    string(defaultValue: 'rolling', description:'Please choose your deployment strategy: ', name: 'rolling')
   }
 
   stages {
@@ -363,27 +364,57 @@ pipeline {
               sh """cf curl '/v3/apps/${app_guid}/actions/apply_manifest' -X POST -d @manifest.yml -H 'Content-type: application/x-yaml' -i"""
 
               echo "${log_info}Creating new deployement for app ${gds_app[2]} ${log_end}"
+
+              
               try {
-                deploy_json = sh(script: """cf curl '/v3/deployments' -X POST -d '{"droplet": {"guid": "${droplet_guid}"}, "strategy": null, "relationships": {"app": {"data": {"guid": "${app_guid}"}}}}'""", returnStdout: true).trim()
-                echo deploy_json
-                deploy = readJSON text: deploy_json
-                if (deploy.errors) {
-                  error_msg = deploy.errors[0].detail
-                  error error_msg
-                }
-                deploy_guid = deploy.guid
-                timeout(time: app_manifest.applications[0].processes[0].timeout * app_proc_web.instances * 3, unit: 'SECONDS') {
-                  error_msg = "App failed to deploy."
-                  deploy_state = sh(script: "cf curl '/v3/deployments/${deploy_guid}' | jq -rc '.status.value'", returnStdout: true).trim()
-                  while (deploy_state != "FINALIZED") {
-                    sleep 10
+                // Rolling deployments only work if there is a web process, so backend-only apps, say that those that
+                // only run background processes or run tasks, we do a simpler strategy
+                if (env.Strategy == "rolling") {
+                  deploy_json = sh(script: """cf curl '/v3/deployments' -X POST -d '{"droplet": {"guid": "${droplet_guid}"}, "strategy": "rolling", "relationships": {"app": {"data": {"guid": "${app_guid}"}}}}'""", returnStdout: true).trim()
+                  deploy = readJSON text: deploy_json
+                  if (deploy.errors) {
+                    error_msg = deploy.errors[0].detail
+                    error error_msg
+                  }
+                  deploy_guid = deploy.guid
+                  timeout(time: app_manifest.applications[0].processes[0].timeout * app_proc_web.instances * 3, unit: 'SECONDS') {
+                    error_msg = "App failed to deploy."
                     deploy_state = sh(script: "cf curl '/v3/deployments/${deploy_guid}' | jq -rc '.status.value'", returnStdout: true).trim()
-                    deploy_status = sh(script: "cf curl '/v3/deployments/${deploy_guid}' | jq -rc '.status.reason'", returnStdout: true).trim()
-                    if (deploy_state == "CANCELING" || deploy_status == "CANCELED" || deploy_status == "DEGENERATE") {
-                      deploy_err = sh(script: "cf curl '/v3/deployments/${deploy_guid}' | jq -rc '.status.details'", returnStdout: true).trim()
-                      error_msg = "${deploy_status}: ${deploy_err}"
-                      error error_msg
+                    while (deploy_state != "FINALIZED") {
+                      sleep 10
+                      deploy_state = sh(script: "cf curl '/v3/deployments/${deploy_guid}' | jq -rc '.status.value'", returnStdout: true).trim()
+                      deploy_status = sh(script: "cf curl '/v3/deployments/${deploy_guid}' | jq -rc '.status.reason'", returnStdout: true).trim()
+                      if (deploy_state == "CANCELING" || deploy_status == "CANCELED" || deploy_status == "DEGENERATE") {
+                        deploy_err = sh(script: "cf curl '/v3/deployments/${deploy_guid}' | jq -rc '.status.details'", returnStdout: true).trim()
+                        error_msg = "${deploy_status}: ${deploy_err}"
+                        error error_msg
+                      }
                     }
+                  }
+                } else {
+                  // Patch application with current droplet
+                  sh(script: """cf curl '/v3/apps/${app_guid}/relationships/current_droplet' -X PATCH -d '{"data": {"guid": "${droplet_guid}"}}'""")
+                  // Restart the app
+                  sh(script: """cf curl '/v3/apps/${app_guid}/actions/restart' -X POST""")
+                  // Wait until all processes are not starting
+                  timeout(time: 60, unit: 'SECONDS') {
+                    while (True) {
+                      sleep 5
+                      process_stats = readJSON text: (sh(script: """cf curl '/v3/processes/${app_guid}/stats' -X GET""", returnStdout: true).trim())
+                      if (process_stats.resources.size() == 0) {
+                        // No processes have yet been created
+                        continue
+                      }
+                      if (process_stats.resources.every { it.state != 'STARTING' }) {
+                        // All processes have finished starting
+                        break
+                      }
+                    }
+                  }
+                  // If any processes are not running, error
+                  process_stats = readJSON text: (sh(script: """cf curl '/v3/processes/${app_guid}/stats' -X GET""", returnStdout: true).trim())
+                  if (process_stats.resources.any { it.state != 'RUNNING' }) {
+                    error "Not all processes running"
                   }
                 }
               } catch (err) {
@@ -416,7 +447,7 @@ pipeline {
                 new_app_revision = sh(script:"cf curl '/v3/apps/${app_guid}/revisions/deployed' | jq -rc '.resources[].guid'", returnStdout: true).trim()
                 if (new_app_revision != app_revision && app_revision != '') {
                   echo "${log_warn}Rollback app ${gds_app[2]} to previous revision ${app_revision}. ${log_end}"
-                  sh """cf curl '/v3/deployments' -X POST -d '{"revision": {"guid": "${app_revision}"}, "strategy": null, "relationships": {"app": {"data": {"guid": "${app_guid}"}}}}' | jq -C 'del(.links)'"""
+                  sh """cf curl '/v3/deployments' -X POST -d '{"revision": {"guid": "${app_revision}"}, "strategy": "rolling", "relationships": {"app": {"data": {"guid": "${app_guid}"}}}}' | jq -C 'del(.links)'"""
                 }
                 if (droplet_guid != null) {
                   echo "${log_warn}Remove droplet for app ${gds_app[2]} ${log_end}"
