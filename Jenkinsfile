@@ -380,7 +380,6 @@ pipeline {
 
               try {
                 // Rolling deployments don't have downtime of the web process, but only work if there _is_ a web process
-                // and so are not suitable for backend-process-only apps
                 if (env.Strategy == "rolling") {
                   deploy_json = sh(script: """cf curl '/v3/deployments' -X POST -d '{"droplet": {"guid": "${droplet_guid}"}, "strategy": "rolling", "relationships": {"app": {"data": {"guid": "${app_guid}"}}}}'""", returnStdout: true).trim()
                   deploy = readJSON text: deploy_json
@@ -403,33 +402,44 @@ pipeline {
                       }
                     }
                   }
+                // Non-rolling deployments, suitable for apps that don't have a web process
                 } else {
                   // Patch application with new droplet
                   sh(script: """cf curl '/v3/apps/${app_guid}/relationships/current_droplet' -X PATCH -d '{"data": {"guid": "${droplet_guid}"}}'""")
+
                   // Restart the app, so it starts at the new droplet
                   sh(script: """cf curl '/v3/apps/${app_guid}/actions/restart' -X POST""")
+
                   // Wait until all processes have been created and finished starting
                   timeout(time: 60, unit: 'SECONDS') {
                     while (True) {
                       sleep 5
-                      process_stats_json = sh(script: """cf curl '/v3/processes/${app_guid}/stats' -X GET""", returnStdout: true).trim()
-                      process_stats = readJSON text: process_stats_json
-                      if (process_stats.resources.size() == 0) {
-                        // No processes have yet been created
+                      processes_json = sh(script: """cf curl '/v3/apps/${app_guid}/processes' -X GET""", returnStdout: true).trim()
+                      processes = readJSON text: processes_json
+                      process_states = processes.resources
+                        .collect { 
+                          process_stats_json = sh(script: """cf curl '/v3/processes/${it.guid}/stats' -X GET""", returnStdout: true).trim()
+                          process_stats = readJSON text: process_stats_json
+                          process_stats.resources.collect { it.state }
+                        }
+                        .flatten()
+
+                      // If no processes have yet been created, wait
+                      if (process_states.size() == 0) {
                         continue
                       }
-                      if (process_stats.resources.every { it.state != 'STARTING' }) {
-                        // All processes have finished starting
+
+                      // If all processes have finished starting...
+                      if (process_states.every { it != 'STARTING' }) {
+                        // ... but any of them are not running, error
+                        if (process_states.any { it.state != 'RUNNING' }) {
+                          error "Not all processes running"
+                        }
+                        // ... and otherwise we're succesful
                         break
                       }
                     }
-                  }
-                  // If any processes are not running, error
-                  process_stats_json = sh(script: """cf curl '/v3/processes/${app_guid}/stats' -X GET""", returnStdout: true).trim()
-                  process_stats = readJSON text: process_stats_json
-                  if (process_stats.resources.any { it.state != 'RUNNING' }) {
-                    error "Not all processes running"
-                  }
+                  }  
                 }
               } catch (err) {
                 error error_msg
