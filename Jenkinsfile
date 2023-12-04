@@ -412,7 +412,7 @@ pipeline {
 
                   // Wait until all processes have been created and finished starting
                   timeout(time: 60, unit: 'SECONDS') {
-                    while (True) {
+                    while (true) {
                       sleep 5
                       echo "Getting processes"
                       processes_json = sh(script: """cf curl '/v3/apps/${app_guid}/processes' -X GET""", returnStdout: true).trim()
