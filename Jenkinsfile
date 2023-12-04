@@ -422,6 +422,7 @@ pipeline {
                         .collect { 
                           process_stats_json = sh(script: """cf curl '/v3/processes/${it.guid}/stats' -X GET""", returnStdout: true).trim()
                           process_stats = readJSON text: process_stats_json
+                          echo process_stats_json
                           process_stats.resources.collect { it.state }
                         }
                         .flatten()
