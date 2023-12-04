@@ -401,8 +401,10 @@ pipeline {
                     }
                   }
                 }
+              }
+
               // Non-rolling deployments, suitable for apps that don't have a web process
-              } else {
+              if (env.Strategy == "non-rolling") {
                 echo "${log_info}Patching app ${gds_app[2]} with new droplet${log_end}"
                 sh(script: """cf curl '/v3/apps/${app_guid}/relationships/current_droplet' -X PATCH -d '{"data": {"guid": "${droplet_guid}"}}'""")
 
@@ -410,7 +412,7 @@ pipeline {
                 sh(script: """cf curl '/v3/apps/${app_guid}/actions/restart' -X POST""")
 
                 echo "${log_info}Waiting until all processes of ${gds_app[2]} have been created and running${log_end}"
-                timeout(time: 60, unit: 'SECONDS') {
+                timeout(time: app_manifest.applications[0].processes[0].timeout, unit: 'SECONDS') {
                   while (true) {
                     sleep 5
                     processes_json = sh(script: """cf curl '/v3/apps/${app_guid}/processes' -X GET""", returnStdout: true).trim()
@@ -427,7 +429,8 @@ pipeline {
                     if (process_states.size() > 0 && process_states.every { it != 'STARTING' }) {
                       // ... but any of them are not running, error
                       if (process_states.any { it != 'RUNNING' }) {
-                        error "Not all processes running"
+                        error_msg = "Not all processes running"
+                        error error_msg
                       }
                       // ... and otherwise we're succesful
                       break
@@ -435,6 +438,7 @@ pipeline {
                   }
                 }  
               }
+
               echo "${log_info}App ${gds_app[2]} started. ${log_end}"
             }
           }
