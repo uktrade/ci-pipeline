@@ -107,12 +107,14 @@ pipeline {
               env.Version = git_commit
             }
 
-            if (!env.Strategy) {
+            if (!params.Strategy) {
               strategy = input(
                 id: 'strategy', message: 'Please enter your deployment strategy, rolling or non-rolling: ', parameters: [
                 [$class: 'StringParameterDefinition', name: 'Strategy', description: 'Strategy']
               ])
-              env.Strategy = Strategy
+              env.Strategy = strategy
+            } else {
+              env.Strategy = params.Strategy
             }
             if (env.Strategy != 'rolling' && env.Strategy != 'non-rolling') {
               error 'Invalid Strategy!'
