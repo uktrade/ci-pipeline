@@ -35,7 +35,7 @@ pipeline {
     string(defaultValue: '', description:'Please choose your project: ', name: 'Project')
     string(defaultValue: '', description:'Please choose your environment: ', name: 'Environment')
     string(defaultValue: '', description:'Please choose your git branch/tag/commit: ', name: 'Version')
-    string(defaultValue: 'rolling', description:'Please choose your deployment strategy, rolling or non-rolling: ', name: 'Strategy')
+    string(defaultValue: 'rolling', description:'Please choose your deployment strategy, "rolling" or "non-rolling": ', name: 'Strategy')
   }
 
   stages {
