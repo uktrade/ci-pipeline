@@ -414,8 +414,10 @@ pipeline {
                   timeout(time: 60, unit: 'SECONDS') {
                     while (True) {
                       sleep 5
+                      echo "Getting processes"
                       processes_json = sh(script: """cf curl '/v3/apps/${app_guid}/processes' -X GET""", returnStdout: true).trim()
                       processes = readJSON text: processes_json
+                      echo processes_json
                       process_states = processes.resources
                         .collect { 
                           process_stats_json = sh(script: """cf curl '/v3/processes/${it.guid}/stats' -X GET""", returnStdout: true).trim()
@@ -423,6 +425,7 @@ pipeline {
                           process_stats.resources.collect { it.state }
                         }
                         .flatten()
+                      echo process_states
 
                       // If no processes have yet been created, wait
                       if (process_states.size() == 0) {
