@@ -377,8 +377,8 @@ pipeline {
               echo "${log_info}Creating new deployement for app ${gds_app[2]} ${log_end}"
 
               try {
-                // Rolling deployments only work if there is a web process, so backend-only apps, say that those that
-                // only run background processes or run tasks, we do a simpler strategy
+                // Rolling deployments don't have downtime of the web process, but only work if there _is_ a web process
+                // and so are not suitable for backend-process-only apps
                 if (env.Strategy == "rolling") {
                   deploy_json = sh(script: """cf curl '/v3/deployments' -X POST -d '{"droplet": {"guid": "${droplet_guid}"}, "strategy": "rolling", "relationships": {"app": {"data": {"guid": "${app_guid}"}}}}'""", returnStdout: true).trim()
                   deploy = readJSON text: deploy_json
