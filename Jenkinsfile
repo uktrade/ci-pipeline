@@ -415,7 +415,7 @@ pipeline {
                 new_app_revision = sh(script:"cf curl '/v3/apps/${app_guid}/revisions/deployed' | jq -rc '.resources[].guid'", returnStdout: true).trim()
                 if (new_app_revision != app_revision && app_revision != '') {
                   echo "${log_warn}Rollback app ${gds_app[2]} to previous revision ${app_revision}. ${log_end}"
-                  sh """cf curl '/v3/deployments' -X POST -d '{"revision": {"guid": "${app_revision}"}, "strategy": "rolling", "relationships": {"app": {"data": {"guid": "${app_guid}"}}}}' | jq -C 'del(.links)'"""
+                  sh """cf curl '/v3/deployments' -X POST -d '{"revision": {"guid": "${app_revision}"}, "strategy": "", "relationships": {"app": {"data": {"guid": "${app_guid}"}}}}' | jq -C 'del(.links)'"""
                 }
                 if (droplet_guid != null) {
                   echo "${log_warn}Remove droplet for app ${gds_app[2]} ${log_end}"
